@@ -12956,7 +12956,7 @@ body{
     radial-gradient(2px 2px at 80% 60%, rgba(255,255,255,0.9) 0%, transparent 70%);
   background-repeat: repeat;
   background-size: 150px 150px;
-  animation: twinkle 3s infinite ease-in-out alternate;
+  animation: twinkle 1s infinite ease-in-out alternate;
   opacity: 0.9;
 }
 /* ✨ twinkling animation */
