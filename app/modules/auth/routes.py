@@ -1,10 +1,13 @@
-from flask import redirect, render_template, request, url_for
+from flask import redirect, render_template, request, url_for, flash
 from flask_login import current_user, login_user, logout_user
+from datetime import datetime, timezone
 
 from app.modules.auth import auth_bp
-from app.modules.auth.forms import LoginForm, SignupForm
-from app.modules.auth.services import AuthenticationService
+from app.modules.auth.forms import LoginForm, SignupForm, RecoverPasswordForm, ResetPasswordForm
+from app.modules.auth.services import AuthenticationService, send_password_recovery_email
 from app.modules.profile.services import UserProfileService
+from app import db
+from app.modules.auth.models import User
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -52,3 +55,50 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/recover-password/", methods=["GET", "POST"])
+def recover_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("public.index"))
+
+    form = RecoverPasswordForm()
+    if form.validate_on_submit():
+        email = request.form.get("email")
+        user = authentication_service.repository.get_by_email(email)
+
+        if not user:
+            flash("The email address is not registered in our system.", "error")
+            return redirect(url_for("auth.recover_password"))
+
+        if user:
+            token = user.generate_reset_token()
+            reset_link = url_for("auth.reset_password", token=token, _external=True)
+            send_password_recovery_email(email, reset_link)
+            flash("A password recovery email has been sent.", "info")
+        
+        return redirect(url_for("auth.recover_password"))
+
+    return render_template("auth/recover_password_form.html", form=form)
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for("public.index"))
+
+    user = User.verify_reset_token(token)
+    if not user or user.reset_token_expiration < datetime.now():
+        flash("The password reset link is invalid or has expired.", "danger")
+        return redirect(url_for("auth.recover_password"))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.reset_token = None
+        user.reset_token_expiration = None
+        db.session.commit()
+        flash("Your password has been reset successfully.", "success")
+        return redirect(url_for("auth.recover_password"))
+
+    return render_template("auth/reset_password_form.html", form=form)
+

@@ -8,6 +8,11 @@ from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+import secrets
+from datetime import datetime, timedelta, timezone
+from flask import url_for
+from flask_mail import Message
+from app import mail
 
 
 class AuthenticationService(BaseService):
@@ -76,3 +81,36 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+def send_password_recovery_email(to_email, reset_link):
+    msg = Message(
+        subject="Password Reset Request",
+        sender="noreply@astronomiahub.com",
+        recipients=[to_email],
+        body=(
+                "Hello,\n\n"
+                "We received a request to reset your password for your AstronomiaHub account.\n\n"
+                f"If you made this request, please click the link below to reset your password:\n{reset_link}\n\n"
+                "If you did not request a password reset, you can safely ignore this email.\n\n"
+                "Best regards,\n"
+                "AstronomiaHub Team"
+            )
+        )
+    mail.send(msg)
+
+
+    def send_password_reset_email(self, user: User):
+        reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)
+        msg = Message(
+            subject="Password Reset Request",
+            sender="noreply@astronomiahub.com",
+            recipients=[user.email],
+            body=f"Hello {user.username}, \n\n"
+                    f"We received a request to reset your password for your AstronomiaHub account.\n\n"
+                    f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
+                    f"If you did not request a password reset, you can safely ignore this email.\n\n"
+                    f"Best regards,\n"
+                    f"AstronomiaHub Team"
+        )
+        mail.send(msg)
+        print(f"Sent password reset email to {email} with link: {reset_link}")

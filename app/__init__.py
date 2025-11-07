@@ -11,12 +11,15 @@ from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
 
+from flask_mail import Mail
+
 # Load environment variables
 load_dotenv()
 
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
+mail = Mail()
 
 
 def create_app(config_name="development"):
@@ -33,6 +36,16 @@ def create_app(config_name="development"):
     # Register modules
     module_manager = ModuleManager(app)
     module_manager.register_modules()
+
+    # Initialize Flask-Mail (simulado cambiar luego)
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USERNAME'] = 'astronomiahub@gmail.com'
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_DEFAULT_SENDER'] = 'astronomiahub@gmail.com'
+    mail.init_app(app)
+
 
     # Register login manager
     from flask_login import LoginManager
@@ -66,6 +79,20 @@ def create_app(config_name="development"):
         }
 
     return app
+
+def send_password_recovery_email(to_email, reset_link):
+    msg = Message(
+            subject="Password Reset Request",
+            sender="noreply@astronomiahub.com",
+            recipients=[to_email],
+            body=f"Hello, \n\n"
+                    f"We received a request to reset your password for your AstronomiaHub account.\n\n"
+                    f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
+                    f"If you did not request a password reset, you can safely ignore this email.\n\n"
+                    f"Best regards,\n"
+                    f"AstronomiaHub Team"
+        )
+    mail.send(msg)
 
 
 app = create_app()
