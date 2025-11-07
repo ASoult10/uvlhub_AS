@@ -1,0 +1,159 @@
+{% extends "base_template.html" %}
+
+{% block title %}Manage API Keys{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1>
+                <i class="fas fa-key"></i> API Keys Management
+            </h1>
+            <p class="text-muted">Create and manage API keys to access your datasets programmatically.</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Formulario para crear nueva API Key -->
+    <div class="row mb-5">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Create New API Key</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('api.create_key') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.scopes.label(class="form-label") }}
+                            {{ form.scopes(class="form-select", size=3) }}
+                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple permissions</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.expires_at.label(class="form-label") }}
+                            {{ form.expires_at(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Leave empty for permanent key. Example: 2025-12-31 23:59
+                            </small>
+                        </div>
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> API Documentation</h5>
+                </div>
+                <div class="card-body">
+                    <h6>How to use your API key:</h6>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl -H "X-API-Key: YOUR_KEY_HERE" \
+     {{ request.url_root }}api/datasets/1</code></pre>
+                    
+                    <a href="{{ url_for('api.api_documentation') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-book"></i> Full Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de API Keys existentes -->
+    <div class="row">
+        <div class="col-12">
+            <h3>Your API Keys</h3>
+            
+            {% if api_keys %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Key</th>
+                                <th>Permissions</th>
+                                <th>Status</th>
+                                <th>Requests</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key in api_keys %}
+                            <tr class="{% if not key.is_active %}table-secondary{% endif %}">
+                                <td><strong>{{ key.name }}</strong></td>
+                                <td>
+                                    <code class="text-muted">{{ key.key[:20] }}...</code>
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="copyToClipboard('{{ key.key }}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    {% for scope in key.scopes.split(',') %}
+                                        <span class="badge bg-info">{{ scope }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if key.is_valid() %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ key.requests_count }}</td>
+                                <td>{{ key.created_at.strftime('%Y-%m-%d') if key.created_at else 'N/A' }}</td>
+                                <td>{{ key.last_used_at.strftime('%Y-%m-%d %H:%M') if key.last_used_at else 'Never' }}</td>
+                                <td>
+                                    {% if key.is_active %}
+                                        <form method="POST" action="{{ url_for('api.revoke_key', key_id=key.id) }}" style="display:inline;">
+                                            {{ revoke_form.hidden_tag() }}
+                                            <button type="submit" class="btn btn-sm btn-warning" 
+                                                    onclick="return confirm('Are you sure?')">
+                                                <i class="fas fa-ban"></i> Revoke
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                    <form method="POST" action="{{ url_for('api.delete_key', key_id=key.id) }}" style="display:inline;">
+                                        {{ revoke_form.hidden_tag() }}
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Delete permanently?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You don't have any API keys yet. Create one above to get started!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('API Key copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}
