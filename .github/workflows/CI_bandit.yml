@@ -2,9 +2,9 @@ name: Bandit CI
 
 on:
   push:
-    branches: [main, trunk, feature_task_ci]
+    branches: [main, trunk]
   pull_request:
-    branches: [main, trunk, feature_task_ci]
+    branches: [main, trunk]
 
 jobs:
   bandit-scan:
