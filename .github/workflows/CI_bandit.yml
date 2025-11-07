@@ -2,11 +2,9 @@ name: Bandit CI
 
 on:
   push:
-    branches:
-      [main, trunk, feature_task_ci]
+    branches: [main, trunk, feature_task_ci]
   pull_request:
-    branches:
-      [main, trunk, feature_task_ci]
+    branches: [main, trunk, feature_task_ci]
 
 jobs:
   bandit-scan:
@@ -30,7 +28,14 @@ jobs:
         run: |
           bandit -r app/ -ll -o bandit-report.txt -f txt
 
-      - name: Upload Bandit report
+      # Muestra el contenido del informe en los logs (opcional, pero útil)
+      - name: Show Bandit report
+        if: failure()
+        run: cat bandit-report.txt
+
+      # Sube el informe como artefacto SOLO si el análisis falla
+      - name: Upload Bandit report (only on failure)
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: bandit-security-report
