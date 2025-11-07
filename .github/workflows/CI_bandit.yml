@@ -26,7 +26,8 @@ jobs:
 
       - name: Run Bandit security analysis
         run: |
-          bandit -r app/ -ll --severity-level high -o bandit-report.txt -f txt
+          bandit -r app/ --severity-level high -o bandit-report.txt -f txt
+
 
       - name: Upload Bandit report (only on failure)
         if: failure()
