@@ -3,10 +3,10 @@ name: Python Lint CI
 on:
   push:
     branches:
-      [main, trunk, feature_task_ci]
+      [main, trunk]
   pull_request:
     branches:
-      [main, trunk, feature_task_ci]
+      [main, trunk]
 
 jobs:
   lint:

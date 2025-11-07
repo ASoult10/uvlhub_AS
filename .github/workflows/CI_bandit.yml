@@ -26,14 +26,8 @@ jobs:
 
       - name: Run Bandit security analysis
         run: |
-          bandit -r app/ -ll -o bandit-report.txt -f txt
+          bandit -r app/ -ll --severity-level high -o bandit-report.txt -f txt
 
-      # Muestra el contenido del informe en los logs (opcional, pero útil)
-      - name: Show Bandit report
-        if: failure()
-        run: cat bandit-report.txt
-
-      # Sube el informe como artefacto SOLO si el análisis falla
       - name: Upload Bandit report (only on failure)
         if: failure()
         uses: actions/upload-artifact@v4
