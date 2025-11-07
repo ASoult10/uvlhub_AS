@@ -273,6 +273,10 @@
                                     <i data-feather="eye"></i> View
                                 </button>
 
+                                <button id="save-btn-{{ file.id }}" onclick="saveInCart('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                    <i data-feather="bookmark"></i> Save
+                                </button>
+
                                 <div class="btn-group" role="group">
                                     <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
                                         <i data-feather="check"></i> Check
@@ -370,6 +374,34 @@
     });
 
     var currentFileId;
+
+
+    function saveInCart(fileId) {
+        const btn = document.getElementById(`save-btn-${fileId}`);
+        const icon = btn.querySelector('i');
+
+        fetch(`/dataset/save_in_cart/${fileId}`)
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+
+                if (data.saved) {
+                    icon.setAttribute('data-feather', 'bookmark');
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-secondary');
+
+                } else if (data.removed) {
+                    icon.setAttribute('data-feather', 'bookmark');
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-outline-secondary');
+                }
+
+                feather.replace();
+            })
+            .catch(error => console.error('Error saving file in cart:', error));
+    }
+
+
 
     function viewFile(fileId) {
         fetch(`/file/view/${fileId}`)
