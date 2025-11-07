@@ -3,10 +3,10 @@ name: Codacy CI
 on:
   push:
     branches:
-      - main
+      [main, trunk, feature_task_ci]
   pull_request:
     branches:
-      - main
+      [main, trunk, feature_task_ci]
 
 jobs:
   build:

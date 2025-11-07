@@ -1,8 +1,12 @@
-name: Python Lint
+name: Python Lint CI
 
 on:
   push:
+    branches:
+      [main, trunk, feature_task_ci]
   pull_request:
+    branches:
+      [main, trunk, feature_task_ci]
 
 jobs:
   lint:
