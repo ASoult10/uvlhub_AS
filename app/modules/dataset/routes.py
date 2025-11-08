@@ -29,9 +29,11 @@ from app.modules.dataset.services import (
     DSDownloadRecordService,
     DSMetaDataService,
     DSViewRecordService,
-    SavedDataSetService,
 )
 from app.modules.zenodo.services import ZenodoService
+
+from app.modules.hubfile.services import HubfileService
+from flask_login import current_user
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,6 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
-saved_dataset_service = SavedDataSetService() 
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -255,9 +256,19 @@ def subdomain_index(doi):
 
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
-    resp.set_cookie("view_cookie", user_cookie)
 
+    # Creamos el servicio de hubfile
+    hubfile_service = HubfileService()
+
+    resp = make_response(
+        render_template(
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            hubfile_service=hubfile_service,
+            current_user=current_user
+        )
+    )
+    resp.set_cookie("view_cookie", user_cookie)
     return resp
 
 
@@ -272,42 +283,3 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     return render_template("dataset/view_dataset.html", dataset=dataset)
-
-@dataset_bp.route("/dataset/save_in_cart/<int:dataset_id>", methods=["GET"])
-@login_required
-def save_in_cart(dataset_id):
-    """Guarda o elimina un dataset de la lista de guardados del usuario."""
-    try:
-        dataset = dataset_service.get_or_404(dataset_id)
-
-        if saved_dataset_service.is_saved(current_user, dataset_id):
-            saved_dataset_service.remove_from_saved(current_user, dataset)
-            message = "Dataset eliminado de guardados."
-            saved = False
-        else:
-            saved_dataset_service.add_to_saved(current_user, dataset)
-            message = "Dataset guardado correctamente."
-            saved = True
-
-        return jsonify({"message": message, "saved": saved}), 200
-
-    except Exception as e:
-        logger.exception(f"Error al guardar dataset {dataset_id}: {e}")
-        return jsonify({"message": "Error al guardar el dataset."}), 500
-
-# Listar datasets guardados por el usuario
-@dataset_bp.route("/dataset/saved", methods=["GET"])
-@login_required
-def list_saved_datasets():
-    """Devuelve todos los datasets guardados por el usuario actual."""
-    try:
-        saved_datasets = saved_dataset_service.get_all_saved(current_user)
-
-        # Transformamos a diccionario para poder serializar a JSON
-        datasets_json = [dataset.to_dict() for dataset in saved_datasets]
-
-        return jsonify({"saved_datasets": datasets_json}), 200
-
-    except Exception as e:
-        logger.exception(f"Error al obtener datasets guardados: {e}")
-        return jsonify({"message": "Error al obtener datasets guardados."}), 500

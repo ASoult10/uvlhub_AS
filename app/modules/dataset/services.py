@@ -214,33 +214,3 @@ class SizeService:
             return f"{round(size / (1024 ** 3), 2)} GB"
 
 
-# Servicio para gestionar los datasets guardados por los usuarios
-class SavedDataSetService(BaseService):
-    def __init__(self):
-        from app.modules.dataset.repositories import SavedDataSetRepository
-        super().__init__(SavedDataSetRepository())
-
-    def is_saved(self, user, dataset_id: int) -> bool:
-        """Comprueba si el dataset ya está guardado por el usuario."""
-        return self.repository.is_saved(user, dataset_id)
-
-    def add_to_saved(self, user, dataset):
-        """Guarda un dataset en la lista del usuario."""
-        if not self.repository.is_saved(user, dataset.id):
-            self.repository.add_to_saved(user, dataset)
-            logger.info(f"Dataset {dataset.id} guardado por el usuario {user.id}")
-        else:
-            logger.info(f"Dataset {dataset.id} ya estaba guardado por el usuario {user.id}")
-
-    def remove_from_saved(self, user, dataset):
-        """Elimina un dataset guardado."""
-        if self.repository.is_saved(user, dataset.id):
-            self.repository.remove_from_saved(user, dataset)
-            logger.info(f"Dataset {dataset.id} eliminado de guardados por el usuario {user.id}")
-        else:
-            logger.info(f"Dataset {dataset.id} no estaba guardado por el usuario {user.id}")
-
-    def get_all_saved(self, user):
-        """Devuelve todos los datasets guardados por el usuario."""
-        return self.repository.get_all_saved(user)
-

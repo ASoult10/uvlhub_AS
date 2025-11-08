@@ -16,13 +16,15 @@ class User(db.Model, UserMixin):
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
-    # Relación con los modelos guardados en el carrito
-    saved_datasets = db.relationship(
-        "DataSet",
-        secondary="saved_datasets",
-        backref=db.backref("saved_by_users", lazy="dynamic"),
-        lazy="dynamic",
+    # Relación: archivos guardados por este usuario
+    saved_files = db.relationship(
+        "Hubfile",
+        secondary="user_saved_files",
+        back_populates="saved_by_users",
+        lazy="dynamic"
     )
+
+
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

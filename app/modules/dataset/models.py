@@ -6,14 +6,6 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 
 from app import db
 
-# Tabla para los datasets guardados
-saved_datasets = db.Table(
-    'saved_datasets',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('dataset_id', db.Integer, db.ForeignKey('data_set.id'), primary_key=True),
-)
-
-
 class PublicationType(Enum):
     NONE = "none"
     ANNOTATION_COLLECTION = "annotationcollection"

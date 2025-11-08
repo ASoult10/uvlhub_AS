@@ -1,0 +1,114 @@
+2025-11-07 15:51:07,225 - app.modules.dataset.routes - ERROR - Exception while create dataset data in Zenodo Failed to create deposition. Error details: {'status': 403, 'message': 'Permission denied.'}
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 69, in create_dataset
+    zenodo_response_json = zenodo_service.create_new_deposition(dataset)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/zenodo/services.py", line 178, in create_new_deposition
+    raise Exception(error_message)
+Exception: Failed to create deposition. Error details: {'status': 403, 'message': 'Permission denied.'}
+2025-11-07 15:54:13,315 - app.modules.dataset.routes - ERROR - Exception while create dataset data in Zenodo Failed to create deposition. Error details: {'status': 403, 'message': 'Permission denied.'}
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 69, in create_dataset
+    zenodo_response_json = zenodo_service.create_new_deposition(dataset)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/zenodo/services.py", line 178, in create_new_deposition
+    raise Exception(error_message)
+Exception: Failed to create deposition. Error details: {'status': 403, 'message': 'Permission denied.'}
+2025-11-08 14:59:48,743 - app.modules.dataset.routes - ERROR - Error al guardar dataset 10: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 281, in save_in_cart
+    dataset = dataset_service.get_or_404(dataset_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/services/BaseService.py", line 18, in get_or_404
+    return self.repository.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/repositories/BaseRepository.py", line 31, in get_or_404
+    return self.model.query.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_sqlalchemy/query.py", line 33, in get_or_404
+    abort(404, description=description)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/helpers.py", line 284, in abort
+    current_app.aborter(code, *args, **kwargs)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/werkzeug/exceptions.py", line 876, in __call__
+    raise self.mapping[code](*args, **kwargs)
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-08 15:14:01,072 - app.modules.dataset.routes - ERROR - Error al guardar dataset 10: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 281, in save_in_cart
+    dataset = dataset_service.get_or_404(dataset_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/services/BaseService.py", line 18, in get_or_404
+    return self.repository.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/repositories/BaseRepository.py", line 31, in get_or_404
+    return self.model.query.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_sqlalchemy/query.py", line 33, in get_or_404
+    abort(404, description=description)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/helpers.py", line 284, in abort
+    current_app.aborter(code, *args, **kwargs)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/werkzeug/exceptions.py", line 876, in __call__
+    raise self.mapping[code](*args, **kwargs)
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-08 15:14:24,173 - app.modules.dataset.routes - ERROR - Error al guardar dataset 11: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 281, in save_in_cart
+    dataset = dataset_service.get_or_404(dataset_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/services/BaseService.py", line 18, in get_or_404
+    return self.repository.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/core/repositories/BaseRepository.py", line 31, in get_or_404
+    return self.model.query.get_or_404(id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_sqlalchemy/query.py", line 33, in get_or_404
+    abort(404, description=description)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/helpers.py", line 284, in abort
+    current_app.aborter(code, *args, **kwargs)
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/werkzeug/exceptions.py", line 876, in __call__
+    raise self.mapping[code](*args, **kwargs)
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-08 16:39:10,315 - app - ERROR - Exception on /doi/10.1234/dataset4/ [GET]
+Traceback (most recent call last):
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/dataset/routes.py", line 256, in subdomain_index
+    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/practica/astronomiahub/app/modules/dataset/templates/dataset/view_dataset.html", line 1, in top-level template code
+    {% extends "base_template.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/templates/base_template.html", line 200, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/dataset/templates/dataset/view_dataset.html", line 275, in block 'content'
+    {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'hubfile_service' is undefined
+2025-11-08 16:39:10,336 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.

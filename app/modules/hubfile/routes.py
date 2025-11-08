@@ -93,3 +93,38 @@ def view_file(file_id):
             return jsonify({"success": False, "error": "File not found"}), 404
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+# Endpoint para guardar un archivo en el carrito
+@hubfile_bp.route("/file/save/<int:file_id>", methods=["POST"])
+def save_file(file_id):
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "You must be logged in to save files."})
+    try:
+        HubfileService().add_to_user_saved(file_id, current_user.id)
+        return jsonify({"success": True, "message": "File saved successfully", "saved": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Endpoint para eliminar un archivo del carrito
+@hubfile_bp.route("/file/unsave/<int:file_id>", methods=["POST"])
+def unsave_file(file_id):
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "error": "not_authenticated"})
+    try:
+        HubfileService().remove_from_user_saved(file_id, current_user.id)
+        return jsonify({"success": True, "message": "File removed successfully", "removed": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Endpoint para obtener la lista de archivos guardados por el usuario
+@hubfile_bp.route("/file/saved", methods=["GET"])
+def get_saved_files():
+    try:
+        saved_files = HubfileService().get_saved_files_for_user(current_user.id)
+        files_list = [file.to_dict() for file in saved_files]
+        return jsonify({"success": True, "files": files_list})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+

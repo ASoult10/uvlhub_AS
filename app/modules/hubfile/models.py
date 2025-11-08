@@ -7,6 +7,13 @@ from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
 
 
+# Tabla de asociación para los archivos guardados por los usuarios
+user_saved_files = db.Table(
+    "user_saved_files",
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id"), primary_key=True),
+)
+
 class Hubfile(db.Model):
     __tablename__ = "file"
     id = db.Column(db.Integer, primary_key=True)
@@ -14,6 +21,15 @@ class Hubfile(db.Model):
     checksum = db.Column(db.String(120), nullable=False)
     size = db.Column(db.Integer, nullable=False)
     feature_model_id = db.Column(db.Integer, db.ForeignKey("feature_model.id"), nullable=False)
+
+    # Relación: qué usuarios han guardado este archivo
+    saved_by_users = db.relationship(
+        "User",
+        secondary=user_saved_files,
+        back_populates="saved_files",
+        lazy="dynamic"
+    )
+
 
     def get_formatted_size(self):
         from app.modules.dataset.services import SizeService
