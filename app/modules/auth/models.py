@@ -16,6 +16,14 @@ class User(db.Model, UserMixin):
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
+    # Relación con los modelos guardados en el carrito
+    saved_datasets = db.relationship(
+        "DataSet",
+        secondary="saved_datasets",
+        backref=db.backref("saved_by_users", lazy="dynamic"),
+        lazy="dynamic",
+    )
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if "password" in kwargs:

@@ -6,6 +6,13 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 
 from app import db
 
+# Tabla para los datasets guardados
+saved_datasets = db.Table(
+    'saved_datasets',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('dataset_id', db.Integer, db.ForeignKey('data_set.id'), primary_key=True),
+)
+
 
 class PublicationType(Enum):
     NONE = "none"
@@ -162,3 +169,5 @@ class DOIMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
+
+

@@ -106,3 +106,27 @@ class DOIMappingRepository(BaseRepository):
 
     def get_new_doi(self, old_doi: str) -> str:
         return self.model.query.filter_by(dataset_doi_old=old_doi).first()
+
+# Repository para gestionar los datasets guardados por los usuarios
+class SavedDataSetRepository(BaseRepository):
+    def __init__(self):
+        from app.modules.auth.models import User 
+        super().__init__(User)
+
+    def is_saved(self, user, dataset_id: int) -> bool:
+        """Comprueba si el dataset ya está guardado por el usuario."""
+        return user.saved_datasets.filter_by(id=dataset_id).first() is not None
+
+    def add_to_saved(self, user, dataset):
+        """Guarda un dataset en la lista del usuario."""
+        user.saved_datasets.append(dataset)
+        self._commit()
+
+    def remove_from_saved(self, user, dataset):
+        """Elimina un dataset guardado."""
+        user.saved_datasets.remove(dataset)
+        self._commit()
+
+    def get_all_saved(self, user):
+        """Devuelve todos los datasets guardados por el usuario."""
+        return user.saved_datasets.order_by(DataSet.created_at.desc()).all()
