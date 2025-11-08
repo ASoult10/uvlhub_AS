@@ -55,6 +55,10 @@ def create_app(config_name="development"):
     error_handler_manager = ErrorHandlerManager(app)
     error_handler_manager.register_error_handlers()
 
+
+    #Setting up secret app key for 2FA
+    app.secret_key = os.environ["SECRET_KEY"]
+
     # Injecting environment variables into jinja context
     @app.context_processor
     def inject_vars_into_jinja():
