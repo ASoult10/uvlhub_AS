@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from flask_login import UserMixin
+import pyotp, qrcode
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
@@ -11,6 +12,7 @@ class User(db.Model, UserMixin):
 
     email = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
+    user_secret = db.Column(db.String(256), nullable = True, default = "") #Secret for 2FA
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
@@ -25,12 +27,17 @@ class User(db.Model, UserMixin):
         super(User, self).__init__(**kwargs)
         if "password" in kwargs:
             self.set_password(kwargs["password"])
+        if "user_secret" in kwargs:
+            self.set_user_secret(kwargs["user_secret"])
 
     def __repr__(self):
         return f"<User {self.email}>"
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
+
+    def set_user_secret(self, secret):
+        self.user_secret = generate_password_hash(secret)
 
     def check_password(self, password):
         return check_password_hash(self.password, password)

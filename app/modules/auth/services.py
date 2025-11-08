@@ -1,5 +1,7 @@
 import os
 
+import pyotp
+
 from flask_login import current_user, login_user
 
 from app.modules.auth.models import User
