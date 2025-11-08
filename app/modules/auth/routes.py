@@ -47,6 +47,14 @@ def login():
 
     return render_template("auth/login_form.html", form=form)
 
+@auth_bp.route("/2fa-setup", methods=["GET", "POST"])
+def two_factor_setup():
+    if current_user.is_authenticated:
+        if current_user.user_secret:
+           return redirect(url_for("public.index"))
+
+    return render_template("auth/two_factor_setup.html")
+
 
 @auth_bp.route("/logout")
 def logout():
