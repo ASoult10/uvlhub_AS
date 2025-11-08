@@ -19,6 +19,8 @@ function send_query() {
             const searchCriteria = {
                 csrf_token: csrfToken,
                 query: document.querySelector('#query').value,
+                date_after: document.querySelector('#date_after').value,
+                date_before: document.querySelector('#date_before').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };

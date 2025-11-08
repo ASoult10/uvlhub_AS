@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import re
 
 import unidecode
@@ -12,7 +14,7 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", sorting="newest", publication_type="any", tags=[], **kwargs):
+    def filter(self, query="", date_after=None, date_before=None, author="", sorting="newest", publication_type="any", tags=[], **kwargs):
         # Normalize and remove unwanted characters
         normalized_query = unidecode.unidecode(query).lower()
         cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
@@ -39,6 +41,14 @@ class ExploreRepository(BaseRepository):
             .filter(or_(*filters))
             .filter(DSMetaData.dataset_doi.isnot(None))  # Exclude datasets with empty dataset_doi
         )
+
+        if date_after:
+            date_after_dt = datetime.strptime(date_after, "%Y-%m-%d")
+            datasets = datasets.filter(self.model.created_at >= date_after_dt)
+
+        if date_before:
+            date_before_dt = datetime.strptime(date_before, "%Y-%m-%d")
+            datasets = datasets.filter(DataSet.created_at <= date_before_dt)
 
         if publication_type != "any":
             matching_type = None
