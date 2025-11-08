@@ -1,5 +1,4 @@
-2025-11-08 19:06:23,147 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-11-08 19:12:01,629 - app - ERROR - Exception on /file/saved/view [GET]
+2025-11-08 19:03:13,239 - app - ERROR - Exception on /file/saved/view [GET]
 Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -19,34 +18,9 @@ Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 142, in view_saved_files
-    "dataset_title": f.feature_model.dataset.ds_meta_data.title,
-                     ^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'FeatureModel' object has no attribute 'dataset'. Did you mean: 'data_set'?
-2025-11-08 19:12:01,650 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-11-08 19:15:53,395 - app - ERROR - Exception on /file/saved/view [GET]
-Traceback (most recent call last):
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
-    return original_handler(e)
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 146, in view_saved_files
-    return render_template(
-           ^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 137, in view_saved_files
+    return render_template("hubfile/saved_files.html", saved_files=saved_files)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
     return _render(app, template, context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,20 +37,15 @@ Traceback (most recent call last):
   File "/home/practica/astronomiahub/app/templates/base_template.html", line 208, in top-level template code
     {% block content %}{% endblock %}
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 74, in block 'content'
-    <a href="{{ url_for('hubfile.download_all_saved') }}" class="btn btn-primary">
+  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 39, in block 'content'
+    {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'hubfile.download_all_saved'. Did you mean 'hubfile.download_file' instead?
-2025-11-08 19:15:53,526 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-11-08 19:20:43,534 - app - ERROR - Exception on /file/saved/download_all [GET]
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'hubfile_service' is undefined
+2025-11-08 19:03:13,259 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-11-08 19:05:14,330 - app - ERROR - Exception on /file/saved/view [GET]
 Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -96,12 +65,32 @@ Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 168, in download_all_saved
-    if os.path.exists(file.path):
-                      ^^^^^^^^^
-AttributeError: 'Hubfile' object has no attribute 'path'
-2025-11-08 19:20:43,562 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-11-08 19:24:02,923 - app - ERROR - Exception on /file/saved/download_all [GET]
+  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 137, in view_saved_files
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 1, in top-level template code
+    {% extends "base_template.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/templates/base_template.html", line 208, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 39, in block 'content'
+    {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'hubfile_service' is undefined
+2025-11-08 19:05:14,410 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-11-08 19:05:17,014 - app - ERROR - Exception on /file/saved/view [GET]
 Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -121,8 +110,28 @@ Traceback (most recent call last):
   File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 164, in download_all_saved
-    zip_buffer = io.BytesIO()
-                 ^^
-NameError: name 'io' is not defined. Did you forget to import 'io'
-2025-11-08 19:24:02,955 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+  File "/home/practica/astronomiahub/app/modules/hubfile/routes.py", line 137, in view_saved_files
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 1, in top-level template code
+    {% extends "base_template.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/templates/base_template.html", line 208, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/app/modules/hubfile/templates/hubfile/saved_files.html", line 39, in block 'content'
+    {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/astronomiahub/venv/lib/python3.12/site-packages/jinja2/environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'hubfile_service' is undefined
+2025-11-08 19:05:17,019 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.

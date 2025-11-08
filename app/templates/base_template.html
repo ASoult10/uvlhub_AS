@@ -109,6 +109,14 @@ chico sundermann">
                                 class="align-middle">My datasets</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar-item {{ 'active' if request.path.startswith('/file/saved') else '' }}">
+                        <a class="sidebar-link" href="/file/saved/view">
+                            <i class="align-middle" data-feather="bookmark"></i>
+                            <span class="align-middle">Saved models</span>
+                        </a>
+                    </li>
+
 
                     <li class="sidebar-header">
                         Options

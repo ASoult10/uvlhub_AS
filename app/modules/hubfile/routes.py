@@ -2,14 +2,22 @@ import os
 import uuid
 from datetime import datetime, timezone
 
-from flask import current_app, jsonify, make_response, request, send_from_directory
-from flask_login import current_user
+from flask import current_app, jsonify, make_response, request, send_from_directory, render_template, send_file
+from flask_login import current_user, login_required
 
 from app import db
 from app.modules.hubfile import hubfile_bp
 from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
 from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
+from app.modules.flamapy.routes import to_glencoe, to_cnf, to_splot
 
+import zipfile
+import io
+
+# Importaciones de Flamapy y tempfile (asumimos que están disponibles en el entorno)
+from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
+from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
+import tempfile
 
 @hubfile_bp.route("/file/download/<int:file_id>", methods=["GET"])
 def download_file(file_id):
@@ -128,3 +136,129 @@ def get_saved_files():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@hubfile_bp.route("/file/saved/view", methods=["GET"])
+@login_required
+def view_saved_files():
+    hubfile_service = HubfileService()
+    saved_files = hubfile_service.get_saved_files_for_user(current_user.id)
+
+    files_data = []
+    for f in saved_files:
+        files_data.append({
+            "id": f.id,
+            "name": f.name,
+            "dataset_title": f.feature_model.data_set.ds_meta_data.title,
+            "saved": hubfile_service.is_saved_by_user(f.id, current_user.id)
+        })
+
+    return render_template(
+        "hubfile/saved_files.html",
+        files_data=files_data
+    )
+
+# Endpoint para descargar todos los archivos guardados como un ZIP
+@hubfile_bp.route("/file/saved/download_all", methods=["GET"])
+@login_required
+def download_all_saved():
+    # Obtener el formato solicitado (uvl, glencoe, cnf, splot)
+    export_format = request.args.get("export_format", "uvl").lower()
+
+    saved_files = HubfileService().get_saved_files_for_user(current_user.id)
+
+    if not saved_files:
+        return "No saved files to download.", 404
+
+    # Asumimos que Flamapy está disponible; export_format controlará la conversión
+
+    # Cookie para registro de descargas (se usará la misma para todos los ficheros del ZIP)
+    user_cookie = request.cookies.get("file_download_cookie")
+    if not user_cookie:
+        user_cookie = str(uuid.uuid4())
+
+    # Creamos un ZIP en memoria
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w") as zipf:
+        for file in saved_files:
+            try:
+                # Construimos la ruta al archivo original
+                directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+                parent_directory_path = os.path.dirname(current_app.root_path)
+                original_path = os.path.join(parent_directory_path, directory_path, file.name)
+
+                if export_format == "uvl":
+                    # Añadimos el UVL original si existe
+                    if os.path.exists(original_path):
+                        zipf.write(original_path, arcname=file.name)
+                    else:
+                        print(f"Warning: File not found {original_path}")
+                else:
+                    # Para los formatos que requieren conversión, utilizamos flamapy como en las rutas individuales
+                    tmp = tempfile.NamedTemporaryFile(suffix=".tmp", delete=False)
+                    tmp_name = tmp.name
+                    tmp.close()
+
+                    try:
+                        # Leemos el modelo UVL y aplicamos la transformación según el formato
+                        hubfile = HubfileService().get_or_404(file.id)
+                        fm = UVLReader(hubfile.get_path()).transform()
+
+                        if export_format == "glencoe":
+                            out_name = f"{os.path.splitext(file.name)[0]}_glencoe.txt"
+                            GlencoeWriter(tmp_name, fm).transform()
+                        elif export_format == "splot":
+                            out_name = f"{os.path.splitext(file.name)[0]}_splot.txt"
+                            SPLOTWriter(tmp_name, fm).transform()
+                        elif export_format in ("cnf", "dimacs"):
+                            out_name = f"{os.path.splitext(file.name)[0]}_cnf.txt"
+                            sat = FmToPysat(fm).transform()
+                            DimacsWriter(tmp_name, sat).transform()
+                        else:
+                            # Formato desconocido -> fallback a UVL
+                            out_name = file.name
+                            if os.path.exists(original_path):
+                                zipf.write(original_path, arcname=out_name)
+                                # saltamos al siguiente archivo
+                                os.remove(tmp_name)
+                                continue
+
+                        # Si la transformación creó el tmp file, lo leemos y lo añadimos al ZIP
+                        if os.path.exists(tmp_name):
+                            with open(tmp_name, "rb") as f:
+                                zipf.writestr(out_name, f.read())
+                        else:
+                            print(f"Warning: Conversion output not found for file {file.id} (format={export_format})")
+
+                    finally:
+                        # Intentamos limpiar el temporal
+                        try:
+                            if os.path.exists(tmp_name):
+                                os.remove(tmp_name)
+                        except Exception:
+                            pass
+
+                # Creación del registro de descarga (opcional)
+                existing_record = HubfileDownloadRecord.query.filter_by(
+                    user_id=current_user.id, file_id=file.id, download_cookie=user_cookie
+                ).first()
+
+                if not existing_record:
+                    HubfileDownloadRecordService().create(
+                        user_id=current_user.id,
+                        file_id=file.id,
+                        download_date=datetime.now(timezone.utc),
+                        download_cookie=user_cookie,
+                    )
+
+            except Exception as e:
+                print(f"Error processing file {file.id} for export: {e}")
+                continue
+
+    zip_buffer.seek(0)
+    resp = make_response(send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"saved_files_{export_format}.zip",
+    ))
+    resp.set_cookie("file_download_cookie", user_cookie)
+    return resp
