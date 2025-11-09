@@ -1,6 +1,10 @@
 from flask import jsonify
 from app.modules.fakenodo import fakenodo_bp
+from app.modules.fakenodo.services import FakenodoService
+from flask import request
 
+
+fakenodo_service = FakenodoService()
 
 # Ruta de prueba de conexión (GET /fakenodo/api)
 @fakenodo_bp.route('', methods=["GET"])
@@ -40,6 +44,19 @@ def get_all_depositions():
         },
     ]
     return jsonify({"depositions": fake_depositions}), 200
+
+# Simulación de creación de un nuevo depósito (POST /fakenodo/api/deposit/depositions)
+@fakenodo_bp.route('/deposit/depositions', methods=['POST'])
+def create_new_deposition():
+    
+    dataset_data = request.get_json() or {}
+    fakenodo_dataset = type("FakeDataset", 
+                            (), 
+                            {"ds_meta_data": type("meta", (), {"title": dataset_data.get("title", "Untitled")})()}
+                            )
+    
+    response = fakenodo_service.create_new_deposition(fakenodo_dataset)
+    return jsonify(response), response.get("status_code", 201)
 
 
 # Simulación de subida de archivo (POST /fakenodo/api/deposit/depositions/<deposition_id>/files)
