@@ -55,6 +55,11 @@ class ExploreRepository(BaseRepository):
             formatted_name = func.lower(func.replace(func.trim(Author.name), ' ', ''))
             datasets = datasets.filter(DSMetaData.authors.any(formatted_name.like(f"%{author}%")))
 
+        if len(tags) > 0:
+            tag_conditions = [DSMetaData.tags.ilike(f"%{tag}%") for tag in tags]
+            if tag_conditions:
+                datasets = datasets.filter(or_(*tag_conditions))
+
         if publication_type != "any":
             matching_type = None
             for member in PublicationType:
@@ -64,9 +69,6 @@ class ExploreRepository(BaseRepository):
 
             if matching_type is not None:
                 datasets = datasets.filter(DSMetaData.publication_type == matching_type.name)
-
-        if tags:
-            datasets = datasets.filter(DSMetaData.tags.ilike(any_(f"%{tag}%" for tag in tags)))
 
         # Order by created_at
         if sorting == "oldest":

@@ -82,6 +82,18 @@
                             </div>
                         </div> 
 
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label" for="tags">Filter by tags</label>
+                                <select id="tags" name="tags" class="form-control select2"
+                                        multiple="multiple">
+                                    {% for tag in tags %}
+                                        <option value="{{ tag }}">{{ tag }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label" for="publication_type">Filter by publication
@@ -185,9 +197,16 @@
 
     <script>
         $(document).ready(function() {
-            $('.select2').select2({
+            $('#author').select2({
                 allowClear: false,
                 width: '100%'
+            });
+
+            $('#tags').select2({
+                allowClear: true,
+                width: '100%',
+                placeholder: "Select tags...",
+                closeOnSelect: false
             });
         });
     </script>

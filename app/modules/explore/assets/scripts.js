@@ -10,7 +10,7 @@ function send_query() {
     document.getElementById("results_not_found").style.display = "none";
     console.log("hide not found icon");
 
-    const filters = document.querySelectorAll('#filters input, #filters select, #filters select.select2, #filters [type="radio"]');
+    const filters = document.querySelectorAll('#filters input, #filters select:not(.select2), #filters [type="radio"]');
 
     filters.forEach(filter => {
         filter.removeEventListener('input', filterChangeHandler);
@@ -21,6 +21,10 @@ function send_query() {
     });
 
     $('#author').on('select2:select select2:unselect', function(e) {
+        filterChangeHandler.call(this, e);
+    });
+
+    $('#tags').on('select2:select select2:unselect', function(e) {
         filterChangeHandler.call(this, e);
     });
 }
@@ -34,6 +38,7 @@ function filterChangeHandler(e) {
         date_after: document.querySelector('#date_after').value,
         date_before: document.querySelector('#date_before').value,
         author: document.querySelector('#author').value,
+        tags: $('#tags').val() || [],
         publication_type: document.querySelector('#publication_type').value,
         sorting: document.querySelector('[name="sorting"]:checked').value,
     };
@@ -192,6 +197,10 @@ function clearFilters() {
     let authorSelect = document.querySelector('#author');
     authorSelect.value = "any";
     $(authorSelect).trigger('change');
+
+    // Reset the tags filter
+    let tagSelect = document.querySelector('#tags');
+    $(tagSelect).val(null).trigger('change');
 
     // Reset the publication type to its default value
     let publicationTypeSelect = document.querySelector('#publication_type');
