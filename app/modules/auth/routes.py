@@ -42,11 +42,52 @@ def login():
     form = LoginForm()
     if request.method == "POST" and form.validate_on_submit():
         if authentication_service.login(form.email.data, form.password.data):
-            return redirect(url_for("public.index"))
+            if current_user.has2FA:
+                return redirect(url_for("auth.login_with_two_factor"))
+            else:
+                return redirect(url_for("public.index"))
 
         return render_template("auth/login_form.html", form=form, error="Invalid credentials")
 
     return render_template("auth/login_form.html", form=form)
+
+#Redirects to the 2fa login form
+@auth_bp.route("/login/2fa-step", methods=["GET", "POST"])
+def login_with_two_factor():
+    
+    form = TwoFactorForm()
+    if request.method == "POST" and form.validate_on_submit():
+        if authentication_service.check_temp_code(form.code.data):
+            flash('Two-factor authentication worked', 'success')
+            return redirect(url_for("public.index"))
+        return render_template("auth/two_factor_login.html", form=form, error="Invalid 2FA code")
+    return render_template("auth/two_factor_login.html", form=form)
+
+
+#Checks the code for the 2fa login
+@auth_bp.route("/login/2fa-step/verify", methods=["POST"])
+def verify_2fa_login():
+
+
+    code = request.form.get("code").strip()
+    current_app.logger.debug("verify_2fa code=%r", code)
+
+    if authentication_service.check_temp_code(code):
+        # Update user's 2FA status
+        current_user.has2FA = True
+        db.session.add(current_user)
+        db.session.commit()
+        
+        # Success flash message
+        flash('Login with 2FA success', 'success')
+        return redirect(url_for("public.index"))
+    else:
+        # Error flash message
+        flash('Invalid verification code. Please try again.', 'error')
+        return redirect(url_for("auth.login_with_two_factor"))
+
+
+
 
 @auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
@@ -57,7 +98,7 @@ def two_factor_setup():
 
     user = current_user
     if not user.user_secret or user.user_secret == '':
-        secret = pyotp.random_base32()  # e.g., 16 chars
+        secret = pyotp.random_base32()  
         user.set_user_secret(secret)
         db.session.add(user)
         db.session.commit()
@@ -79,7 +120,7 @@ def verify_2fa():
 
     if authentication_service.check_temp_code(code):
         # Update user's 2FA status
-        current_user.two_factor_enabled = True
+        current_user.has2FA = True
         db.session.add(current_user)
         db.session.commit()
         
