@@ -185,3 +185,16 @@
     padding: 5px;
     border-radius: 3px;
 }
+
+/* Recommendation card hover effect - Galaxy glow */
+.recommendation-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.recommendation-card:hover {
+    background-color: #f0e6ff !important;
+    box-shadow: 0 0 20px rgba(255, 63, 164, 0.4), 0 0 30px rgba(87, 0, 179, 0.3);
+    transform: translateY(-2px);
+    border-left-color: #ff3fa4 !important;
+}

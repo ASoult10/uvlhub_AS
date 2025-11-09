@@ -27,9 +27,27 @@ def index():
     total_dataset_views = dataset_service.total_dataset_views()
     total_feature_model_views = feature_model_service.total_feature_model_views()
 
+    # Get latest datasets
+    latest_datasets = dataset_service.latest_synchronized()
+    logger.info(f"Found {len(latest_datasets)} latest datasets")
+    
+    # Get recommendations for each dataset
+    recommendations_map = {}
+    try:
+        for dataset in latest_datasets:
+            logger.info(f"Getting recommendations for dataset {dataset.id}: {dataset.ds_meta_data.title}")
+            recommendations = dataset_service.get_recommendations(dataset.id, limit=3)
+            logger.info(f"Found {len(recommendations)} recommendations for dataset {dataset.id}")
+            recommendations_map[dataset.id] = recommendations
+    except Exception as e:
+        logger.error(f"Error getting recommendations: {e}", exc_info=True)
+    
+    logger.info(f"Total datasets: {len(latest_datasets)}, recommendations_map size: {len(recommendations_map)}")
+
     return render_template(
         "public/index.html",
-        datasets=dataset_service.latest_synchronized(),
+        datasets=latest_datasets,
+        recommendations_map=recommendations_map,
         datasets_counter=datasets_counter,
         feature_models_counter=feature_models_counter,
         total_dataset_downloads=total_dataset_downloads,

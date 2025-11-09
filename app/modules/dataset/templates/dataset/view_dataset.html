@@ -325,6 +325,41 @@
         </div>
         
         
+        <!-- Recommended Datasets Section -->
+        {% if recommendations and recommendations|length > 0 %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i data-feather="star"></i> Recommended Datasets
+                </h5>
+                <p class="text-muted mb-3" style="font-size: 0.9rem;">Based on similar tags and authors</p>
+                
+                {% for rec in recommendations %}
+                <div class="mb-2">
+                    <a href="/doi/{{ rec.dataset.ds_meta_data.dataset_doi }}/" class="text-decoration-none">
+                        <div class="recommendation-card p-2 rounded" style="background-color: #f8f9fa; border-left: 3px solid #5700b3;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="color: #5700b3; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px;">
+                                    {% if rec.dataset.ds_meta_data.title|length > 40 %}
+                                        {{ rec.dataset.ds_meta_data.title[:40] }}...
+                                    {% else %}
+                                        {{ rec.dataset.ds_meta_data.title }}
+                                    {% endif %}
+                                </strong>
+                                <span class="badge" style="background-color: #5700b3; font-size: 0.85rem; white-space: nowrap;">
+                                    {{ rec.score }}/10
+                                </span>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.85rem;">
+                                {{ rec.downloads }} downloads · {{ rec.coincidences }} match{{ 'es' if rec.coincidences != 1 else '' }}
+                            </small>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     
         <a href="/dataset/download/{{ dataset.id }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
             <i data-feather="download" class="center-button-icon"></i>

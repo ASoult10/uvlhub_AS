@@ -123,11 +123,41 @@ function send_query() {
 
                                     </div>
 
+                                    ${dataset.recommendations && dataset.recommendations.length > 0 ? `
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-2" style="font-size: 0.9rem;">
+                                                <i data-feather="star" style="width: 14px; height: 14px;"></i> Similar Datasets
+                                            </h6>
+                                            ${dataset.recommendations.map(rec => `
+                                                <div class="mb-2">
+                                                    <a href="${rec.url}" class="text-decoration-none">
+                                                        <div class="recommendation-card p-2 rounded" style="background-color: #f8f9fa; border-left: 3px solid #5700b3;">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <strong style="color: #5700b3; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; font-size: 0.85rem;">
+                                                                    ${rec.title.length > 50 ? rec.title.substring(0, 50) + '...' : rec.title}
+                                                                </strong>
+                                                                <span class="badge" style="background-color: #5700b3; font-size: 0.7rem; white-space: nowrap;">
+                                                                    ${rec.score}/10
+                                                                </span>
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                ${rec.downloads} downloads · ${rec.coincidences} match${rec.coincidences !== 1 ? 'es' : ''}
+                                                            </small>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+
                                 </div>
                             </div>
                         `;
 
                         document.getElementById('results').appendChild(card);
+                        feather.replace(); // Re-render feather icons
                     });
                 });
         });
