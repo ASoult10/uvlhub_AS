@@ -9,16 +9,6 @@
         <b>Latest</b> datasets
     </h1>
 
-    <!-- Debug info -->
-    <script>
-        console.log("datasets_with_recommendations exists:", {{ 'true' if datasets_with_recommendations else 'false' }});
-        console.log("datasets_with_recommendations length:", {{ datasets_with_recommendations|length if datasets_with_recommendations else 0 }});
-        console.log("datasets exists:", {{ 'true' if datasets else 'false' }});
-        console.log("datasets length:", {{ datasets|length if datasets else 0 }});
-        console.log("recommendations_map exists:", {{ 'true' if recommendations_map else 'false' }});
-        console.log("recommendations_map keys:", {{ recommendations_map.keys()|list if recommendations_map else [] }});
-    </script>
-
     <div class="row">
 
         <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
