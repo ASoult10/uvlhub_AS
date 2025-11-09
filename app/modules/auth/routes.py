@@ -1,8 +1,9 @@
-from flask import redirect, render_template, request, url_for
+from flask import current_app, redirect, render_template, request, url_for, flash
 from flask_login import current_user, login_user, logout_user
-
+import pyotp
 from app.modules.auth import auth_bp
-from app.modules.auth.forms import LoginForm, SignupForm
+from app import db
+from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorForm
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 
@@ -47,13 +48,48 @@ def login():
 
     return render_template("auth/login_form.html", form=form)
 
-@auth_bp.route("/2fa-setup", methods=["GET", "POST"])
+@auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
-    if current_user.is_authenticated:
-        if current_user.user_secret:
-           return redirect(url_for("public.index"))
+    if current_user.is_authenticated == False:
+        return redirect(url_for("public.index"))
+    
+    form = TwoFactorForm()
 
-    return render_template("auth/two_factor_setup.html")
+    user = current_user
+    if not user.user_secret or user.user_secret == '':
+        secret = pyotp.random_base32()  # e.g., 16 chars
+        user.set_user_secret(secret)
+        db.session.add(user)
+        db.session.commit()
+    else:
+        secret = user.user_secret
+
+    #uri with encoded information of the user and the provider
+    issuer = "ASTRONOMÍAHUB"
+    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.email, issuer_name=issuer)
+    qr_b64 = authentication_service.generate_qr_code_uri(uri)
+    form = TwoFactorForm()
+    
+    return render_template("auth/two_factor_setup.html", qr_b64 = qr_b64, form = form)
+
+@auth_bp.route("/2fa-setup/verify", methods=["POST"])
+def verify_2fa():
+    code = request.form.get("code").strip()
+    current_app.logger.debug("verify_2fa code=%r", code)
+
+    if authentication_service.check_temp_code(code):
+        # Update user's 2FA status
+        current_user.two_factor_enabled = True
+        db.session.add(current_user)
+        db.session.commit()
+        
+        # Success flash message
+        flash('Two-factor authentication has been successfully enabled for your account!', 'success')
+        return redirect(url_for("public.index"))
+    else:
+        # Error flash message
+        flash('Invalid verification code. Please try again.', 'error')
+        return redirect(url_for("auth.two_factor_setup"))
 
 
 @auth_bp.route("/logout")

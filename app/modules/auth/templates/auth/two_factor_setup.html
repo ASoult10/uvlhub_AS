@@ -6,11 +6,16 @@
 
 <h1 class="h2 mb-3"><b>TwoFactorTest</b></h1>
 
-<div class="row">
-    <div class="col-12">
-
-    </div>
-</div>
+<h2>Scan this QR Code in Google Authenticator</h2>
+    <img src="data:image/png;base64,{{qr_b64}}">
+    <form action="{{ url_for('auth.verify_2fa') }}" method="post">
+        {{ form.code.label(class="form-label") }}
+        {{ form.code(class="form-control",placeholder="Temporary Code") }}
+        {% for error in form.code.errors %}
+        <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
 
 
 {% endblock %}

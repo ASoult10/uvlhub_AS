@@ -17,3 +17,6 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField("Remember me")
     submit = SubmitField("Login")
 
+class TwoFactorForm(FlaskForm):
+    code = StringField("Input Temporary Code", validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField("Check Code")

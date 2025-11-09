@@ -12,7 +12,8 @@ class User(db.Model, UserMixin):
 
     email = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
-    user_secret = db.Column(db.String(256), nullable = True, default = "") #Secret for 2FA
+    user_secret = db.Column(db.String(256), nullable = True, default = pyotp.random_base32()) #Secret for 2FA
+    has2FA = db.Column(db.Boolean, nullable=False, default=False) #Indicates if 2FA is enabled
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
@@ -37,7 +38,7 @@ class User(db.Model, UserMixin):
         self.password = generate_password_hash(password)
 
     def set_user_secret(self, secret):
-        self.user_secret = generate_password_hash(secret)
+        self.user_secret = secret
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
