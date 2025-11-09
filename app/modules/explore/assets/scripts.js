@@ -10,128 +10,139 @@ function send_query() {
     document.getElementById("results_not_found").style.display = "none";
     console.log("hide not found icon");
 
-    const filters = document.querySelectorAll('#filters input, #filters select, #filters [type="radio"]');
+    const filters = document.querySelectorAll('#filters input, #filters select, #filters select.select2, #filters [type="radio"]');
 
     filters.forEach(filter => {
-        filter.addEventListener('input', () => {
-            const csrfToken = document.getElementById('csrf_token').value;
+        filter.removeEventListener('input', filterChangeHandler);
+        filter.removeEventListener('change', filterChangeHandler);
+        
+        filter.addEventListener('input', filterChangeHandler);
+        filter.addEventListener('change', filterChangeHandler);
+    });
 
-            const searchCriteria = {
-                csrf_token: csrfToken,
-                query: document.querySelector('#query').value,
-                date_after: document.querySelector('#date_after').value,
-                date_before: document.querySelector('#date_before').value,
-                publication_type: document.querySelector('#publication_type').value,
-                sorting: document.querySelector('[name="sorting"]:checked').value,
-            };
+    $('#author').on('select2:select select2:unselect', function(e) {
+        filterChangeHandler.call(this, e);
+    });
+}
 
-            console.log(document.querySelector('#publication_type').value);
+function filterChangeHandler(e) {
+    const csrfToken = document.getElementById('csrf_token').value;
 
-            fetch('/explore', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(searchCriteria),
-            })
-                .then(response => response.json())
-                .then(data => {
+    const searchCriteria = {
+        csrf_token: csrfToken,
+        query: document.querySelector('#query').value,
+        date_after: document.querySelector('#date_after').value,
+        date_before: document.querySelector('#date_before').value,
+        author: document.querySelector('#author').value,
+        publication_type: document.querySelector('#publication_type').value,
+        sorting: document.querySelector('[name="sorting"]:checked').value,
+    };
 
-                    console.log(data);
-                    document.getElementById('results').innerHTML = '';
+    console.log(document.querySelector('#publication_type').value);
 
-                    // results counter
-                    const resultCount = data.length;
-                    const resultText = resultCount === 1 ? 'dataset' : 'datasets';
-                    document.getElementById('results_number').textContent = `${resultCount} ${resultText} found`;
+    fetch('/explore', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(searchCriteria),
+    })
+    .then(response => response.json())
+    .then(data => {
 
-                    if (resultCount === 0) {
-                        console.log("show not found icon");
-                        document.getElementById("results_not_found").style.display = "block";
-                    } else {
-                        document.getElementById("results_not_found").style.display = "none";
-                    }
+        console.log(data);
+        document.getElementById('results').innerHTML = '';
 
+        // results counter
+        const resultCount = data.length;
+        const resultText = resultCount === 1 ? 'dataset' : 'datasets';
+        document.getElementById('results_number').textContent = `${resultCount} ${resultText} found`;
 
-                    data.forEach(dataset => {
-                        let card = document.createElement('div');
-                        card.className = 'col-12';
-                        card.innerHTML = `
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h3><a href="${dataset.url}">${dataset.title}</a></h3>
-                                        <div>
-                                            <span class="badge bg-primary" style="cursor: pointer;" onclick="set_publication_type_as_query('${dataset.publication_type}')">${dataset.publication_type}</span>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary">${formatDate(dataset.created_at)}</p>
-
-                                    <div class="row mb-2">
-
-                                        <div class="col-md-4 col-12">
-                                            <span class=" text-secondary">
-                                                Description
-                                            </span>
-                                        </div>
-                                        <div class="col-md-8 col-12">
-                                            <p class="card-text">${dataset.description}</p>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row mb-2">
-
-                                        <div class="col-md-4 col-12">
-                                            <span class=" text-secondary">
-                                                Authors
-                                            </span>
-                                        </div>
-                                        <div class="col-md-8 col-12">
-                                            ${dataset.authors.map(author => `
-                                                <p class="p-0 m-0">${author.name}${author.affiliation ? ` (${author.affiliation})` : ''}${author.orcid ? ` (${author.orcid})` : ''}</p>
-                                            `).join('')}
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row mb-2">
-
-                                        <div class="col-md-4 col-12">
-                                            <span class=" text-secondary">
-                                                Tags
-                                            </span>
-                                        </div>
-                                        <div class="col-md-8 col-12">
-                                            ${dataset.tags.map(tag => `<span class="badge bg-primary me-1" style="cursor: pointer;" onclick="set_tag_as_query('${tag}')">${tag}</span>`).join('')}
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row">
-
-                                        <div class="col-md-4 col-12">
-
-                                        </div>
-                                        <div class="col-md-8 col-12">
-                                            <a href="${dataset.url}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
-                                                View dataset
-                                            </a>
-                                            <a href="/dataset/download/${dataset.id}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
-                                                Download (${dataset.total_size_in_human_format})
-                                            </a>
-                                        </div>
+        if (resultCount === 0) {
+            console.log("show not found icon");
+            document.getElementById("results_not_found").style.display = "block";
+        } else {
+            document.getElementById("results_not_found").style.display = "none";
+        }
 
 
-                                    </div>
-
-                                </div>
+        data.forEach(dataset => {
+            let card = document.createElement('div');
+            card.className = 'col-12';
+            card.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3><a href="${dataset.url}">${dataset.title}</a></h3>
+                            <div>
+                                <span class="badge bg-primary" style="cursor: pointer;" onclick="set_publication_type_as_query('${dataset.publication_type}')">${dataset.publication_type}</span>
                             </div>
-                        `;
+                        </div>
+                        <p class="text-secondary">${formatDate(dataset.created_at)}</p>
 
-                        document.getElementById('results').appendChild(card);
-                    });
-                });
+                        <div class="row mb-2">
+
+                            <div class="col-md-4 col-12">
+                                <span class=" text-secondary">
+                                    Description
+                                </span>
+                            </div>
+                            <div class="col-md-8 col-12">
+                                <p class="card-text">${dataset.description}</p>
+                            </div>
+
+                        </div>
+
+                        <div class="row mb-2">
+
+                            <div class="col-md-4 col-12">
+                                <span class=" text-secondary">
+                                    Authors
+                                </span>
+                            </div>
+                            <div class="col-md-8 col-12">
+                                ${dataset.authors.map(author => `
+                                    <p class="p-0 m-0">${author.name}${author.affiliation ? ` (${author.affiliation})` : ''}${author.orcid ? ` (${author.orcid})` : ''}</p>
+                                `).join('')}
+                            </div>
+
+                        </div>
+
+                        <div class="row mb-2">
+
+                            <div class="col-md-4 col-12">
+                                <span class=" text-secondary">
+                                    Tags
+                                </span>
+                            </div>
+                            <div class="col-md-8 col-12">
+                                ${dataset.tags.map(tag => `<span class="badge bg-primary me-1" style="cursor: pointer;" onclick="set_tag_as_query('${tag}')">${tag}</span>`).join('')}
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-4 col-12">
+
+                            </div>
+                            <div class="col-md-8 col-12">
+                                <a href="${dataset.url}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
+                                    View dataset
+                                </a>
+                                <a href="/dataset/download/${dataset.id}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
+                                    Download (${dataset.total_size_in_human_format})
+                                </a>
+                            </div>
+
+
+                        </div>
+
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('results').appendChild(card);
         });
     });
 }
@@ -168,6 +179,19 @@ function clearFilters() {
     let queryInput = document.querySelector('#query');
     queryInput.value = "";
     // queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+
+    // Reset the after date filter
+    let dateAfterSelect = document.querySelector('#date_after');
+    dateAfterSelect.value = "";
+
+    // Reset the before date filter
+    let dateBeforeSelect = document.querySelector('#date_before');
+    dateBeforeSelect.value = "";
+
+    // Reset the author filter to default value
+    let authorSelect = document.querySelector('#author');
+    authorSelect.value = "any";
+    $(authorSelect).trigger('change');
 
     // Reset the publication type to its default value
     let publicationTypeSelect = document.querySelector('#publication_type');
