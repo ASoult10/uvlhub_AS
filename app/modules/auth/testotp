@@ -1,0 +1,3 @@
+import pyotp
+secret = "FSJSNLDZUUKAQMSWII5VQMLROYCFAGEP"
+print("current code:", pyotp.TOTP(secret).now())
