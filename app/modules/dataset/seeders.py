@@ -3,21 +3,15 @@ import shutil
 import uuid
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv # isort: skip
-
 from app.modules.auth.models import User
-from app.modules.dataset.models import (
-    Author,
-    DataSet,
-    DSDownloadRecord,
-    DSMetaData,
-    DSMetrics,
-    PublicationType,
-)
-from app.modules.featuremodel.models import FMMetaData, FeatureModel
+from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, DSMetrics, PublicationType
+from app.modules.featuremodel.models import FeatureModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from core.utils.utils import random_datetime
+
+from dotenv import load_dotenv  # isort: skip
+
 
 
 class DataSetSeeder(BaseSeeder):
