@@ -12,7 +12,7 @@ def index():
     if request.method == "GET":
         query = request.args.get("query", "")
         authors = Author.query.with_entities(Author.name).distinct().order_by(Author.name.asc()).all()
-        tag_strings = DSMetaData.query.with_entities(DSMetaData.tags).filter(DSMetaData.tags != None).all()
+        tag_strings = DSMetaData.query.with_entities(DSMetaData.tags).filter(DSMetaData.tags.isnot(None)).all()
         tags = set()
         for (tag_string,) in tag_strings:
             if tag_string:

@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 
 import unidecode
-from sqlalchemy import any_, func, or_
+from sqlalchemy import func, or_
 
 from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
 from app.modules.featuremodel.models import FeatureModel, FMMetaData
@@ -13,7 +13,8 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", date_after=None, date_before=None, author="any", sorting="newest", publication_type="any", tags=[], **kwargs):
+    def filter(self, query="", date_after=None, date_before=None, author="any", sorting="newest",
+               publication_type="any", tags=[], **kwargs):
         # Normalize and remove unwanted characters
         normalized_query = unidecode.unidecode(query).lower()
         cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
