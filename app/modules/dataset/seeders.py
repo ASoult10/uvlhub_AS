@@ -13,7 +13,6 @@ from core.utils.utils import random_datetime
 from dotenv import load_dotenv  # isort: skip
 
 
-
 class DataSetSeeder(BaseSeeder):
 
     priority = 2  # Lower priority
