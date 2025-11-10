@@ -1,9 +1,8 @@
+import re
 from datetime import datetime
 
-import re
-
 import unidecode
-from sqlalchemy import any_, or_, func
+from sqlalchemy import any_, func, or_
 
 from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
 from app.modules.featuremodel.models import FeatureModel, FMMetaData
