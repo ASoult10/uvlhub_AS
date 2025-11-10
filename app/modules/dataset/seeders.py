@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 from app.modules.auth.models import User
 from app.modules.dataset.models import (
     Author,
-    DSDownloadRecord,
     DataSet,
+    DSDownloadRecord,
     DSMetaData,
     DSMetrics,
     PublicationType,
