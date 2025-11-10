@@ -3,7 +3,7 @@ import shutil
 import uuid
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv # isort: skip
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import (
@@ -249,7 +249,7 @@ class DataSetSeeder(BaseSeeder):
         seeded_feature_models = self.seed(feature_models)
 
         # Create files, associate them with FeatureModels and copy files
-        load_dotenv()
+        load_dotenv()  # isort: skip
         working_dir = os.getenv("WORKING_DIR", "")
         src_folder = os.path.join(
             working_dir, "app", "modules", "dataset", "uvl_examples"
