@@ -1,9 +1,9 @@
 from flask import jsonify, render_template, request
 
+from app.modules.dataset.services import DataSetService
 from app.modules.explore import explore_bp
 from app.modules.explore.forms import ExploreForm
 from app.modules.explore.services import ExploreService
-from app.modules.dataset.services import DataSetService
 
 
 @explore_bp.route("/explore", methods=["GET", "POST"])

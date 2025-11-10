@@ -14,7 +14,7 @@ from app.modules.dataset.models import (
     DSMetrics,
     PublicationType,
 )
-from app.modules.featuremodel.models import FeatureModel, FMMetaData
+from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from core.utils.utils import random_datetime
