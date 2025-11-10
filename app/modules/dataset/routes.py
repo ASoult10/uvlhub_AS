@@ -256,7 +256,13 @@ def subdomain_index(doi):
 
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations))
+    resp = make_response(
+        render_template(
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            recommendations=recommendations,
+        )
+    )
     resp.set_cookie("view_cookie", user_cookie)
 
     return resp
@@ -275,4 +281,6 @@ def get_unsynchronized_dataset(dataset_id):
     # Get recommendations
     recommendations = dataset_service.get_recommendations(dataset.id, limit=5)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations)
+    return render_template(
+        "dataset/view_dataset.html", dataset=dataset, recommendations=recommendations
+    )

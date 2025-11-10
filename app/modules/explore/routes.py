@@ -16,23 +16,23 @@ def index():
     if request.method == "POST":
         criteria = request.get_json()
         datasets = ExploreService().filter(**criteria)
-        
+
         # Add recommendations for each dataset
         dataset_service = DataSetService()
         result = []
         for dataset in datasets:
             dataset_dict = dataset.to_dict()
             recommendations = dataset_service.get_recommendations(dataset.id, limit=3)
-            dataset_dict['recommendations'] = [
+            dataset_dict["recommendations"] = [
                 {
-                    'title': rec['dataset'].ds_meta_data.title,
-                    'url': f"/doi/{rec['dataset'].ds_meta_data.dataset_doi}/",
-                    'score': rec['score'],
-                    'downloads': rec['downloads'],
-                    'coincidences': rec['coincidences']
+                    "title": rec["dataset"].ds_meta_data.title,
+                    "url": f"/doi/{rec['dataset'].ds_meta_data.dataset_doi}/",
+                    "score": rec["score"],
+                    "downloads": rec["downloads"],
+                    "coincidences": rec["coincidences"],
                 }
                 for rec in recommendations
             ]
             result.append(dataset_dict)
-        
+
         return jsonify(result)
