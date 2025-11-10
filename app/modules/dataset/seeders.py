@@ -1,15 +1,24 @@
 import os
 import shutil
+import uuid
 from datetime import datetime, timezone
-from core.utils.utils import random_datetime
+
 from dotenv import load_dotenv
 
 from app.modules.auth.models import User
-from app.modules.dataset.models import Author, DSDownloadRecord, DataSet, DSMetaData, DSMetrics, PublicationType
+from app.modules.dataset.models import (
+    Author,
+    DSDownloadRecord,
+    DataSet,
+    DSMetaData,
+    DSMetrics,
+    PublicationType,
+)
 from app.modules.featuremodel.models import FeatureModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
-import uuid
+from core.utils.utils import random_datetime
+
 
 class DataSetSeeder(BaseSeeder):
 
@@ -27,7 +36,6 @@ class DataSetSeeder(BaseSeeder):
         ds_metrics = DSMetrics(number_of_models="5", number_of_features="50")
         seeded_ds_metrics = self.seed([ds_metrics])[0]
 
-
         # Create DSMetaData instances
         ds_meta_data_list = [
             DSMetaData(
@@ -44,7 +52,7 @@ class DataSetSeeder(BaseSeeder):
         ]
 
         # Additional DSMetaData with specific tags and author for testing Recommender System
-        # ID5: Different tag same author, old, 1st downloads. 
+        # ID5: Different tag same author, old, 1st downloads.
         ds_meta_data_list.append(
             DSMetaData(
                 deposition_id=5,
@@ -58,8 +66,7 @@ class DataSetSeeder(BaseSeeder):
             )
         )
 
-        #ID6: One coincidence tag same author, recent, middle road downloads.
-
+        # ID6: One coincidence tag same author, recent, middle road downloads.
         ds_meta_data_list.append(
             DSMetaData(
                 deposition_id=6,
@@ -72,9 +79,8 @@ class DataSetSeeder(BaseSeeder):
                 ds_metrics_id=seeded_ds_metrics.id,
             )
         )
-        
 
-        #ID7: Different tag different author, recent, no downloads, shouldnt show.
+        # ID7: Different tag different author, recent, no downloads, shouldnt show.
         ds_meta_data_list.append(
             DSMetaData(
                 deposition_id=7,
@@ -87,7 +93,6 @@ class DataSetSeeder(BaseSeeder):
                 ds_metrics_id=seeded_ds_metrics.id,
             )
         )
-
 
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
 
@@ -102,7 +107,7 @@ class DataSetSeeder(BaseSeeder):
             for i in range(4)
         ]
 
-        #Authors for testing datasets id 5 to 7
+        # Authors for testing datasets id 5 to 7
         authors.append(
             Author(
                 name="Author 1",
@@ -135,9 +140,9 @@ class DataSetSeeder(BaseSeeder):
             DataSet(
                 user_id=user1.id if i % 2 == 0 else user2.id,
                 ds_meta_data_id=seeded_ds_meta_data[i].id,
-                created_at= random_datetime(
+                created_at=random_datetime(
                     datetime(2020, 1, 1, tzinfo=timezone.utc),
-                    datetime.now(timezone.utc)
+                    datetime.now(timezone.utc),
                 ),
             )
             for i in range(4)
@@ -166,16 +171,16 @@ class DataSetSeeder(BaseSeeder):
         )
 
         seeded_datasets = self.seed(datasets)
-        #Finally we going to add a new seeder, for download count.
-        #To simulate download for the different datasets.
-        
+        # Finally we going to add a new seeder, for download count.
+        # To simulate download for the different datasets.
+
         download_records = []
         for _ in range(10):
             download_records.append(
                 DSDownloadRecord(
                     dataset_id=seeded_datasets[4].id,
                     download_date=datetime(2020, 6, 1, tzinfo=timezone.utc),
-                    download_cookie=str(uuid.uuid4())
+                    download_cookie=str(uuid.uuid4()),
                 )
             )
 
@@ -185,7 +190,7 @@ class DataSetSeeder(BaseSeeder):
                 DSDownloadRecord(
                     dataset_id=seeded_datasets[5].id,
                     download_date=datetime.now(timezone.utc),
-                    download_cookie=str(uuid.uuid4())
+                    download_cookie=str(uuid.uuid4()),
                 )
             )
 
@@ -199,9 +204,9 @@ class DataSetSeeder(BaseSeeder):
                         dataset_id=seeded_datasets[i].id,
                         download_date=random_datetime(
                             datetime(2021, 1, 1, tzinfo=timezone.utc),
-                            datetime.now(timezone.utc)
+                            datetime.now(timezone.utc),
                         ),
-                        download_cookie=str(uuid.uuid4())
+                        download_cookie=str(uuid.uuid4()),
                     )
                 )
 
@@ -235,7 +240,10 @@ class DataSetSeeder(BaseSeeder):
         self.seed(fm_authors)
 
         feature_models = [
-            FeatureModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
+            FeatureModel(
+                data_set_id=seeded_datasets[i // 3].id,
+                fm_meta_data_id=seeded_fm_meta_data[i].id,
+            )
             for i in range(12)
         ]
         seeded_feature_models = self.seed(feature_models)
@@ -243,14 +251,20 @@ class DataSetSeeder(BaseSeeder):
         # Create files, associate them with FeatureModels and copy files
         load_dotenv()
         working_dir = os.getenv("WORKING_DIR", "")
-        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
+        src_folder = os.path.join(
+            working_dir, "app", "modules", "dataset", "uvl_examples"
+        )
         for i in range(12):
             file_name = f"file{i+1}.uvl"
             feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
+            dataset = next(
+                ds for ds in seeded_datasets if ds.id == feature_model.data_set_id
+            )
             user_id = dataset.user_id
 
-            dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
+            dest_folder = os.path.join(
+                working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}"
+            )
             os.makedirs(dest_folder, exist_ok=True)
             shutil.copy(os.path.join(src_folder, file_name), dest_folder)
 
