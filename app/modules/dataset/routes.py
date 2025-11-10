@@ -281,6 +281,4 @@ def get_unsynchronized_dataset(dataset_id):
     # Get recommendations
     recommendations = dataset_service.get_recommendations(dataset.id, limit=5)
 
-    return render_template(
-        "dataset/view_dataset.html", dataset=dataset, recommendations=recommendations
-    )
+    return render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations)

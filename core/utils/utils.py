@@ -10,6 +10,4 @@ def random_datetime(start, end):
 
 
 # Example usage in your seeder:
-created_at = random_datetime(
-    datetime(2020, 1, 1, tzinfo=timezone.utc), datetime.now(timezone.utc)
-)
+created_at = random_datetime(datetime(2020, 1, 1, tzinfo=timezone.utc), datetime.now(timezone.utc))

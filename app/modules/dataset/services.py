@@ -151,9 +151,7 @@ class DataSetService(BaseService):
 
         Only datasets with at least one tag or author match are recommended.
         """
-        logger.info(
-            f"=== get_recommendations called for dataset_id={dataset_id}, limit={limit} ==="
-        )
+        logger.info(f"=== get_recommendations called for dataset_id={dataset_id}, limit={limit} ===")
 
         # Get the current dataset
         current_dataset = self.repository.get_by_id(dataset_id)
@@ -166,15 +164,9 @@ class DataSetService(BaseService):
         # Get current dataset's tags and authors
         current_tags = set()
         if current_dataset.ds_meta_data.tags:
-            current_tags = {
-                tag.strip().lower()
-                for tag in current_dataset.ds_meta_data.tags.split(",")
-            }
+            current_tags = {tag.strip().lower() for tag in current_dataset.ds_meta_data.tags.split(",")}
 
-        current_authors = {
-            author.name.strip().lower()
-            for author in current_dataset.ds_meta_data.authors
-        }
+        current_authors = {author.name.strip().lower() for author in current_dataset.ds_meta_data.authors}
 
         logger.info(f"Current tags: {current_tags}")
         logger.info(f"Current authors: {current_authors}")
@@ -193,14 +185,9 @@ class DataSetService(BaseService):
         for dataset in all_datasets:
             dataset_tags = set()
             if dataset.ds_meta_data.tags:
-                dataset_tags = {
-                    tag.strip().lower()
-                    for tag in dataset.ds_meta_data.tags.split(",")
-                }
+                dataset_tags = {tag.strip().lower() for tag in dataset.ds_meta_data.tags.split(",")}
 
-            dataset_authors = {
-                author.name.strip().lower() for author in dataset.ds_meta_data.authors
-            }
+            dataset_authors = {author.name.strip().lower() for author in dataset.ds_meta_data.authors}
 
             # Check for any coincidence
             tag_matches = current_tags & dataset_tags
@@ -211,11 +198,7 @@ class DataSetService(BaseService):
                 total_coincidences = len(tag_matches) + len(author_matches)
 
                 # Get download count
-                download_count = (
-                    self.dsdownloadrecord_repository.count_downloads_for_dataset(
-                        dataset.id
-                    )
-                )
+                download_count = self.dsdownloadrecord_repository.count_downloads_for_dataset(dataset.id)
 
                 logger.info(
                     f"  Candidate: {dataset.ds_meta_data.title} - "
@@ -302,13 +285,9 @@ class DataSetService(BaseService):
         # Sort by score (descending) and limit results
         recommendations.sort(key=lambda x: x["score"], reverse=True)
 
-        logger.info(
-            f"Returning {len(recommendations[:limit])} recommendations (sorted by score)"
-        )
+        logger.info(f"Returning {len(recommendations[:limit])} recommendations (sorted by score)")
         for i, rec in enumerate(recommendations[:limit], 1):
-            logger.info(
-                f"  {i}. {rec['dataset'].ds_meta_data.title} - Score: {rec['score']}"
-            )
+            logger.info(f"  {i}. {rec['dataset'].ds_meta_data.title} - Score: {rec['score']}")
 
         return recommendations[:limit]
 
