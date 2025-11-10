@@ -32,6 +32,9 @@ from app.modules.dataset.services import (
 )
 from app.modules.zenodo.services import ZenodoService
 
+from app.modules.hubfile.services import HubfileService
+from flask_login import current_user
+
 logger = logging.getLogger(__name__)
 
 
@@ -256,15 +259,16 @@ def subdomain_index(doi):
 
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
+
+    # Creamos el servicio de hubfile
+    hubfile_service = HubfileService()
+
     resp = make_response(
         render_template(
-            "dataset/view_dataset.html",
-            dataset=dataset,
-            recommendations=recommendations,
+            "dataset/view_dataset.html", dataset=dataset, hubfile_service=hubfile_service, current_user=current_user
         )
     )
     resp.set_cookie("view_cookie", user_cookie)
-
     return resp
 
 

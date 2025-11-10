@@ -16,6 +16,11 @@ class User(db.Model, UserMixin):
     data_sets = db.relationship("DataSet", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
+    # Relación: archivos guardados por este usuario
+    saved_files = db.relationship(
+        "Hubfile", secondary="user_saved_files", back_populates="saved_by_users", lazy="dynamic"
+    )
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if "password" in kwargs:
