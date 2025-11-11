@@ -27,3 +27,9 @@ class Token(db.Model):
 
     def __repr__(self):
         return f'Token<{self.id} for User {self.user_id}>'
+    
+    def __init__(self, **kwargs):
+        super(Token, self).__init__(**kwargs)
+
+    def is_expired(self, current_time):
+        return current_time >= self.expires_at
