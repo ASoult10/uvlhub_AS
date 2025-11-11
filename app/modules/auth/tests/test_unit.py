@@ -1,5 +1,9 @@
+import base64
+
+import pyotp
 import pytest
 from flask import url_for
+from app import db
 
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
@@ -102,3 +106,67 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+#2FA
+
+def test_generate_qr_code_uri():
+    uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
+    qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
+
+    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    assert isinstance(qr_b64, str)
+    img_bytes = base64.b64decode(qr_b64)
+    assert img_bytes[:4] == b"\x89PNG"
+
+def test_generate_qr_code_uri():
+    uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
+    qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
+
+    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    assert isinstance(qr_b64, str)
+    img_bytes = base64.b64decode(qr_b64)
+    assert img_bytes[:4] == b"\x89PNG"
+
+
+def test_check_temp_code_success():
+    """Test the authentication service check_temp_code method."""
+    # Create a user and set a known secret
+    user = AuthenticationService().create_with_profile(
+        name="Test", surname="User", email="totp_test@example.com", password="test1234"
+    )
+    secret = pyotp.random_base32()
+    user.set_user_secret(secret)
+    db.session.add(user)
+    db.session.commit()
+
+    # Generate current TOTP code
+    totp = pyotp.TOTP(secret).now()
+    
+    # Test that the code validates when user is logged in
+    # We simulate this by using the service with a mock current_user context
+    from unittest.mock import patch
+    with patch('app.modules.auth.services.current_user', user):
+        assert AuthenticationService().check_temp_code(totp) is True
+        
+def test_2fa_verify_route_invalid_code(test_client, clean_database):
+    # Create a user
+    email = "2fa_test2@example.com"
+    password = "test1234"
+    AuthenticationService().create_with_profile(name="Two", surname="Fa", email=email, password=password)
+
+    # Ensure the user has some secret
+    user = UserRepository().get_by_email(email)
+    secret = pyotp.random_base32()
+    user.set_user_secret(secret)
+    db.session.add(user)
+    db.session.commit()
+
+    # Login the user
+    resp = test_client.post("/login", data=dict(email=email, password=password), follow_redirects=True)
+    assert resp.status_code in (200, 302)
+
+    # Post an invalid code
+    resp = test_client.post("/2fa-setup/verify", data=dict(code="000000"), follow_redirects=True)
+    assert resp.request.path == url_for("auth.two_factor_setup")
+    assert b"Invalid verification code" in resp.data
