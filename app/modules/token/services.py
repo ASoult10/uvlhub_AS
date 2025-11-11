@@ -6,8 +6,9 @@ from app.modules.token.models import Token
 class TokenService(BaseService):
     
     def __init__(self):
-        super().__init__(TokenRepository())
-        self.repository = self.get_repository()
+        repository = TokenRepository()
+        super().__init__(repository)
+        self.repository = repository
     
     def get_token_by_id(self, token_id: int):
         return self.repository.get_token_by_id(token_id)
@@ -50,3 +51,5 @@ class TokenService(BaseService):
     def delete_token(self, token_id: int):
         token_to_delete = self.get_token_by_id(token_id)
         self.repository.delete_token(token_to_delete)
+
+service = TokenService()  

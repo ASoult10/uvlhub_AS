@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from app.modules.token import token_bp
-from app.modules.token.models import service as TokenService
+from app.modules.token.services import service as TokenService
 from app import db
 
 def jsonify_token(token):
