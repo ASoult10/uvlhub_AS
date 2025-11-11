@@ -24,6 +24,14 @@ class User(db.Model, UserMixin):
         "Hubfile", secondary="user_saved_files", back_populates="saved_by_users", lazy="dynamic"
     )
 
+    # Relación: tokens asociados a este usuario
+    tokens = db.relationship(
+        "Token",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if "password" in kwargs:
