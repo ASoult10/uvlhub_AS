@@ -133,3 +133,5 @@ WTForms==3.2.1
 zope.event==5.1.1
 zope.interface==7.2
 zstandard==0.23.0
+pyotp==2.9.0
+qrcode==8.2
