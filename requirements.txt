@@ -135,3 +135,4 @@ zope.interface==7.2
 zstandard==0.23.0
 pyotp==2.9.0
 qrcode==8.2
+Flask-Limiter==4.0.0
