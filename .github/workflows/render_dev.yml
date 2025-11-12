@@ -1,0 +1,24 @@
+name: Deploy to Render Development
+
+on:
+    push:
+      branches:
+        - trunk
+    pull_request:
+      branches:
+        - trunk
+
+jobs:
+
+  deploy:
+    name: Deploy to Render Development
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render Development
+        env:
+          deploy_url: ${{ secrets.RENDER_DEVELOPMENT_DEPLOY_HOOK_URL }}
+        run: |
+          curl "$deploy_url"
