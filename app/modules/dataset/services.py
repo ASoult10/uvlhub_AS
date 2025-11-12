@@ -48,6 +48,58 @@ class DataSetService(BaseService):
         self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
+    def create_from_dict(self, dataset_info: dict, current_user) -> DataSet:
+    
+        from app.modules.dataset.models import PublicationType
+
+        def normalize_publication_type(value: str) -> str:
+            if not value:
+                return "NONE"
+            v = str(value).lower().strip()
+            for pt in PublicationType:
+                if pt.value == v:
+                    return pt.name
+            return "NONE"
+
+        title = dataset_info.get("title")
+        description = dataset_info.get("description", "")
+        tags = dataset_info.get("tags", [])
+        publication_type = normalize_publication_type(dataset_info.get("publication_type"))
+        publication_doi = dataset_info.get("publication_doi")
+        dataset_doi = dataset_info.get("dataset_doi")
+        version = dataset_info.get("version", "1.0")
+        authors_in = dataset_info.get("authors", [])
+
+        if not title or not str(title).strip():
+            raise ValueError("Title is required in dataset_info")
+
+        try:
+            dsmetadata = self.dsmetadata_repository.create(
+                title=title,
+                description=description,
+                publication_type=publication_type,
+                publication_doi=publication_doi,
+                dataset_doi=dataset_doi,
+                version=version,
+                tags=",".join(tags) if isinstance(tags, list) else str(tags),
+            )
+            for a in authors_in:
+                author = self.author_repository.create(
+                    commit=False,
+                    ds_meta_data_id=dsmetadata.id,
+                    name=a.get("name"),
+                    affiliation=a.get("affiliation", ""),
+                    orcid=a.get("orcid", ""),
+                )
+                dsmetadata.authors.append(author)
+
+            dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+            self.repository.session.commit()
+            return dataset
+        except Exception as exc:
+            self.repository.session.rollback()
+            raise exc
+
 
     def move_feature_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()

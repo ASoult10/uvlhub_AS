@@ -5,6 +5,8 @@ from flask import request
 from sqlalchemy import Enum as SQLAlchemyEnum
 
 from app import db
+# ✅ añadido: mixin para lógica común entre tipos de dataset
+from app.modules.dataset.base import BaseDataset
 
 
 class PublicationType(Enum):
@@ -64,7 +66,8 @@ class DSMetaData(db.Model):
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
 
-class DataSet(db.Model):
+# ✅ cambiado: ahora DataSet hereda de BaseDataset para soportar hooks/validaciones comunes
+class DataSet(BaseDataset, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
