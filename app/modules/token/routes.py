@@ -1,5 +1,6 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
 from app.modules.token import token_bp
 from app.modules.token.services import service as TokenService
 from app import db
@@ -39,6 +40,29 @@ def get_token_by_code(self, code):
 def get_all_tokens_by_user():
     tokens = TokenService.get_all_tokens_by_user(current_user.id)
     return jsonify([jsonify_token(token) for token in tokens]), 200
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    claims = get_jwt()
+    jti = claims.get("jti")
+
+    # Verifica que el refresh token no esté revocado (si no usas token_in_blocklist this is done automatically)
+    # Si implementas rotación: marca el refresh antiguo como revoked y crea uno nuevo
+    # Ejemplo: TokenService.revoke_by_jti(jti)
+    TokenService.revoke_token_by_jti(jti)  # implementa esta función si la necesitas
+
+    new_access = create_access_token(identity=identity)
+
+    # Opcional: crea un nuevo refresh (rotación) y guarda en DB
+    new_refresh = create_refresh_token(identity=identity)
+    decoded = decode_token(new_refresh)
+    new_jti = decoded.get("jti")
+    expires_at = datetime.utcfromtimestamp(decoded.get("exp"))
+    TokenService.save_token(user_id=identity, code=new_refresh, type="refresh", is_active=True, expires_at=expires_at, jti=new_jti)
+
+    return jsonify(access_token=new_access, refresh_token=new_refresh), 200
 
 @token_bp.route('/token/revoke/<int:token_id>', methods=['DELETE'])
 @login_required

@@ -1,6 +1,9 @@
 from app.modules.token.repositories import TokenRepository
 from core.services.BaseService import BaseService
-from app.modules.token.models import Token
+from app.modules.token.models import Token, TokenType
+from flask_jwt_extended import create_access_token, create_refresh_token, decode_token
+from flask import request, current_app
+from datetime import datetime
 
 
 class TokenService(BaseService):
@@ -29,11 +32,59 @@ class TokenService(BaseService):
             return True
         return False
 
-    def revoke_all_tokens_for_user(self, user_id: int) -> int:
+    def revoke_all_tokens_for_user(self, user_id: int):
         tokens_to_revoke = self.get_all_tokens_by_user(user_id)
         for token in tokens_to_revoke:
                 self.edit_token(token.id, is_active=False)
         return len(tokens_to_revoke)
+
+    def create_tokens(self, user_id: int, device_info: str, location_info: str):
+
+        access_token = create_access_token(identity=user_id) # additional_claims={"roles": getattr(user, "roles", [])}
+        refresh_token = create_refresh_token(identity=user_id)
+
+        decoded_refresh = decode_token(refresh_token)
+        refresh_jti = decoded_refresh.get("jti")
+        exp_ts_refresh = decoded_refresh.get("exp")  # epoch seconds
+        expires_at_refresh = datetime.utcfromtimestamp(exp_ts_refresh)
+        refresh_token_data = {
+            "user_id": user_id,
+            "code": refresh_token,
+            "type": TokenType.REFRESH_TOKEN,
+            "is_active": True,
+            "expires_at": expires_at_refresh,
+            "device_info": device_info,
+            "location_info": location_info,
+            "jti": refresh_jti
+        }
+
+        decoded_access = decode_token(access_token)
+        access_jti = decoded_access.get("jti")
+        exp_ts_access = decoded_access.get("exp")  # epoch seconds
+        expires_at_access = datetime.utcfromtimestamp(exp_ts_access)
+        access_token_data = {
+            "user_id": user_id,
+            "parent_jti": refresh_jti,
+            "code": access_token,
+            "type": TokenType.ACCESS_TOKEN,
+            "is_active": True,
+            "expires_at": expires_at_access,
+            "device_info": device_info,
+            "location_info": location_info,
+            "jti": access_jti
+        }
+
+        try:
+            self.save_token(**refresh_token_data)
+            self.save_token(**access_token_data)
+        except Exception:
+            current_app.logger.exception("No se pudo guardar los tokens en DB")
+
+        return access_token, refresh_token
+    
+    def save_refresh_token(self, user_id, refresh_token, expires_at, device_info=None, jti=None):
+        token = Token(user_id=user_id, code=refresh_token, type=TokenType.REFRESH, is_active=True, expires_at=expires_at, device_info=device_info, jti=jti)
+        return self.save_token(token)
     
     def save_token(self, **kwargs):
         new_token = Token(**kwargs)

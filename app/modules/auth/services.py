@@ -3,6 +3,7 @@ import os
 import pyotp, qrcode
 import base64
 from io import BytesIO
+from flask import request
 from flask_login import current_user, login_user
 
 from app.modules.auth.models import User
@@ -11,18 +12,32 @@ from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+from app.modules.token.services import service as TokenService
 
 
 class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
+        
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
-            return True
+
+            user_id = user.id
+            device_info = request.user_agent.string if request else None
+            location_info = None  # TODO: Sacar Ubicacion desde request
+
+            access_token, refresh_token = TokenService.create_tokens(user_id, device_info, location_info)
+
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "user": {"id": user.id, "email": user.email}
+            }, 200
+
         return False
 
     def is_email_available(self, email: str) -> bool:

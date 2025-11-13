@@ -136,3 +136,5 @@ zstandard==0.23.0
 pyotp==2.9.0
 qrcode==8.2
 Flask-Limiter==4.0.0
+flask-jwt-extended==4.7.1
+PyJWT==2.10.1
