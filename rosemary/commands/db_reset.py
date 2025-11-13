@@ -39,8 +39,14 @@ def db_reset(clear_migrations, yes):
                 for table in reversed(meta.sorted_tables):
                     if not clear_migrations or table.name != "alembic_version":
                         conn.execute(table.delete())
+                        # Reset auto-increment counter for each table
+                        try:
+                            conn.execute(db.text(f"ALTER TABLE {table.name} AUTO_INCREMENT = 1"))
+                        except Exception:
+                            # Some tables might not have auto-increment, skip silently
+                            pass
                 trans.commit()  # End transaction
-            click.echo(click.style("All table data cleared.", fg="yellow"))
+            click.echo(click.style("All table data cleared and auto-increment counters reset.", fg="yellow"))
             subprocess.run(["flask", "db", "stamp", "head"], check=True)
         except Exception as e:
             click.echo(click.style(f"Error clearing table data: {e}", fg="red"))

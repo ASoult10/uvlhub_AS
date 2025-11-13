@@ -25,3 +25,6 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField("New Password", validators=[DataRequired()])
     confirm_password = PasswordField("Confirm New Password", validators=[DataRequired(), EqualTo("password", message="Passwords must match")])
     submit = SubmitField("Reset Password")
+class TwoFactorForm(FlaskForm):
+    code = StringField("Input Temporary Code", validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField("Check Code")

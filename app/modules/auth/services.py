@@ -1,5 +1,8 @@
 import os
 
+import pyotp, qrcode
+import base64
+from io import BytesIO
 from flask_login import current_user, login_user
 
 from app.modules.auth.models import User
@@ -78,6 +81,25 @@ class AuthenticationService(BaseService):
         if current_user.is_authenticated:
             return current_user.profile
         return None
+
+
+    def check_temp_code(self, code: str) -> bool:
+        user = current_user
+        if not user or not user.user_secret:
+            return False
+
+        totp = pyotp.TOTP(user.user_secret).now()
+        return code == totp
+    
+    def generate_qr_code_uri(self,uri: str):
+        qr = qrcode.QRCode(box_size=10, border=2)
+        qr.add_data(uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill='black', back_color='white')
+        tempImg = BytesIO()
+        img.save(tempImg, format="PNG")
+        qr_b64 = base64.b64encode(tempImg.getvalue()).decode("utf-8")
+        return qr_b64
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
