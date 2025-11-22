@@ -3,8 +3,9 @@ import os
 import pyotp, qrcode
 import base64
 from io import BytesIO
-from flask import request
+from flask import current_app, jsonify, make_response, request
 from flask_login import current_user, login_user
+from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
@@ -21,22 +22,38 @@ class AuthenticationService(BaseService):
         self.user_profile_repository = UserProfileRepository()
         
 
-    def login(self, email, password, remember=True):
+    def login(self, email, password, remember=True, return_redirect=False, redirect_url=None):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
 
-            user_id = str(user.id)
+            user_id = int(user.id)
             device_info = request.user_agent.string if request else None
             location_info = None  # TODO: Sacar Ubicacion desde request
 
             access_token, refresh_token = TokenService.create_tokens(user_id, device_info, location_info)
 
-            return {
+            if return_redirect and redirect_url:
+                from flask import redirect
+                response = redirect(redirect_url)
+                set_access_cookies(response, access_token)
+                set_refresh_cookies(response, refresh_token)
+                return response
+
+            response_data = {
+                "message": "Login successful",
+                "user": {
+                    "id": user.id,
+                    "email": user.email
+                },
                 "access_token": access_token,
-                "refresh_token": refresh_token,
-                "user": {"id": user.id, "email": user.email}
-            }, 200
+                "refresh_token": refresh_token
+            }
+            
+            response = make_response(jsonify(response_data), 200)
+            set_access_cookies(response, access_token)
+            set_refresh_cookies(response, refresh_token)
+            return response
 
         return False
 

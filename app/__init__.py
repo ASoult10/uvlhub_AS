@@ -31,6 +31,23 @@ def create_app(config_name="development"):
     config_manager = ConfigManager(app)
     config_manager.load_config(config_name=config_name)
 
+    # JWT Configuration
+    app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 900  # 15 minutes
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 7 * 24 * 3600  # 7 days
+    
+    # Configurar para usar cookies
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
+    app.config['JWT_COOKIE_SECURE'] = False # If True, only send cookies over HTTPS
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = True # Enable CSRF protection
+    app.config['JWT_COOKIE_SAMESITE'] = 'Lax' # 'Lax' or 'Strict' or 'None'
+    app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token_cookie'
+    app.config['JWT_REFRESH_COOKIE_NAME'] = 'refresh_token_cookie'
+    app.config['JWT_CSRF_IN_COOKIES'] = True # Store CSRF tokens in cookies
+    app.config['JWT_COOKIE_DOMAIN'] = None  # None = same domain as server
+    app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
+    app.config['JWT_REFRESH_COOKIE_PATH'] = '/'
+
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
