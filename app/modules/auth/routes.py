@@ -1,4 +1,4 @@
-from flask import current_app, redirect, render_template, request, url_for, flash
+from flask import current_app, jsonify, redirect, render_template, request, url_for, flash
 from flask_login import current_user, login_user, logout_user
 import pyotp
 from datetime import datetime, timezone
@@ -44,12 +44,26 @@ def login():
 
     form = LoginForm()
     if request.method == "POST" and form.validate_on_submit():
-        if authentication_service.login(form.email.data, form.password.data):
-            if current_user.has2FA:
-                return redirect(url_for("auth.login_with_two_factor"))
-            else:
-                return redirect(url_for("public.index"))
 
+        user = authentication_service.repository.get_by_email(form.email.data)
+
+        if user and user.check_password(form.password.data):
+            if user.has2FA:
+                redirect_url = url_for("auth.login_with_two_factor")
+            else:
+                redirect_url = url_for("public.index")
+            
+            response = authentication_service.login(
+                form.email.data,
+                form.password.data,
+                form.remember_me.data,
+                return_redirect=True,
+                redirect_url=redirect_url
+            )
+            
+            if response:
+                return response
+        
         return render_template("auth/login_form.html", form=form, error="Invalid credentials")
 
     return render_template("auth/login_form.html", form=form)

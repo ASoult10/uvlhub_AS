@@ -184,6 +184,27 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'file_id')
     )
+    op.create_table('fakenodo',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('token',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('code', sa.String(length=512), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('parent_jti', sa.String(length=128), nullable=True),
+    sa.Column('type', sa.Enum('ACCESS_TOKEN', 'REFRESH_TOKEN', name='token_type', native_enum=False), nullable=False),
+    sa.Column('expires_at', sa.DateTime(), nullable=False),
+    sa.Column('jti', sa.String(length=128), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('device_info', sa.String(length=256), nullable=False),
+    sa.Column('location_info', sa.String(length=256), nullable=False),
+    sa.ForeignKeyConstraint(['parent_jti'], ['token.jti'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('jti')
+    )
     # ### end Alembic commands ###
 
 
@@ -207,4 +228,6 @@ def downgrade():
     op.drop_table('fm_metrics')
     op.drop_table('ds_metrics')
     op.drop_table('doi_mapping')
+    op.drop_table('token')
+    op.drop_table('fakenodo')
     # ### end Alembic commands ###

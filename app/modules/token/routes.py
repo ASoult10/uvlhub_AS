@@ -1,5 +1,6 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
 from app.modules.token import token_bp
 from app.modules.token.services import service as TokenService
 from app import db
