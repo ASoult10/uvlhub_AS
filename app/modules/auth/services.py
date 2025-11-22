@@ -26,7 +26,7 @@ class AuthenticationService(BaseService):
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
 
-            user_id = user.id
+            user_id = str(user.id)
             device_info = request.user_agent.string if request else None
             location_info = None  # TODO: Sacar Ubicacion desde request
 

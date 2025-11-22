@@ -10,6 +10,8 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
+from flask_jwt_extended import JWTManager
+
 
 # Load environment variables
 load_dotenv()
@@ -17,6 +19,9 @@ load_dotenv()
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
+
+# Initialize JWT Manager
+jwt = JWTManager()
 
 
 def create_app(config_name="development"):
@@ -29,6 +34,9 @@ def create_app(config_name="development"):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Initialize JWT with the app
+    jwt.init_app(app)
 
     # Register modules
     module_manager = ModuleManager(app)
@@ -55,8 +63,7 @@ def create_app(config_name="development"):
     error_handler_manager = ErrorHandlerManager(app)
     error_handler_manager.register_error_handlers()
 
-
-    #Setting up secret app key for 2FA
+    # Setting up secret app key for 2FA
     app.secret_key = os.environ["SECRET_KEY"]
 
     # Injecting environment variables into jinja context
@@ -69,6 +76,15 @@ def create_app(config_name="development"):
             "APP_VERSION": get_app_version(),
         }
 
+    # Initialize JWT blocklist loader
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from app.modules.token.models import Token
+        
+        jti = jwt_payload.get("jti")
+        token = Token.query.filter_by(jti=jti).first()
+        return not token or not token.is_active
+    
     return app
 
 
