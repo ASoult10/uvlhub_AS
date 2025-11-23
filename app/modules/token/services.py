@@ -16,8 +16,8 @@ class TokenService(BaseService):
     def get_token_by_id(self, token_id):
         return self.repository.get_token_by_id(token_id)
 
-    def get_token_by_code(self, code):
-        return self.repository.get_token_by_code(code)
+    def get_token_by_jti(self, jti):
+        return self.repository.get_token_by_jti(jti)
 
     def get_active_tokens_by_user(self, user_id):
         return self.repository.get_active_tokens_by_user(user_id)

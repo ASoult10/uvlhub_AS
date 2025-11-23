@@ -1,4 +1,5 @@
 from flask import current_app, jsonify, redirect, render_template, request, url_for, flash
+from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
 from flask_login import current_user, login_user, logout_user
 import pyotp
 from datetime import datetime, timezone
@@ -9,10 +10,11 @@ from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorForm,RecoverP
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 from app.modules.auth.models import User
+from app.modules.token.services import TokenService
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
-
+token_service = TokenService()
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 def show_signup_form():
@@ -80,12 +82,9 @@ def login_with_two_factor():
         return render_template("auth/two_factor_login.html", form=form, error="Invalid 2FA code")
     return render_template("auth/two_factor_login.html", form=form)
 
-
 #Checks the code for the 2fa login
 @auth_bp.route("/login/2fa-step/verify", methods=["POST"])
 def verify_2fa_login():
-
-
     code = request.form.get("code").strip()
     current_app.logger.debug("verify_2fa code=%r", code)
 
@@ -102,9 +101,6 @@ def verify_2fa_login():
         # Error flash message
         flash('Invalid verification code. Please try again.', 'error')
         return redirect(url_for("auth.login_with_two_factor"))
-
-
-
 
 @auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
@@ -151,9 +147,14 @@ def verify_2fa():
 
 
 @auth_bp.route("/logout")
+@jwt_required(optional=True)
 def logout():
     logout_user()
-    return redirect(url_for("public.index"))
+    token_to_revoke = token_service.get_token_by_jti(get_jwt()["jti"])
+    if token_to_revoke:
+        token_service.revoke_token(token_to_revoke.id, current_user.id)
+    unset_jwt_cookies(response := redirect(url_for("public.index")))
+    return response
 
 
 @auth_bp.route("/recover-password/", methods=["GET", "POST"])

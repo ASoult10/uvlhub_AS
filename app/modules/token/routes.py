@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
 from app.modules.token import token_bp
-from app.modules.token.services import service as TokenService
+from app.modules.token.services import TokenService
 from app import db
 
 def jsonify_token(token):
@@ -29,10 +29,10 @@ def get_token_by_id(self, token_id):
     token = TokenService.get_token_by_id(token_id)
     return jsonify_token(token), 200
 
-@token_bp.route('/token/get/code/<string:code>', methods=['GET'])
+@token_bp.route('/token/get/jti/<string:jti>', methods=['GET'])
 @login_required
-def get_token_by_code(self, code):
-    token = TokenService.get_token_by_code(code)
+def get_token_by_jti(jti):
+    token = TokenService.get_token_by_jti(jti)
     return jsonify_token(token), 200
 
 @token_bp.route('/token/get/all', methods=['GET'])

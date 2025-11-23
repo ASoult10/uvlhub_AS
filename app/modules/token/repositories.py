@@ -10,8 +10,8 @@ class TokenRepository(BaseRepository):
     def get_token_by_id(self, token_id: int):
         return self.model.query.filter_by(id=token_id).first_or_404()
 
-    def get_token_by_code(self, code: str):
-        return self.model.query.filter_by(code=code).first_or_404()
+    def get_token_by_jti(self, jti: str):
+        return self.model.query.filter_by(jti=jti).first_or_404()
 
     def get_active_tokens_by_user(self, user_id: int):
         return self.model.query.filter_by(user_id=user_id, is_active=True).all()

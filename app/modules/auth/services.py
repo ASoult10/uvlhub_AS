@@ -167,4 +167,3 @@ class AuthenticationService(BaseService):
                     f"AstronomiaHub Team"
         )
         mail.send(msg)
-        print(f"Sent password reset email to {email} with link: {reset_link}")
