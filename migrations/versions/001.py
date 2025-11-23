@@ -43,6 +43,8 @@ def upgrade():
     sa.Column('user_secret', sa.String(length=256), nullable=True),
     sa.Column('has2FA', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('reset_token_expiration', sa.DateTime(), nullable=True),
+    sa.Column('reset_token', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )

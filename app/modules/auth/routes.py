@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from app import db
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorForm,RecoverPasswordForm,ResetPasswordForm
-from app.modules.auth.services import AuthenticationService, send_password_recovery_email
+from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 from app.modules.auth.models import User
 
@@ -173,7 +173,7 @@ def recover_password():
         if user:
             token = user.generate_reset_token()
             reset_link = url_for("auth.reset_password", token=token, _external=True)
-            send_password_recovery_email(email, reset_link)
+            AuthenticationService.send_password_recovery_email(email, reset_link)
             flash("A password recovery email has been sent.", "info")
         
         return redirect(url_for("auth.recover_password"))
