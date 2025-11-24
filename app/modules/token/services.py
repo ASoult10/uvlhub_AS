@@ -32,8 +32,12 @@ class TokenService(BaseService):
 
     def revoke_token(self, token_id, user_id):
         token_to_revoke = self.get_token_by_id(token_id)
-        if token_to_revoke.user_id == user_id:
+        parent_jti = token_to_revoke.parent_jti if token_to_revoke else None
+        parent_token = self.get_token_by_jti(parent_jti) if parent_jti else None
+        if token_to_revoke and token_to_revoke.user_id == user_id:
             self.edit_token(token_id, is_active=False)
+            if parent_token and parent_token.user_id == user_id:
+                self.edit_token(parent_token.id, is_active=False)
             return True
         return False
 
