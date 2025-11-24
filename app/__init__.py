@@ -181,17 +181,17 @@ def create_app(config_name="development"):
                 parent_jti = get_jwt()["jti"]
 
                 device_info = request.user_agent.string if request else None
-                location_info = None
+                location_info = None # TODO: Sacar Ubicacion desde 
 
                 new_access_token = token_service.refresh_access_token(user_id, device_info, location_info, parent_jti)
 
                 response = redirect(request.path)
                 set_access_cookies(response, new_access_token)
-                print("OLEEEE")
                 return response
             
             except Exception:
                 """ If both tokens are invalid, log out the user and redirect to login page """
+                print("KKKKKK")
                 logout_user()
                 response = redirect(url_for("auth.login"))
                 unset_jwt_cookies(response)

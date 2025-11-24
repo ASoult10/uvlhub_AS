@@ -15,9 +15,14 @@ class TokenService(BaseService):
     
     def get_token_by_id(self, token_id):
         return self.repository.get_token_by_id(token_id)
-
+    
     def get_token_by_jti(self, jti):
         return self.repository.get_token_by_jti(jti)
+
+    def get_pair_of_tokens_by_jti(self, jti):
+        access_token = self.repository.get_token_by_jti(jti)
+        refresh_token = self.repository.get_token_by_jti(access_token.parent_jti) if access_token else None
+        return access_token, refresh_token
 
     def get_active_tokens_by_user(self, user_id):
         return self.repository.get_active_tokens_by_user(user_id)

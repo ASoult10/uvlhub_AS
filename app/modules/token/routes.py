@@ -29,12 +29,6 @@ def get_token_by_id(self, token_id):
     token = TokenService.get_token_by_id(token_id)
     return jsonify_token(token), 200
 
-@token_bp.route('/token/get/jti/<string:jti>', methods=['GET'])
-@login_required
-def get_token_by_jti(jti):
-    token = TokenService.get_token_by_jti(jti)
-    return jsonify_token(token), 200
-
 @token_bp.route('/token/get/all', methods=['GET'])
 @login_required
 def get_all_tokens_by_user():

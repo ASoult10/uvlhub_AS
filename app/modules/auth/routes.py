@@ -33,8 +33,13 @@ def show_signup_form():
             return render_template("auth/signup_form.html", form=form, error=f"Error creating user: {exc}")
 
         # Log user
-        login_user(user, remember=True)
-        return redirect(url_for("public.index"))
+        response = authentication_service.login(
+            email,
+            form.password.data,
+            remember=True,
+            redirect_url=url_for("public.index")
+        )
+        return response
 
     return render_template("auth/signup_form.html", form=form)
 
@@ -59,7 +64,6 @@ def login():
                 form.email.data,
                 form.password.data,
                 form.remember_me.data,
-                return_redirect=True,
                 redirect_url=redirect_url
             )
             
@@ -145,23 +149,29 @@ def verify_2fa():
         flash('Invalid verification code. Please try again.', 'error')
         return redirect(url_for("auth.two_factor_setup"))
 
-
 @auth_bp.route("/logout")
+@jwt_required(optional=True)
 def logout():
     response = redirect(url_for("public.index"))
 
     try:
-        jti = get_jwt()["jti"]
-        token_to_revoke = token_service.get_token_by_jti(jti)
-        token_service.revoke_token(token_to_revoke.id, current_user.id)
+        jwt_data = get_jwt()
+        if jwt_data and "jti" in jwt_data:
+            jti = jwt_data["jti"]
+            access_token, refresh_token = token_service.get_pair_of_tokens_by_jti(jti)
+            
+            if access_token:
+                token_service.revoke_token(access_token.id, current_user.id)
+            
+            if refresh_token:
+                token_service.revoke_token(refresh_token.id, current_user.id)
+                
     except Exception:
         pass
 
     unset_jwt_cookies(response)
     logout_user()
     return response
-
-
 
 @auth_bp.route("/recover-password/", methods=["GET", "POST"])
 def recover_password():
