@@ -21,8 +21,9 @@ class AuthorForm(FlaskForm):
             "orcid": self.orcid.data,
         }
 
-#este se quitará:
+
 class FeatureModelForm(FlaskForm):
+    # TODO: quitar FeatureModelForm
     uvl_filename = StringField("UVL Filename", validators=[DataRequired()])
     title = StringField("Title", validators=[Optional()])
     desc = TextAreaField("Description", validators=[Optional()])
@@ -52,7 +53,10 @@ class FeatureModelForm(FlaskForm):
             "tags": self.tags.data,
             "uvl_version": self.version.data,
         }
+
+
 class ObservationForm(FlaskForm):
+    """ Formulario para una observación asociada a un dataset. """
     object_name = StringField("Object name", validators=[DataRequired()])
     ra = StringField("RA (hh:mm:ss.sss)", validators=[DataRequired()])
     dec = StringField("DEC (+/-dd:mm:ss.sss)", validators=[DataRequired()])
@@ -60,6 +64,7 @@ class ObservationForm(FlaskForm):
     observation_date = DateField("Observation date", validators=[DataRequired()])
     filter_used = StringField("Filter used", validators=[Optional()])
     notes = TextAreaField("Notes", validators=[Optional()])
+
 
 class DataSetForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
@@ -73,9 +78,8 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    #este se quitará:
-    feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
-    observations= FieldList(FormField(ObservationForm), min_entries=1)
+    feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)  # TODO: quitar feature_models de DataSetForm
+    observations = FieldList(FormField(ObservationForm), min_entries=1)
 
     submit = SubmitField("Submit")
 
@@ -102,4 +106,9 @@ class DataSetForm(FlaskForm):
         return [author.get_author() for author in self.authors]
 
     def get_feature_models(self):
+        # TODO: quitar feature_models de DataSetForm
         return [fm.get_feature_model() for fm in self.feature_models]
+
+    def get_observations(self):
+        """ Devuelve una lista de diccionarios con los datos de las observaciones. """
+        return [obs.get_observation() for obs in self.observations]
