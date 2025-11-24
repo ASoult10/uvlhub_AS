@@ -8,10 +8,17 @@ class TokenRepository(BaseRepository):
         super().__init__(Token)
     
     def get_token_by_id(self, token_id: int):
-        return self.model.query.filter_by(id=token_id).first_or_404()
+        return self.model.query.filter_by(id=token_id).first()
 
     def get_token_by_jti(self, jti: str):
-        return self.model.query.filter_by(jti=jti).first_or_404()
+        return self.model.query.filter_by(jti=jti).first()
+    
+    def get_active_access_token_by_parent_jti(self, parent_jti: str):
+        return self.model.query.filter_by(
+            parent_jti=parent_jti,
+            type="Access_Token",
+            is_active=True
+        ).first()
 
     def get_active_tokens_by_user(self, user_id: int):
         return self.model.query.filter_by(user_id=user_id, is_active=True).all()

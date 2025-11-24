@@ -80,9 +80,33 @@ class TokenService(BaseService):
 
         return access_token, refresh_token
     
-    def save_refresh_token(self, user_id, refresh_token, expires_at, device_info=None, jti=None):
-        token = Token(user_id=user_id, code=refresh_token, type=TokenType.REFRESH, is_active=True, expires_at=expires_at, device_info=device_info, jti=jti)
-        return self.save_token(token)
+    def refresh_access_token(self, user_id, device_info, location_info, parent_jti):
+        old_access = self.repository.get_active_access_token_by_parent_jti(parent_jti)
+        if old_access:
+            self.edit_token(old_access.id, is_active=False)
+
+        access_token = create_access_token(identity=str(user_id))
+
+        decoded_access = decode_token(access_token)
+        access_jti = decoded_access.get("jti")
+        exp_ts_access = decoded_access.get("exp")
+        expires_at_access = datetime.utcfromtimestamp(exp_ts_access)
+
+        access_token_data = {
+            "user_id": user_id,
+            "parent_jti": parent_jti,
+            "code": access_token,
+            "type": TokenType.ACCESS_TOKEN,
+            "is_active": True,
+            "expires_at": expires_at_access,
+            "device_info": device_info,
+            "location_info": location_info,
+            "jti": access_jti
+        }
+
+        self.save_token(**access_token_data)
+
+        return access_token
     
     def save_token(self, **kwargs):
         new_token = Token(**kwargs)

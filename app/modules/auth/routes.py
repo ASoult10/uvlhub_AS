@@ -147,14 +147,20 @@ def verify_2fa():
 
 
 @auth_bp.route("/logout")
-@jwt_required(optional=True)
 def logout():
-    logout_user()
-    token_to_revoke = token_service.get_token_by_jti(get_jwt()["jti"])
-    if token_to_revoke:
+    response = redirect(url_for("public.index"))
+
+    try:
+        jti = get_jwt()["jti"]
+        token_to_revoke = token_service.get_token_by_jti(jti)
         token_service.revoke_token(token_to_revoke.id, current_user.id)
-    unset_jwt_cookies(response := redirect(url_for("public.index")))
+    except Exception:
+        pass
+
+    unset_jwt_cookies(response)
+    logout_user()
     return response
+
 
 
 @auth_bp.route("/recover-password/", methods=["GET", "POST"])

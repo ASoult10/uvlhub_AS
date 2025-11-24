@@ -1,7 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify, redirect, request, url_for
+from flask_login import logout_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
@@ -10,9 +11,7 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
-from flask_jwt_extended import JWTManager
-
-
+from flask_jwt_extended import JWTManager, get_jwt
 from flask_mail import Mail
 
 # Load environment variables
@@ -109,11 +108,94 @@ def create_app(config_name="development"):
     # Initialize JWT blocklist loader
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
-        from app.modules.token.models import Token
+        """Check if a JWT token has been revoked or expired"""
+        from app.modules.token.services import TokenService
+        from datetime import datetime, timezone
         
         jti = jwt_payload.get("jti")
-        token = Token.query.filter_by(jti=jti).first()
-        return not token or not token.is_active
+        token_service = TokenService()
+        token = token_service.get_token_by_jti(jti)
+        
+        if token is None or not token.is_active:
+            return True
+        
+        if token.expires_at:
+            expires_at_aware = token.expires_at
+            if expires_at_aware.tzinfo is None:
+                expires_at_aware = expires_at_aware.replace(tzinfo=timezone.utc)
+            
+            if expires_at_aware < datetime.now(timezone.utc):
+                return True
+        
+        return False
+
+    @app.before_request
+    def refresh_expired_access_token():
+        """Refresh expired access tokens using refresh tokens stored in cookies"""
+        from flask import request, redirect, url_for
+        from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, set_access_cookies, unset_jwt_cookies
+        from flask_login import logout_user
+        from app.modules.token.services import TokenService
+        from flask_jwt_extended.exceptions import JWTExtendedException
+
+        public_endpoints = [
+            'auth.login',
+            'auth.logout',
+            'auth.show_signup_form',
+            'auth.recover_password',
+            'auth.reset_password',
+            'auth.login_with_two_factor',
+            'auth.two_factor_setup',
+            'auth.verify_2fa',
+            'auth.verify_2fa_login',
+            'public.index',
+            'public.scripts',
+            'explore.index',
+            'team.index',
+            'dataset.subdomain_index',
+            'hubfile.view_file',
+            'hubfile.download_file',
+            'flamapy.check_uvl',
+            'flamapy.valid',
+            'static'
+        ]
+
+        if request.endpoint in public_endpoints:
+            return
+        
+        if request.is_json or request.path.startswith("/api"):
+            return
+
+        try:
+            """ First, try to verify the access token """
+            verify_jwt_in_request(locations=["cookies"])
+            return
+        except Exception:
+            try:
+                """ If access token is invalid, try to verify the refresh token """
+                token_service = TokenService()
+                verify_jwt_in_request(locations=["cookies"], refresh=True)
+                
+                user_identity = get_jwt_identity()
+                user_id = int(user_identity)
+                parent_jti = get_jwt()["jti"]
+
+                device_info = request.user_agent.string if request else None
+                location_info = None
+
+                new_access_token = token_service.refresh_access_token(user_id, device_info, location_info, parent_jti)
+
+                response = redirect(request.path)
+                set_access_cookies(response, new_access_token)
+                print("OLEEEE")
+                return response
+            
+            except Exception:
+                """ If both tokens are invalid, log out the user and redirect to login page """
+                logout_user()
+                response = redirect(url_for("auth.login"))
+                unset_jwt_cookies(response)
+                return response
     
     return app
 
