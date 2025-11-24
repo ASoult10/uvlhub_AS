@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import FieldList, FormField, SelectField, StringField, SubmitField, TextAreaField
+from wtforms import DateField, FieldList, FloatField, FormField, SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import URL, DataRequired, Optional
 
 from app.modules.dataset.models import PublicationType
@@ -21,7 +21,7 @@ class AuthorForm(FlaskForm):
             "orcid": self.orcid.data,
         }
 
-
+#este se quitará:
 class FeatureModelForm(FlaskForm):
     uvl_filename = StringField("UVL Filename", validators=[DataRequired()])
     title = StringField("Title", validators=[Optional()])
@@ -52,7 +52,14 @@ class FeatureModelForm(FlaskForm):
             "tags": self.tags.data,
             "uvl_version": self.version.data,
         }
-
+class ObservationForm(FlaskForm):
+    object_name = StringField("Object name", validators=[DataRequired()])
+    ra = StringField("RA (hh:mm:ss.sss)", validators=[DataRequired()])
+    dec = StringField("DEC (+/-dd:mm:ss.sss)", validators=[DataRequired()])
+    magnitude = FloatField("Magnitude", validators=[Optional()])
+    observation_date = DateField("Observation date", validators=[DataRequired()])
+    filter_used = StringField("Filter used", validators=[Optional()])
+    notes = TextAreaField("Notes", validators=[Optional()])
 
 class DataSetForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
@@ -66,7 +73,9 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
+    #este se quitará:
     feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
+    observations= FieldList(FormField(ObservationForm), min_entries=1)
 
     submit = SubmitField("Submit")
 

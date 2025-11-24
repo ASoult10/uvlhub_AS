@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum):
+class PublicationType(Enum): #se cambia al tipo de publicación en astronomía
     NONE = "none"
     ANNOTATION_COLLECTION = "annotationcollection"
     BOOK = "book"
@@ -29,7 +29,7 @@ class PublicationType(Enum):
     OTHER = "other"
 
 
-class Author(db.Model):
+class Author(db.Model):#se queda igual
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     affiliation = db.Column(db.String(120))
@@ -39,6 +39,35 @@ class Author(db.Model):
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
+
+class Observation(db.Model):#es nueva
+    id = db.Column(db.Integer, primary_key=True)
+    data_set_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
+
+    object_name = db.Column(db.String(255), nullable=False)
+    ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
+    dec = db.Column(db.String(64), nullable=False)  # +/-dd:mm:ss.sss
+    magnitude = db.Column(db.Float, nullable=True)
+    observation_date = db.Column(db.Date, nullable=False)
+    filter_used = db.Column(db.String(16), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+
+    dataset = db.relationship(
+        "DataSet",
+        backref=db.backref("astronomy_observations", lazy=True, cascade="all, delete"),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "object_name": self.object_name,
+            "ra": self.ra,
+            "dec": self.dec,
+            "magnitude": self.magnitude,
+            "observation_date": self.observation_date.isoformat() if self.observation_date else None,
+            "filter_used": self.filter_used,
+            "notes": self.notes or "",
+        }
 
 
 class DSMetrics(db.Model):
@@ -62,6 +91,7 @@ class DSMetaData(db.Model):
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey("ds_metrics.id"))
     ds_metrics = db.relationship("DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete")
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
+    observations = db.relationship("Observation", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
 
 class DataSet(db.Model):
@@ -72,7 +102,9 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
+    #esto tiene que desaparecer:
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
+
 
     def name(self):
         return self.ds_meta_data.title
