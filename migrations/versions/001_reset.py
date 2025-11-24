@@ -100,6 +100,17 @@ def upgrade():
     sa.ForeignKeyConstraint(['fm_meta_data_id'], ['fm_meta_data.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('observation',
+    sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+    sa.Column('object_name', sa.String(length=255), nullable=False),
+    sa.Column('ra', sa.String(length=64), nullable=False),      # hh:mm:ss.sss
+    sa.Column('dec', sa.String(length=64), nullable=False),     # +/-dd:mm:ss.sss
+    sa.Column('magnitude', sa.Float(), nullable=True),
+    sa.Column('observation_date', sa.Date(), nullable=False),
+    sa.Column('filter_used', sa.String(length=16), nullable=True),
+    sa.Column('notes', sa.Text(), nullable=True),
+    sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
+    )
     op.create_table('data_set',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),

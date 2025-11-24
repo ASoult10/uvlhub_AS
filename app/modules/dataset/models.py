@@ -52,10 +52,7 @@ class Observation(db.Model):#es nueva
     filter_used = db.Column(db.String(16), nullable=True)
     notes = db.Column(db.Text, nullable=True)
 
-    dataset = db.relationship(
-        "DataSet",
-        backref=db.backref("astronomy_observations", lazy=True, cascade="all, delete"),
-    )
+    ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
 
     def to_dict(self):
         return {
