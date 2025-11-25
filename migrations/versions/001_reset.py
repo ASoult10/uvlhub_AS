@@ -109,6 +109,7 @@ def upgrade():
     sa.Column('observation_date', sa.Date(), nullable=False),
     sa.Column('filter_used', sa.String(length=16), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
+    sa.Column('ds_meta_data_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
     )
     op.create_table('data_set',
