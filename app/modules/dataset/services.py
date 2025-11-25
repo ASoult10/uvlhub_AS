@@ -8,7 +8,7 @@ from typing import Optional
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord
+from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord, Observation
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -101,12 +101,36 @@ class DataSetService(BaseService):
         try:
             logger.info(f"Creating dsmetadata...: {form.get_dsmetadata()}")
             dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
+
+            # Autores del dataset (autor principal + adicionales)
             for author_data in [main_author] + form.get_authors():
                 author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
                 dsmetadata.authors.append(author)
 
+            # Crear dataset
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
+            # ==========================
+            # NUEVO: crear observaciones
+            # ==========================
+            observations_data = form.get_observations()
+            logger.info(f"Creating {len(observations_data)} observations from form...")
+            for obs_data in observations_data:
+                obs = Observation(
+                    data_set_id=dataset.id,
+                    ds_meta_data_id=dsmetadata.id,
+                    object_name=obs_data["object_name"],
+                    ra=obs_data["ra"],
+                    dec=obs_data["dec"],
+                    magnitude=obs_data["magnitude"],
+                    observation_date=obs_data["observation_date"],
+                    filter_used=obs_data["filter_used"],
+                    notes=obs_data["notes"],
+                )
+                self.repository.session.add(obs)
+            # ==========================
+
+            # Feature models
             for feature_model in form.feature_models:
                 uvl_filename = feature_model.uvl_filename.data
                 fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
@@ -126,6 +150,7 @@ class DataSetService(BaseService):
                     commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
                 )
                 fm.files.append(file)
+
             self.repository.session.commit()
         except Exception as exc:
             logger.info(f"Exception creating dataset from form...: {exc}")

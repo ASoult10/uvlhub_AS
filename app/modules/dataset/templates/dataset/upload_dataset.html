@@ -101,7 +101,7 @@
                         <h1 class="h3 mb-3 mt-4">
                           Authors
                           <a href="#" data-toggle="modal" data-target="#infoModal">
-                            <i data-feather="info"></i> <!-- Usamos "info" porque Feather no tiene un ícono específico llamado "feather" para más info -->
+                            <i data-feather="info"></i>
                           </a>
                         </h1>
 
@@ -189,6 +189,92 @@
 
                             </div>
 
+                        </div>
+
+                        {# ===========================
+                           OBSERVATIONS
+                           =========================== #}
+
+                        <h1 class="h3 mb-3 mt-4">
+                            Observations
+                        </h1>
+
+                        <div class="row" style="padding-left: 2rem">
+
+                            <div class="col-12">
+                                <div class="mb-3">
+
+                                    <div id="observations">
+                                        {% for subform in form.observations %}
+                                        <div class="row observation" {% if not loop.first %}
+                                             style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white"
+                                             {% endif %}
+                                        >
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.object_name.label(class="form-label") }}
+                                                {{ subform.form.object_name(class="form-control") }}
+                                                {% for error in subform.object_name.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.ra.label(class="form-label") }}
+                                                {{ subform.form.ra(class="form-control") }}
+                                                {% for error in subform.ra.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.dec.label(class="form-label") }}
+                                                {{ subform.form.dec(class="form-control") }}
+                                                {% for error in subform.dec.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.magnitude.label(class="form-label") }}
+                                                {{ subform.form.magnitude(class="form-control") }}
+                                                {% for error in subform.magnitude.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.observation_date.label(class="form-label") }}
+                                                {{ subform.form.observation_date(class="form-control") }}
+                                                {% for error in subform.observation_date.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.filter_used.label(class="form-label") }}
+                                                {{ subform.form.filter_used(class="form-control") }}
+                                                {% for error in subform.filter_used.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-12 mb-3">
+                                                {{ subform.form.notes.label(class="form-label") }}
+                                                {{ subform.form.notes(class="form-control") }}
+                                                {% for error in subform.notes.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <button type="button" class="btn btn-secondary" id="add_observation">
+                                        Add observation
+                                    </button>
+
+                                </div>
+                            </div>
 
                         </div>
 
@@ -214,7 +300,7 @@
 
         <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
 
-            <h1 class="h3 mb-3 mt-2">UVL models</h1>
+            <h1 class="h3 mb-3 mt-2">JSON files</h1>
 
             <div id="uploaded_models_form" style="padding-left: 2rem">
 
