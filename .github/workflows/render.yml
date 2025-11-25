@@ -39,3 +39,4 @@ jobs:
           release-type: simple
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
+          release-as: 1.0.1
