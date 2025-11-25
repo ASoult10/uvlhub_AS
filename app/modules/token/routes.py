@@ -23,6 +23,10 @@ def jsonify_token(token):
 @login_required
 def sessions_page():
     tokens = token_service.get_active_tokens_by_user(current_user.id)
+    current_token = get_jwt()
+    for token in tokens:
+        token.is_current = (token.jti == current_token['jti'])
+    
     return render_template('token/sessions.html', tokens=tokens)
 
 @token_bp.route('/token/get/id/<int:token_id>', methods=['GET'])

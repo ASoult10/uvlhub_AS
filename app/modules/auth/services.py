@@ -32,8 +32,8 @@ class AuthenticationService(BaseService):
             login_user(user, remember=remember)
 
             user_id = int(user.id)
-            device_info = request.user_agent.string if request else None
-            location_info = None  # TODO: Sacar Ubicacion desde request
+            device_info = TokenService.get_device_name_by_request(request) if request else None
+            location_info = TokenService.get_location_by_ip(request.remote_addr) if request else None
 
             access_token, refresh_token = TokenService.create_tokens(user_id, device_info, location_info)
 

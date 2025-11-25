@@ -1,9 +1,11 @@
+from user_agents import parse
 from app.modules.token.repositories import TokenRepository
 from core.services.BaseService import BaseService
 from app.modules.token.models import Token, TokenType
 from flask_jwt_extended import create_access_token, create_refresh_token, decode_token
 from flask import request, current_app
 from datetime import datetime
+import geoip2.database
 
 
 class TokenService(BaseService):
@@ -133,5 +135,64 @@ class TokenService(BaseService):
     def delete_token(self, token_id):
         token_to_delete = self.get_token_by_id(token_id)
         self.repository.delete_token(token_to_delete)
+    
+    def get_location_by_ip(self, ip_address):
+        if not ip_address or str(ip_address) in ['127.0.0.1', 'localhost', '::1']:
+            return "Local Network"
+    
+        if str(ip_address).startswith(('192.168.', '10.', '172.')):
+            return "Private Network"
+        
+        try:
+            print("A - " + ip_address)
+            geo_reader = geoip2.database.Reader("app/static/geo/GeoLite2-City.mmdb")
+            print("B - " + geo_reader)
+            response = geo_reader.city(ip_address)
+            print("C - " + response)
+            city = response.city.name or "Unknown city"
+            print("D - " + city)
+            country = response.country.name or "Unknown country"
+            print("E - " + country + " - AMOOOOO TI TI TI, TI TI TII, TI TIII TI TI TIIII TI TI TIII TIII TI")
+            return f"{city}, {country}"
+        
+        except Exception:
+            print("EXCEPCION")
+            return "Unknown location"
+        
+        finally:
+            try:
+                geo_reader.close()
+            except Exception:
+                pass
+    
+    def get_device_name_by_request(self, request):
+        ua_string = request.user_agent.string
+        ua = parse(ua_string)
+
+        os_info = f"{ua.os.family} {ua.os.version_string}".strip() if ua.os.family else ""
+        browser_info = f"{ua.browser.family} {ua.browser.version_string}".strip() if ua.browser.family else ""
+
+        if ua.is_mobile:
+            if os_info:
+                return f"{ua.device.brand or 'Mobile'} {' - ' + ua.device.model or ''} ({os_info})".strip()
+            return f"{ua.device.brand or 'Mobile'} {' - ' + ua.device.model or ''}".strip()
+
+        if ua.is_tablet:
+            if os_info:
+                return f"{ua.device.brand or 'Tablet'} { ' - ' + ua.device.model or ''} ({os_info})".strip()
+            return f"{ua.device.brand or 'Tablet'} {' - ' + ua.device.model or ''}".strip()
+
+        if ua.is_pc:
+            if os_info and browser_info:
+                return f"Desktop - {os_info} ({browser_info})"
+            elif os_info:
+                return f"Desktop - {os_info}"
+            else:
+                return "Desktop"
+            
+        if ua.is_bot:
+            return f"Bot - {ua.browser.family}" if ua.browser.family else "Bot"
+        
+        return "Unknown Device"
 
 service = TokenService()  
