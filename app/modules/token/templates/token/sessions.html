@@ -18,22 +18,28 @@
                         <tr>
                             <th>Device</th>
                             <th>Location</th>
-                            <th>Created</th>
-                            <th>Expires</th>
+                            <th>Last Login</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for token in tokens %}
-                        {% if token.type.value == 'Access_Token' and token.is_active%}
+                        {% if token.type.value == 'Access_Token' and token.is_active %}
                         <tr>
+                            {% if token.is_current %}
                             <td>
-                                <i class="align-middle" data-feather="smartphone"></i>
+                                <i class="align-middle" data-feather="monitor"></i>
+                                {{ token.device_info or 'Unknown Device' }} 
+                                <span class="badge bg-success ms-1">Current Session</span>
+                            </td>
+                            {% else %}
+                            <td>
+                                <i class="align-middle" data-feather="monitor"></i>
                                 {{ token.device_info or 'Unknown Device' }}
                             </td>
+                            {% endif %}
                             <td>{{ token.location_info or 'Unknown Location' }}</td>
                             <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>{{ token.expires_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
                                 <button class="btn btn-sm btn-danger" onclick="revokeToken('{{ token.id }}')">
                                     <i class="align-middle" data-feather="log-out"></i>
@@ -86,7 +92,7 @@
         }
 
         function revokeAllTokens() {
-            if (confirm('Are you sure you want to revoke ALL sessions? You will be logged out.')) {
+            if (confirm('Are you sure you want to revoke ALL sessions? You will be logged out :(')) {
                 fetch('/token/revoke/all', {
                     method: 'POST',
                     headers: {
