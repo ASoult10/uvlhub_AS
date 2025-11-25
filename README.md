@@ -11,7 +11,7 @@
 
 # Astronomiahub.io
 
-Repository of feature models in UVL format integrated with Zenodo and flamapy following Open Science principles - Developed by DiversoLab
+Repository of astronomy observations in JSON format - Developed by DiversoLab
 
 ## Official documentation
 
