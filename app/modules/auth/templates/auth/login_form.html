@@ -47,10 +47,10 @@
                             <div class="mb-3">
                                 {{ form.remember_me(class="form-check-input") }}
                                 {{ form.remember_me.label(class="form-check-label") }}
+
+                               <a href="{{ url_for('auth.recover_password') }}" class="btn btn-link p-0 ms-4">Forgot your password?</a>
                             </div>
                         </div>
-
-                    </div>
 
                     <div class="row">
 

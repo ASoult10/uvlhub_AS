@@ -1,0 +1,112 @@
+{% extends "base_template.html" %}
+
+{% block title %}Active Sessions{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Active Sessions</h1>
+
+<div class="row">
+    <div class="col-12">
+        {% if tokens %}
+        <div class="card shadow-sm">
+            <div class="card-header card-dark">
+                <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Your Active Devices</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Device</th>
+                            <th>Location</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        {% if token.type.value == 'Access_Token' and token.is_active %}
+                        <tr>
+                            {% if token.is_current %}
+                            <td>
+                                <i class="align-middle" data-feather="monitor"></i>
+                                {{ token.device_info or 'Unknown Device' }} 
+                                <span class="badge bg-success ms-1">Current Session</span>
+                            </td>
+                            {% else %}
+                            <td>
+                                <i class="align-middle" data-feather="monitor"></i>
+                                {{ token.device_info or 'Unknown Device' }}
+                            </td>
+                            {% endif %}
+                            <td>{{ token.location_info or 'Unknown Location' }}</td>
+                            <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="revokeToken('{{ token.id }}')">
+                                    <i class="align-middle" data-feather="log-out"></i>
+                                    Revoke
+                                </button>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button class="btn btn-danger" onclick="revokeAllTokens()">
+                <i class="align-middle" data-feather="x-circle"></i>
+                Revoke All Sessions
+            </button>
+        </div>
+
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="align-middle" data-feather="info"></i>
+            No active sessions found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function revokeToken(tokenId) {
+            if (confirm('Are you sure you want to revoke this session?')) {
+                fetch(`/token/revoke/${tokenId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function revokeAllTokens() {
+            if (confirm('Are you sure you want to revoke ALL sessions? You will be logged out :(')) {
+                fetch('/token/revoke/all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+{% endblock %}

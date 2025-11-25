@@ -140,6 +140,157 @@ class DataSetService(BaseService):
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
 
+    def get_recommendations(self, dataset_id: int, limit: int = 10):
+        """
+        Get recommended datasets based on tag, author, downloads, and recency.
+
+        Scoring system:
+        - Downloads: 3 pts max (partitioned into 3 tiers)
+        - Recency: 3 pts max (partitioned into 3 tiers)
+        - Coincidences: 4 pts max (based on matching tags/authors)
+
+        Only datasets with at least one tag or author match are recommended.
+        """
+        logger.info(f"=== get_recommendations called for dataset_id={dataset_id}, limit={limit} ===")
+
+        # Get the current dataset
+        current_dataset = self.repository.get_by_id(dataset_id)
+        if not current_dataset:
+            logger.warning(f"Dataset {dataset_id} not found")
+            return []
+
+        logger.info(f"Current dataset: {current_dataset.ds_meta_data.title}")
+
+        # Get current dataset's tags and authors
+        current_tags = set()
+        if current_dataset.ds_meta_data.tags:
+            current_tags = {tag.strip().lower() for tag in current_dataset.ds_meta_data.tags.split(",")}
+
+        current_authors = {author.name.strip().lower() for author in current_dataset.ds_meta_data.authors}
+
+        logger.info(f"Current tags: {current_tags}")
+        logger.info(f"Current authors: {current_authors}")
+
+        # Get all other datasets
+        all_datasets = DataSet.query.filter(DataSet.id != dataset_id).all()
+
+        logger.info(f"Found {len(all_datasets)} other datasets to compare")
+
+        if not all_datasets:
+            logger.warning("No other datasets found")
+            return []
+
+        # First pass: Filter datasets with at least one tag or author match
+        candidates = []
+        for dataset in all_datasets:
+            dataset_tags = set()
+            if dataset.ds_meta_data.tags:
+                dataset_tags = {tag.strip().lower() for tag in dataset.ds_meta_data.tags.split(",")}
+
+            dataset_authors = {author.name.strip().lower() for author in dataset.ds_meta_data.authors}
+
+            # Check for any coincidence
+            tag_matches = current_tags & dataset_tags
+            author_matches = current_authors & dataset_authors
+
+            if tag_matches or author_matches:
+                # Count total coincidences
+                total_coincidences = len(tag_matches) + len(author_matches)
+
+                # Get download count
+                download_count = self.dsdownloadrecord_repository.count_downloads_for_dataset(dataset.id)
+
+                logger.info(
+                    f"  Candidate: {dataset.ds_meta_data.title} - "
+                    f"tags:{tag_matches}, authors:{author_matches}, downloads:{download_count}"
+                )
+
+                candidates.append(
+                    {
+                        "dataset": dataset,
+                        "coincidences": total_coincidences,
+                        "downloads": download_count,
+                        "created_at": dataset.created_at,
+                    }
+                )
+
+        logger.info(f"Found {len(candidates)} candidates with matching tags/authors")
+
+        if not candidates:
+            logger.warning("No candidates with matching tags/authors")
+            return []
+
+        # Extract downloads and dates for partitioning
+        downloads_list = sorted([c["downloads"] for c in candidates])
+        dates_list = sorted([c["created_at"] for c in candidates])
+
+        # Create 3-tier partitions for downloads
+        n_downloads = len(downloads_list)
+        if n_downloads >= 3:
+            download_tier1_max = downloads_list[n_downloads // 3]
+            download_tier2_max = downloads_list[(2 * n_downloads) // 3]
+        elif n_downloads == 2:
+            download_tier1_max = downloads_list[0]
+            download_tier2_max = downloads_list[1]
+        else:
+            download_tier1_max = download_tier2_max = downloads_list[0]
+
+        # Create 3-tier partitions for recency (newer = higher tier)
+        n_dates = len(dates_list)
+        if n_dates >= 3:
+            date_tier1_max = dates_list[n_dates // 3]
+            date_tier2_max = dates_list[(2 * n_dates) // 3]
+        elif n_dates == 2:
+            date_tier1_max = dates_list[0]
+            date_tier2_max = dates_list[1]
+        else:
+            date_tier1_max = date_tier2_max = dates_list[0]
+
+        # Score each candidate
+        recommendations = []
+        max_coincidences = max(c["coincidences"] for c in candidates)
+
+        for candidate in candidates:
+            score = 0.0
+
+            # Downloads score (3 pts max)
+            if candidate["downloads"] <= download_tier1_max:
+                score += 1.0
+            elif candidate["downloads"] <= download_tier2_max:
+                score += 2.0
+            else:
+                score += 3.0
+
+            # Recency score (3 pts max) - newer is better
+            if candidate["created_at"] <= date_tier1_max:
+                score += 1.0
+            elif candidate["created_at"] <= date_tier2_max:
+                score += 2.0
+            else:
+                score += 3.0
+
+            # Coincidences score (4 pts max)
+            coincidence_score = (candidate["coincidences"] / max_coincidences) * 4.0
+            score += coincidence_score
+
+            recommendations.append(
+                {
+                    "dataset": candidate["dataset"],
+                    "score": round(score, 2),
+                    "downloads": candidate["downloads"],
+                    "coincidences": candidate["coincidences"],
+                }
+            )
+
+        # Sort by score (descending) and limit results
+        recommendations.sort(key=lambda x: x["score"], reverse=True)
+
+        logger.info(f"Returning {len(recommendations[:limit])} recommendations (sorted by score)")
+        for i, rec in enumerate(recommendations[:limit], 1):
+            logger.info(f"  {i}. {rec['dataset'].ds_meta_data.title} - Score: {rec['score']}")
+
+        return recommendations[:limit]
+
 
 class AuthorService(BaseService):
     def __init__(self):

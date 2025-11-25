@@ -1,0 +1,102 @@
+{% extends "base_template.html" %}
+
+{% block title %}Saved Models{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h1 class="text-center mb-4">Saved Models</h1>
+
+    {% if files_data %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Dataset</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files_data %}
+            <tr>
+                <td>{{ file.name }}</td>
+                <td>{{ file.dataset_title }}</td>
+                <td>
+                    <button onclick="viewFile('{{ file.id }}')" 
+                            class="btn btn-outline-secondary btn-sm" 
+                            style="border-radius: 5px;">
+                        <i data-feather="eye"></i> View
+                    </button>
+
+                    <button id="save-btn-{{ file.id }}"
+                            onclick="saveInCart('{{ file.id }}')"
+                            class="btn btn-sm {{ 'btn-secondary' if file.saved else 'btn-outline-secondary' }}"
+                            style="border-radius: 5px;">
+                        <i data-feather="bookmark"></i>
+                        <span>{{ 'Saved' if file.saved else 'Save' }}</span>
+                    </button>
+
+                    <div class="btn-group" role="group">
+                        <button id="btnGroupDrop{{ file.id }}" type="button" 
+                                class="btn btn-outline-primary btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown" aria-expanded="false" 
+                                style="border-radius: 5px;">
+                            <i data-feather="check"></i> Check
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
+                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group" role="group">
+                        <button id="btnGroupDropExport{{ file.id }}" type="button" 
+                                class="btn btn-primary btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown" aria-expanded="false" 
+                                style="border-radius: 5px;">
+                            <i data-feather="download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
+                            <li><a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
+                        </ul>
+                    </div>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Botón global Export All como dropdown -->
+    <div class="text-end mt-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i data-feather="download"></i> Export All
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='uvl') }}">UVL</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='glencoe') }}">Glencoe</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='cnf') }}">DIMACS</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='splot') }}">SPLOT</a></li>
+            </ul>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center">
+        You have no saved files.
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    feather.replace();
+});
+
+// Aquí irían tus funciones saveInCart, viewFile, checkUVL como antes
+</script>
+{% endblock %}

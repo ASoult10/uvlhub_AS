@@ -10,51 +10,72 @@ function send_query() {
     document.getElementById("results_not_found").style.display = "none";
     console.log("hide not found icon");
 
-    const filters = document.querySelectorAll('#filters input, #filters select, #filters [type="radio"]');
+    const filters = document.querySelectorAll('#filters input, #filters select:not(.select2), #filters [type="radio"]');
 
     filters.forEach(filter => {
-        filter.addEventListener('input', () => {
-            const csrfToken = document.getElementById('csrf_token').value;
+        filter.removeEventListener('input', filterChangeHandler);
+        filter.removeEventListener('change', filterChangeHandler);
+        
+        filter.addEventListener('input', filterChangeHandler);
+        filter.addEventListener('change', filterChangeHandler);
+    });
 
-            const searchCriteria = {
-                csrf_token: csrfToken,
-                query: document.querySelector('#query').value,
-                publication_type: document.querySelector('#publication_type').value,
-                sorting: document.querySelector('[name="sorting"]:checked').value,
-            };
+    $('#author').on('select2:select select2:unselect', function(e) {
+        filterChangeHandler.call(this, e);
+    });
 
-            console.log(document.querySelector('#publication_type').value);
+    $('#tags').on('select2:select select2:unselect', function(e) {
+        filterChangeHandler.call(this, e);
+    });
+}
 
-            fetch('/explore', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(searchCriteria),
-            })
-                .then(response => response.json())
-                .then(data => {
+function filterChangeHandler(e) {
+    const csrfToken = document.getElementById('csrf_token').value;
 
-                    console.log(data);
-                    document.getElementById('results').innerHTML = '';
+    const searchCriteria = {
+        csrf_token: csrfToken,
+        query: document.querySelector('#query').value,
+        date_after: document.querySelector('#date_after').value,
+        date_before: document.querySelector('#date_before').value,
+        author: document.querySelector('#author').value,
+        tags: $('#tags').val() || [],
+        publication_type: document.querySelector('#publication_type').value,
+        sorting: document.querySelector('[name="sorting"]:checked').value,
+    };
 
-                    // results counter
-                    const resultCount = data.length;
-                    const resultText = resultCount === 1 ? 'dataset' : 'datasets';
-                    document.getElementById('results_number').textContent = `${resultCount} ${resultText} found`;
+    console.log(document.querySelector('#publication_type').value);
 
-                    if (resultCount === 0) {
-                        console.log("show not found icon");
-                        document.getElementById("results_not_found").style.display = "block";
-                    } else {
-                        document.getElementById("results_not_found").style.display = "none";
-                    }
+    fetch('/explore', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(searchCriteria),
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        console.log(data);
+        document.getElementById('results').innerHTML = '';
+
+        // results counter
+        const resultCount = data.length;
+        const resultText = resultCount === 1 ? 'dataset' : 'datasets';
+        document.getElementById('results_number').textContent = `${resultCount} ${resultText} found`;
+
+        if (resultCount === 0) {
+            console.log("show not found icon");
+            document.getElementById("results_not_found").style.display = "block";
+        } else {
+            document.getElementById("results_not_found").style.display = "none";
+        }
 
 
-                    data.forEach(dataset => {
-                        let card = document.createElement('div');
-                        card.className = 'col-12';
-                        card.innerHTML = `
+
+        data.forEach(dataset => {
+            let card = document.createElement('div');
+            card.className = 'col-12';
+            card.innerHTML = `
                             <div class="card">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-between">
@@ -123,13 +144,41 @@ function send_query() {
 
                                     </div>
 
+                                    ${dataset.recommendations && dataset.recommendations.length > 0 ? `
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-2" style="font-size: 0.9rem;">
+                                                <i data-feather="star" style="width: 14px; height: 14px;"></i> Similar Datasets
+                                            </h6>
+                                            ${dataset.recommendations.map(rec => `
+                                                <div class="mb-2">
+                                                    <a href="${rec.url}" class="text-decoration-none">
+                                                        <div class="recommendation-card p-2 rounded" style="background-color: #f8f9fa; border-left: 3px solid #5700b3;">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <strong style="color: #5700b3; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; font-size: 0.85rem;">
+                                                                    ${rec.title.length > 50 ? rec.title.substring(0, 50) + '...' : rec.title}
+                                                                </strong>
+                                                                <span class="badge" style="background-color: #5700b3; font-size: 0.7rem; white-space: nowrap;">
+                                                                    ${rec.score}/10
+                                                                </span>
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                ${rec.downloads} downloads · ${rec.coincidences} match${rec.coincidences !== 1 ? 'es' : ''}
+                                                            </small>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+
                                 </div>
                             </div>
                         `;
 
                         document.getElementById('results').appendChild(card);
-                    });
-                });
+                        feather.replace(); // Re-render feather icons
         });
     });
 }
@@ -166,6 +215,23 @@ function clearFilters() {
     let queryInput = document.querySelector('#query');
     queryInput.value = "";
     // queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+
+    // Reset the after date filter
+    let dateAfterSelect = document.querySelector('#date_after');
+    dateAfterSelect.value = "";
+
+    // Reset the before date filter
+    let dateBeforeSelect = document.querySelector('#date_before');
+    dateBeforeSelect.value = "";
+
+    // Reset the author filter to default value
+    let authorSelect = document.querySelector('#author');
+    authorSelect.value = "any";
+    $(authorSelect).trigger('change');
+
+    // Reset the tags filter
+    let tagSelect = document.querySelector('#tags');
+    $(tagSelect).val(null).trigger('change');
 
     // Reset the publication type to its default value
     let publicationTypeSelect = document.querySelector('#publication_type');

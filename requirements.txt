@@ -133,3 +133,10 @@ WTForms==3.2.1
 zope.event==5.1.1
 zope.interface==7.2
 zstandard==0.23.0
+pyotp==2.9.0
+qrcode==8.2
+Flask-Limiter==4.0.0
+flask-jwt-extended==4.7.1
+PyJWT==2.10.1
+geoip2==5.2.0
+user-agents==2.2.0

@@ -55,6 +55,45 @@
                             </div>
                         </div>
 
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label" for="date_after">After</label>
+                                <input class="form-control" id="date_after" name="date_after" type="date">
+                            </div>
+                        </div> 
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label" for="date_before">Before</label>
+                                <input class="form-control" id="date_before" name="date_before" type="date">
+                            </div>
+                        </div> 
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label" for="author">Filter by author</label>
+                                <select id="author" name="author" class="form-control select2"
+                                        required="">
+                                    <option value="any" selected>Any</option>
+                                    {% for author in authors %}
+                                        <option value="{{ author.name }}">{{ author.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div> 
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label" for="tags">Filter by tags</label>
+                                <select id="tags" name="tags" class="form-control select2"
+                                        multiple="multiple">
+                                    {% for tag in tags %}
+                                        <option value="{{ tag }}">{{ tag }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label" for="publication_type">Filter by publication
@@ -151,5 +190,26 @@
 {% endblock %}
 
 {% block scripts %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ url_for('explore.scripts') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#author').select2({
+                allowClear: false,
+                width: '100%'
+            });
+
+            $('#tags').select2({
+                allowClear: true,
+                width: '100%',
+                placeholder: "Select tags...",
+                closeOnSelect: false
+            });
+        });
+    </script>
+
+    
 {% endblock %}

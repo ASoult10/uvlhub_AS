@@ -109,6 +109,14 @@ chico sundermann">
                                 class="align-middle">My datasets</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar-item {{ 'active' if request.path.startswith('/file/saved') else '' }}">
+                        <a class="sidebar-link" href="/file/saved/view">
+                            <i class="align-middle" data-feather="bookmark"></i>
+                            <span class="align-middle">Saved models</span>
+                        </a>
+                    </li>
+
 
                     <li class="sidebar-header">
                         Options
@@ -120,7 +128,16 @@ chico sundermann">
                                 class="align-middle">Edit profile</span>
                         </a>
                     </li>
+                    {% if current_user.has2FA == False %}
 
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.two_factor_setup' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('auth.two_factor_setup') }}">
+                                <i class="align-middle" data-feather="key"></i> <span
+                                    class="align-middle">Activate 2FA</span>
+                            </a>
+                        </li>
+
+                    {% endif %}
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="{{ url_for('auth.logout') }}">
                             <i class="align-middle" data-feather="log-out"></i> <span
@@ -196,6 +213,26 @@ chico sundermann">
 
         <main class="content">
             <div class="container p-0">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="alert alert-{{ category }}" role="alert">
+                                        <div class="alert-message">
+                                            {% if category == 'success' %}
+                                                <h4 class="alert-heading"><i class="align-middle" data-feather="check-circle"></i> Success</h4>
+                                            {% elif category == 'error' %}
+                                                <h4 class="alert-heading"><i class="align-middle" data-feather="x-circle"></i> Error</h4>
+                                            {% endif %}
+                                            <p style="margin-bottom: 0px">{{ message }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
                 {% block content %}{% endblock %}
 
