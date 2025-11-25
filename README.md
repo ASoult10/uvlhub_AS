@@ -11,7 +11,7 @@
 
 # Astronomiahub.io
 
-Repository of astronomy observations in JSON format - Developed by DiversoLab
+Repository of astronomy observations in JSON format - Developed by DiversoLab and AstronomiaHub team
 
 ## Official documentation
 
