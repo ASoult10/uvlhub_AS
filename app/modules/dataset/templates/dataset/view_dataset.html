@@ -48,6 +48,7 @@
 <div class="row">
     <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
 
+        <!-- ==== DATASET INFO ==== -->
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -82,7 +83,9 @@
                 {% if dataset.ds_meta_data.publication_doi %}
                 <div class="row mb-2">
                     <div class="col-md-4 col-12"><span class="text-secondary">Publication DOI</span></div>
-                    <div class="col-md-8 col-12"><a href="{{ dataset.ds_meta_data.publication_doi }}">{{ dataset.ds_meta_data.publication_doi }}</a></div>
+                    <div class="col-md-8 col-12">
+                        <a href="{{ dataset.ds_meta_data.publication_doi }}">{{ dataset.ds_meta_data.publication_doi }}</a>
+                    </div>
                 </div>
                 {% endif %}
 
@@ -114,9 +117,13 @@
                 <div class="row mb-2">
                     <div class="col-md-4 col-12"><span class=" text-secondary">Tags</span></div>
                     <div class="col-md-8 col-12">
-                        {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                        {% endfor %}
+                        {% if dataset.ds_meta_data.tags %}
+                            {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                            <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No tags</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -135,7 +142,62 @@
             {% endif %}
         </div>
 
-        <div class="card">
+        <!-- ==== OBSERVATIONS ==== -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3 class="mb-3">Observations</h3>
+
+                {% if not dataset.ds_meta_data.observations or dataset.ds_meta_data.observations|length == 0 %}
+                    <p class="text-muted mb-0">No observations associated with this dataset.</p>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Object name</th>
+                                    <th>RA</th>
+                                    <th>DEC</th>
+                                    <th>Mag</th>
+                                    <th>Date</th>
+                                    <th>Filter</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for obs in dataset.ds_meta_data.observations %}
+                                <tr>
+                                    <td>{{ obs.object_name }}</td>
+                                    <td>{{ obs.ra }}</td>
+                                    <td>{{ obs.dec }}</td>
+                                    <td>
+                                        {% if obs.magnitude is not none %}
+                                            {{ obs.magnitude }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if obs.observation_date %}
+                                            {{ obs.observation_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ obs.filter_used or '—' }}</td>
+                                    <td style="max-width: 250px; white-space: pre-wrap; word-break: break-word;">
+                                        {{ obs.notes or '' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==== RELATED PUBLICATION ==== -->
+        <div class="card mt-3">
             <div class="card-body">
                 <h3> Related publication </h3>
                 David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides,
@@ -207,6 +269,7 @@
 
     </div>
 
+    <!-- ==== RIGHT COLUMN ==== -->
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
         <div class="list-group">
             <div class="list-group-item">

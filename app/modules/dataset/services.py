@@ -117,7 +117,6 @@ class DataSetService(BaseService):
             logger.info(f"Creating {len(observations_data)} observations from form...")
             for obs_data in observations_data:
                 obs = Observation(
-                    data_set_id=dataset.id,
                     ds_meta_data_id=dsmetadata.id,
                     object_name=obs_data["object_name"],
                     ra=obs_data["ra"],
