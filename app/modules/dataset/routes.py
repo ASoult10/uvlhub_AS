@@ -282,12 +282,18 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
-
     # Get recommendations
     recommendations = dataset_service.get_recommendations(dataset.id, limit=5)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations)
+    # Crear servicio de hubfile (igual que en la ruta del DOI)
+    hubfile_service = HubfileService()
 
-
+    return render_template(
+        "dataset/view_dataset.html",
+        dataset=dataset,
+        recommendations=recommendations,
+        hubfile_service=hubfile_service,
+        current_user=current_user,
+    )
 
 from . import comments_routes

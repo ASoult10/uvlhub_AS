@@ -42,8 +42,6 @@ class Author(db.Model):#se queda igual
 
 class Observation(db.Model):#es nueva
     id = db.Column(db.Integer, primary_key=True)
-    data_set_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
-
     object_name = db.Column(db.String(255), nullable=False)
     ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
     dec = db.Column(db.String(64), nullable=False)  # +/-dd:mm:ss.sss
