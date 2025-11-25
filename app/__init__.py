@@ -180,8 +180,8 @@ def create_app(config_name="development"):
                 user_id = int(user_identity)
                 parent_jti = get_jwt()["jti"]
 
-                device_info = request.user_agent.string if request else None
-                location_info = None # TODO: Sacar Ubicacion desde 
+                device_info = token_service.get_device_name_by_request(request) if request else None
+                location_info = token_service.get_location_by_ip(request.remote_addr) if request else None
 
                 new_access_token = token_service.refresh_access_token(user_id, device_info, location_info, parent_jti)
 
@@ -191,7 +191,6 @@ def create_app(config_name="development"):
             
             except Exception:
                 """ If both tokens are invalid, log out the user and redirect to login page """
-                print("KKKKKK")
                 logout_user()
                 response = redirect(url_for("auth.login"))
                 unset_jwt_cookies(response)
