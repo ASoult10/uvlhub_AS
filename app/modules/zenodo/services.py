@@ -7,7 +7,6 @@ from flask import Response, jsonify
 from flask_login import current_user
 
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
 from app.modules.zenodo.repositories import ZenodoRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
@@ -178,26 +177,28 @@ class ZenodoService(BaseService):
             raise Exception(error_message)
         return response.json()
 
-    def upload_file(self, dataset: DataSet, deposition_id: int, feature_model: FeatureModel, user=None) -> dict:
+    def upload_file(self, dataset: DataSet, deposition_id: int, hubfile, user=None) -> dict:
         """
-        Upload a file to a deposition in Zenodo.
+        Upload a Hubfile to a deposition in Zenodo.
 
         Args:
+            dataset (DataSet): The dataset the file belongs to.
             deposition_id (int): The ID of the deposition in Zenodo.
-            feature_model (FeatureModel): The FeatureModel object representing the feature model.
-            user (FeatureModel): The User object representing the file owner.
+            hubfile (Hubfile): The Hubfile instance (must have .name).
+            user: optional User instance; if not provided current_user is used.
 
         Returns:
             dict: The response in JSON format with the details of the uploaded file.
         """
-        uvl_filename = feature_model.fm_meta_data.uvl_filename
-        data = {"name": uvl_filename}
+        filename = hubfile.name
+        data = {"name": filename}
         user_id = current_user.id if user is None else user.id
-        file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}/", uvl_filename)
+        file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}", filename)
         files = {"file": open(file_path, "rb")}
 
         publish_url = f"{self.ZENODO_API_URL}/{deposition_id}/files"
         response = requests.post(publish_url, params=self.params, data=data, files=files)
+        files["file"].close()
         if response.status_code != 201:
             error_message = f"Failed to upload files. Error details: {response.json()}"
             raise Exception(error_message)

@@ -29,13 +29,12 @@ class PublicationType(Enum):  # se cambia al tipo de publicación en astronomía
     OTHER = "other"
 
 
-class Author(db.Model):  # se queda igual
+class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     affiliation = db.Column(db.String(120))
     orcid = db.Column(db.String(120))
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
-    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
@@ -113,14 +112,6 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-
-    # TODO: esto tiene que desaparecer:
-    feature_models = db.relationship(
-        "FeatureModel",
-        backref="data_set",
-        lazy=True,
-        cascade="all, delete",
-    )
 
     # RELACIÓN: archivos asociados al dataset (one-to-many con Hubfile)
     hubfiles = db.relationship(

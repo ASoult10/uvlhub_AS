@@ -151,7 +151,7 @@ def view_saved_files():
             {
                 "id": f.id,
                 "name": f.name,
-                "dataset_title": f.feature_model.data_set.ds_meta_data.title,
+                "dataset_title": f.get_dataset().ds_meta_data.title if f.get_dataset() else "",
                 "saved": hubfile_service.is_saved_by_user(f.id, current_user.id),
             }
         )

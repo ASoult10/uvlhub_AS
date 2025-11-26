@@ -17,7 +17,7 @@ from app.modules.dataset.repositories import (
     DSMetaDataRepository,
     DSViewRecordRepository,
 )
-from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
+
 from app.modules.hubfile.repositories import (
     HubfileDownloadRecordRepository,
     HubfileRepository,
@@ -39,17 +39,18 @@ def calculate_checksum_and_size(file_path):
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
-        self.feature_model_repository = FeatureModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
-        self.fmmetadata_repository = FMMetaDataRepository()
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
         self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
         self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
-
-    def move_feature_models(self, dataset: DataSet):
+    def move_hubfiles(self, dataset: DataSet):
+        """
+        Move files from the current user's temp folder into the dataset uploads folder,
+        create Hubfile records and link them to the dataset.
+        """
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
 
@@ -58,9 +59,31 @@ class DataSetService(BaseService):
 
         os.makedirs(dest_dir, exist_ok=True)
 
-        for feature_model in dataset.feature_models:
-            uvl_filename = feature_model.fm_meta_data.uvl_filename
-            shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+        if not os.path.exists(source_dir):
+            return
+
+        for filename in os.listdir(source_dir):
+            src_path = os.path.join(source_dir, filename)
+            if not os.path.isfile(src_path):
+                continue
+
+            # calculate checksum and size
+            checksum, size = calculate_checksum_and_size(src_path)
+
+            # create hubfile record linked directly to dataset
+            file_rec = self.hubfilerepository.create(
+                commit=False,
+                name=filename,
+                checksum=checksum,
+                size=size,
+                dataset_id=dataset.id,
+            )
+
+            # move file to uploads
+            shutil.move(src_path, os.path.join(dest_dir, filename))
+
+            # link file to dataset in-memory
+            dataset.hubfiles.append(file_rec)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -78,7 +101,12 @@ class DataSetService(BaseService):
         return self.repository.count_synchronized_datasets()
 
     def count_feature_models(self):
-        return self.feature_model_service.count_feature_models()
+        # kept method name for compatibility: now returns total hubfiles
+        try:
+            return self.hubfilerepository.count()
+        except Exception:
+            # fallback: count via model query
+            return self.hubfilerepository.model.query.count()
 
     def count_authors(self) -> int:
         return self.author_repository.count()
@@ -129,32 +157,32 @@ class DataSetService(BaseService):
                 self.repository.session.add(obs)
             # ==========================
 
-            # Feature models (mantener por compatibilidad)
-            for feature_model in form.feature_models:
-                uvl_filename = feature_model.uvl_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
-                    author = self.author_repository.create(commit=False, fm_meta_data_id=fmmetadata.id, **author_data)
-                    fmmetadata.authors.append(author)
+            # Create Hubfile records for any uploaded files in the user's temp folder
+            temp_folder = current_user.temp_folder()
+            if os.path.exists(temp_folder) and os.path.isdir(temp_folder):
+                working_dir = os.getenv("WORKING_DIR", "")
+                dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+                os.makedirs(dest_dir, exist_ok=True)
 
-                fm = self.feature_model_repository.create(
-                    commit=False, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
-                )
+                for filename in os.listdir(temp_folder):
+                    file_path = os.path.join(temp_folder, filename)
+                    if not os.path.isfile(file_path):
+                        continue
 
-                # associated files in feature model
-                file_path = os.path.join(current_user.temp_folder(), uvl_filename)
-                checksum, size = calculate_checksum_and_size(file_path)
+                    checksum, size = calculate_checksum_and_size(file_path)
 
-                file = self.hubfilerepository.create(
-                    commit=False,
-                    name=uvl_filename,
-                    checksum=checksum,
-                    size=size,
-                    feature_model_id=fm.id,      # mantener relación con featuremodel
-                    dataset_id=dataset.id         # NUEVO: relación con dataset
-                )
-                fm.files.append(file)
-                dataset.hubfiles.append(file)  # también vincular directamente al dataset
+                    file = self.hubfilerepository.create(
+                        commit=False,
+                        name=filename,
+                        checksum=checksum,
+                        size=size,
+                        dataset_id=dataset.id,
+                    )
+
+                    # move file into uploads folder
+                    shutil.move(file_path, os.path.join(dest_dir, filename))
+
+                    dataset.hubfiles.append(file)
 
             self.repository.session.commit()
         except Exception as exc:

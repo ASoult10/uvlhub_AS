@@ -33,43 +33,6 @@ class AuthorForm(FlaskForm):
         }
 
 
-class FeatureModelForm(FlaskForm):
-    # TODO: quitar FeatureModelForm
-    uvl_filename = StringField("UVL Filename", validators=[DataRequired()])
-    title = StringField("Title", validators=[Optional()])
-    desc = TextAreaField("Description", validators=[Optional()])
-    publication_type = SelectField(
-        "Publication type",
-        choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
-        validators=[Optional()],
-    )
-    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
-    tags = StringField("Tags (separated by commas)")
-    version = StringField("UVL Version")
-    authors = FieldList(FormField(AuthorForm))
-
-    class Meta:
-        csrf = False  # disable CSRF because is subform
-
-    def get_authors(self):
-        return [author.get_author() for author in self.authors]
-
-    def get_fmmetadata(self):
-        return {
-            "uvl_filename": self.uvl_filename.data,
-            "title": self.title.data,
-            "description": self.desc.data,
-            "publication_type": self.publication_type.data,
-            "publication_doi": self.publication_doi.data,
-            "tags": self.tags.data,
-            "uvl_version": self.version.data,
-        }
-
-    # Alias para que DataSetForm.get_feature_models() no rompa
-    def get_feature_model(self):
-        return self.get_fmmetadata()
-
-
 class ObservationForm(FlaskForm):
     """Formulario para una observación asociada a un dataset."""
     object_name = StringField("Object name", validators=[Optional()])
@@ -120,8 +83,6 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    # TODO: quitar feature_models de DataSetForm
-    feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
     observations = FieldList(FormField(ObservationForm), min_entries=0)
     #Archivos JSON asociados al dataset
     json_files = FileField("JSON Files",validators=[Optional(), FileAllowed(['json'], "Only JSON files allowed")],render_kw={"multiple": True}
@@ -151,10 +112,6 @@ class DataSetForm(FlaskForm):
 
     def get_authors(self):
         return [author.get_author() for author in self.authors]
-
-    def get_feature_models(self):
-        # TODO: quitar feature_models de DataSetForm
-        return [fm.get_feature_model() for fm in self.feature_models]
 
     def get_observations(self):
         """Devuelve solo observaciones no vacías."""
