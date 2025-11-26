@@ -167,7 +167,7 @@ def upgrade():
     sa.Column('name', sa.String(length=120), nullable=False),
     sa.Column('checksum', sa.String(length=120), nullable=False),
     sa.Column('size', sa.Integer(), nullable=False),
-    sa.Column('feature_model_id', sa.Integer(), nullable=False),
+    sa.Column('feature_model_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['feature_model_id'], ['feature_model.id'], ),
     sa.Column('dataset_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ),

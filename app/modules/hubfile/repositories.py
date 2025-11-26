@@ -26,7 +26,8 @@ class HubfileRepository(BaseRepository):
         )
 
     def get_dataset_by_hubfile(self, hubfile: Hubfile) -> DataSet:
-        return db.session.query(DataSet).join(FeatureModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
+        return db.session.query(DataSet).filter(DataSet.id == hubfile.dataset_id).first()
+        #return db.session.query(DataSet).join(FeatureModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
 
     # Nuevos métodos para el carrito
     def is_saved_by_user(self, hubfile_id: int, user_id: int) -> bool:
