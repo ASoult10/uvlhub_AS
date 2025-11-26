@@ -169,6 +169,8 @@ def upgrade():
     sa.Column('size', sa.Integer(), nullable=False),
     sa.Column('feature_model_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['feature_model_id'], ['feature_model.id'], ),
+    sa.Column('dataset_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('file_download_record',

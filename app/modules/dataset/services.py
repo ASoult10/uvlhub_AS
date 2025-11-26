@@ -111,7 +111,7 @@ class DataSetService(BaseService):
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
             # ==========================
-            # NUEVO: crear observaciones
+            # Crear observaciones
             # ==========================
             observations_data = form.get_observations()
             logger.info(f"Creating {len(observations_data)} observations from form...")
@@ -129,7 +129,7 @@ class DataSetService(BaseService):
                 self.repository.session.add(obs)
             # ==========================
 
-            # Feature models
+            # Feature models (mantener por compatibilidad)
             for feature_model in form.feature_models:
                 uvl_filename = feature_model.uvl_filename.data
                 fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
@@ -146,16 +146,24 @@ class DataSetService(BaseService):
                 checksum, size = calculate_checksum_and_size(file_path)
 
                 file = self.hubfilerepository.create(
-                    commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
+                    commit=False,
+                    name=uvl_filename,
+                    checksum=checksum,
+                    size=size,
+                    feature_model_id=fm.id,      # mantener relación con featuremodel
+                    dataset_id=dataset.id         # NUEVO: relación con dataset
                 )
                 fm.files.append(file)
+                dataset.hubfiles.append(file)  # también vincular directamente al dataset
 
             self.repository.session.commit()
         except Exception as exc:
             logger.info(f"Exception creating dataset from form...: {exc}")
             self.repository.session.rollback()
             raise exc
+
         return dataset
+
 
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
