@@ -138,6 +138,8 @@ def create_app(config_name="development"):
         from app.modules.token.services import TokenService
         from flask_jwt_extended.exceptions import JWTExtendedException
 
+        return 
+
         public_endpoints = [
             'auth.login',
             'auth.logout',
