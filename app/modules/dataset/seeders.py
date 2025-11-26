@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, DSMetrics, PublicationType
-from app.modules.featuremodel.models import FeatureModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from core.utils.utils import random_datetime
@@ -205,43 +204,6 @@ class DataSetSeeder(BaseSeeder):
 
         self.seed(download_records)
 
-        # Creamos FMMetaData y FeatureModel para compatibilidad,
-        # pero los Hubfile ya NO se enlazan a FeatureModel.
-        fm_meta_data_list = [
-            FMMetaData(
-                uvl_filename=f"file{i+1}.uvl",
-                title=f"Feature Model {i+1}",
-                description=f"Description for feature model {i+1}",
-                publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
-                publication_doi=f"10.1234/fm{i+1}",
-                tags="tag1, tag2",
-                uvl_version="1.0",
-            )
-            for i in range(12)
-        ]
-        seeded_fm_meta_data = self.seed(fm_meta_data_list)
-
-        # Autores para FMMetaData
-        fm_authors = [
-            Author(
-                name=f"Author {i+5}",
-                affiliation=f"Affiliation {i+5}",
-                orcid=f"0000-0000-0000-000{i+5}",
-                fm_meta_data_id=seeded_fm_meta_data[i].id,
-            )
-            for i in range(12)
-        ]
-        self.seed(fm_authors)
-
-        # 12 FeatureModels, 3 por dataset (solo por compatibilidad, los Hubfile ya no los usan)
-        feature_models = [
-            FeatureModel(
-                data_set_id=seeded_datasets[i // 3].id,
-                fm_meta_data_id=seeded_fm_meta_data[i].id,
-            )
-            for i in range(12)
-        ]
-        self.seed(feature_models)
 
         # Crear ficheros UVL y asociarlos DIRECTAMENTE al DataSet vía dataset_id
         load_dotenv()  # isort: skip

@@ -21,8 +21,6 @@ class Hubfile(db.Model):
     name = db.Column(db.String(120), nullable=False)
     checksum = db.Column(db.String(120), nullable=False)
     size = db.Column(db.Integer, nullable=False)
-    #TODO: Eliminar relación con feauture_model
-    feature_model_id = db.Column(db.Integer, db.ForeignKey("feature_model.id"), nullable=True) #lo he cambiado a nullable=True
 
     # Relación: qué usuarios han guardado este archivo
     saved_by_users = db.relationship("User", secondary=user_saved_files, back_populates="saved_files", lazy="dynamic")
