@@ -137,7 +137,7 @@ def create_app(config_name="development"):
         from flask_login import logout_user
         from app.modules.token.services import TokenService
         from flask_jwt_extended.exceptions import JWTExtendedException
-
+        #PARCHE RÁPIDO PARA SOLUCIONAR ERROR EN LA VALIDACIÓN DE TOKENS
         return 
 
         public_endpoints = [
