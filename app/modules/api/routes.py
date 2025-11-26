@@ -8,7 +8,6 @@ from app.modules.dataset.models import DataSet, DSMetaData
 from app import db
 from datetime import datetime
 
-# ==================== FRONTEND ROUTES ====================
 
 @api_bp.route('/manage', methods=['GET'])
 @login_required
@@ -88,7 +87,6 @@ def delete_key(key_id):
     return redirect(url_for('api.manage_keys'))
 
 
-# ==================== API ENDPOINTS ====================
 
 @api_bp.route('/datasets/<int:id>', methods=['GET'])
 @limiter.limit("100 per hour")
@@ -162,8 +160,10 @@ def search_datasets(api_key_obj):
 
 
 @api_bp.route('/stats', methods=['GET'])
-def api_stats():
-    """Endpoint público sin autenticación"""
+@limiter.limit("100 per hour")
+@require_api_key(scope='read:stats')
+def api_stats(api_key_obj):
+    """Stats protegidas por API Key (scope: read:stats)"""
     return jsonify({
         'total_datasets': DataSet.query.count(),
         'version': '1.0'
