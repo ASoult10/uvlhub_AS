@@ -41,6 +41,7 @@
         <a href="/explore" class="btn btn-primary btn-sm" id="search" style="border-radius: 5px;">
             <i data-feather="search" class="center-button-icon"></i>
             Explore more datasets
+
         </a>
     </div>
 </div>
@@ -281,66 +282,65 @@
                 </div>
             </div>
 
-            {% for feature_model in dataset.feature_models %}
-                {% for file in feature_model.files %}
-                <div class="list-group-item">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="row">
-                                <div class="col-8">
-                                    <i data-feather="file"></i> {{ file.name }}
-                                    <br><small class="text-muted">({{ file.get_formatted_size() }})</small>
-                                </div>
-                                <div class="col-2">
-                                    <div id="check_{{ file.id }}"></div>
-                                </div>
+            {# AHORA iteramos directamente por los hubfiles del dataset #}
+            {% for file in dataset.hubfiles %}
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-8">
+                                <i data-feather="file"></i> {{ file.name }}
+                                <br><small class="text-muted">({{ file.get_formatted_size() }})</small>
                             </div>
-                        </div>
-
-                        <div class="col-12 text-end">
-                            <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
-                                <i data-feather="eye"></i> View
-                            </button>
-
-                            {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
-                            <button id="save-btn-{{ file.id }}"
-                                    onclick="saveInCart('{{ file.id }}')"
-                                    class="btn btn-sm {{ 'btn-secondary' if saved else 'btn-outline-secondary' }}"
-                                    style="border-radius: 5px;">
-                                <i data-feather="bookmark"></i>
-                                <span>{{ 'Saved' if saved else 'Save' }}</span>
-                            </button>
-
-                            <div class="btn-group" role="group">
-                                <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                    <i data-feather="check"></i> Check
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">
-                                            Syntax check
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="btn-group" role="group">
-                                <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                    <i data-feather="download"></i> Export
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a>
-                                        <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
-                                </ul>
+                            <div class="col-2">
+                                <div id="check_{{ file.id }}"></div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 text-end">
+                        <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                            <i data-feather="eye"></i> View
+                        </button>
+
+                        {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
+                        <button id="save-btn-{{ file.id }}"
+                                onclick="saveInCart('{{ file.id }}')"
+                                class="btn btn-sm {{ 'btn-secondary' if saved else 'btn-outline-secondary' }}"
+                                style="border-radius: 5px;">
+                            <i data-feather="bookmark"></i>
+                            <span>{{ 'Saved' if saved else 'Save' }}</span>
+                        </button>
+
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
+                                <i data-feather="check"></i> Check
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">
+                                        Syntax check
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
+                                <i data-feather="download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a>
+                                    <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a>
+                                </li>
+                                <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
             {% endfor %}
         </div>
 
@@ -392,7 +392,7 @@
     <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
         <div class="modal-content" style="height: 80vh;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h5 class="modal-title" id="fileViewerModalLabel">Feature model view</h5>
+                <h5 class="modal-title" id="fileViewerModalLabel">File view</h5>
                 <div>
                     <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton" style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
                         <i data-feather="download"></i>
