@@ -164,10 +164,10 @@ class DataSetSeeder(BaseSeeder):
         )
 
         seeded_datasets = self.seed(datasets)
-        # Finally we going to add a new seeder, for download count.
-        # To simulate download for the different datasets.
 
+        # Simular descargas de datasets
         download_records = []
+        # Dataset 5 (antiguo, muchas descargas) - 10 descargas
         for _ in range(10):
             download_records.append(
                 DSDownloadRecord(
@@ -177,7 +177,7 @@ class DataSetSeeder(BaseSeeder):
                 )
             )
 
-        # Dataset 6 (recent, medium downloads) - 5 downloads
+        # Dataset 6 (reciente, descargas medias) - 5 descargas
         for _ in range(5):
             download_records.append(
                 DSDownloadRecord(
@@ -187,9 +187,9 @@ class DataSetSeeder(BaseSeeder):
                 )
             )
 
-        # Dataset 7 (recent, no downloads) - 0 downloads (skip)
+        # Dataset 7 (reciente, sin descargas) - 0 descargas
 
-        # Datasets 1-4 (random downloads for variety)
+        # Datasets 1-4 (descargas aleatorias para variedad)
         for i in range(4):
             for _ in range((i + 1) * 2):  # 2, 4, 6, 8 downloads
                 download_records.append(
@@ -205,7 +205,8 @@ class DataSetSeeder(BaseSeeder):
 
         self.seed(download_records)
 
-        # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
+        # Creamos FMMetaData y FeatureModel para compatibilidad,
+        # pero los Hubfile ya NO se enlazan a FeatureModel.
         fm_meta_data_list = [
             FMMetaData(
                 uvl_filename=f"file{i+1}.uvl",
@@ -220,7 +221,7 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_fm_meta_data = self.seed(fm_meta_data_list)
 
-        # Create Author instances and associate with FMMetaData
+        # Autores para FMMetaData
         fm_authors = [
             Author(
                 name=f"Author {i+5}",
@@ -232,6 +233,7 @@ class DataSetSeeder(BaseSeeder):
         ]
         self.seed(fm_authors)
 
+        # 12 FeatureModels, 3 por dataset (solo por compatibilidad, los Hubfile ya no los usan)
         feature_models = [
             FeatureModel(
                 data_set_id=seeded_datasets[i // 3].id,
@@ -239,16 +241,18 @@ class DataSetSeeder(BaseSeeder):
             )
             for i in range(12)
         ]
-        seeded_feature_models = self.seed(feature_models)
+        self.seed(feature_models)
 
-        # Create files, associate them with FeatureModels and copy files
+        # Crear ficheros UVL y asociarlos DIRECTAMENTE al DataSet vía dataset_id
         load_dotenv()  # isort: skip
         working_dir = os.getenv("WORKING_DIR", "")
         src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
+
         for i in range(12):
             file_name = f"file{i+1}.uvl"
-            feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
+
+            # Asignamos 3 ficheros por dataset: 0–2 -> ds0, 3–5 -> ds1, etc.
+            dataset = seeded_datasets[i // 3]
             user_id = dataset.user_id
 
             dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
@@ -261,6 +265,9 @@ class DataSetSeeder(BaseSeeder):
                 name=file_name,
                 checksum=f"checksum{i+1}",
                 size=os.path.getsize(file_path),
-                feature_model_id=feature_model.id,
+                # 👇 NUEVO: relación directa con el dataset
+                dataset_id=dataset.id,
+                # 👇 IMPORTANTE: ya NO ponemos feature_model_id
+                # feature_model_id=None  # si la columna es nullable, ni siquiera hace falta poner esto
             )
             self.seed([uvl_file])
