@@ -103,7 +103,7 @@
       url = `${base}/api/stats`;
     }
 
-    if (endpoint !== 'stats' && key) {
+    if ( key) {
       headers['X-API-Key'] = key;
       curl = `curl -i -H "X-API-Key: ${key}" "${url}"`;
     } else {
