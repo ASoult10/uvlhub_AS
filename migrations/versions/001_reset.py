@@ -190,6 +190,20 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('jti')
     )
+    op.create_table('api_keys',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('key', sa.String(length=64), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=True),
+    sa.Column('scopes', sa.String(length=255), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('requests_count', sa.Integer(), nullable=True),
+    sa.Column('last_used_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('expires_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###
 
 
@@ -212,4 +226,5 @@ def downgrade():
     op.drop_table('user')
     op.drop_table('ds_metrics')
     op.drop_table('doi_mapping')
+    op.drop_table('api_keys')
     # ### end Alembic commands ###
