@@ -21,10 +21,15 @@ class Hubfile(db.Model):
     name = db.Column(db.String(120), nullable=False)
     checksum = db.Column(db.String(120), nullable=False)
     size = db.Column(db.Integer, nullable=False)
+    #TODO: Eliminar relación con feauture_model
     feature_model_id = db.Column(db.Integer, db.ForeignKey("feature_model.id"), nullable=False)
 
     # Relación: qué usuarios han guardado este archivo
     saved_by_users = db.relationship("User", secondary=user_saved_files, back_populates="saved_files", lazy="dynamic")
+
+    # Dataset al que está asociado el hubfile
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=True)
+
 
     def get_formatted_size(self):
         from app.modules.dataset.services import SizeService

@@ -39,7 +39,7 @@
             <div id="basic_info_form">
 
                 {{ form.hidden_tag() }}
-
+                <input type="hidden" name="dataset_id" value="{{ dataset.id if dataset else '' }}">
                 <div class="row">
 
                     <div class="col-12">
@@ -415,7 +415,8 @@
 
                                         }
                                     };
-                                    xhr.send(JSON.stringify({file: file.name}));
+                                    let dataset_id = document.querySelector('input[name="dataset_id"]').value;
+                                    xhr.send(JSON.stringify({file: file.name, dataset_id: dataset_id}));
                                 }.bind(this));
 
                                 /*

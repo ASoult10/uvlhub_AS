@@ -1,4 +1,6 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+
 from wtforms import (
     DateField,
     FieldList,
@@ -121,6 +123,10 @@ class DataSetForm(FlaskForm):
     # TODO: quitar feature_models de DataSetForm
     feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
     observations = FieldList(FormField(ObservationForm), min_entries=0)
+    #Archivos JSON asociados al dataset
+    json_files = FileField("JSON Files",validators=[Optional(), FileAllowed(['json'], "Only JSON files allowed")],render_kw={"multiple": True}
+)
+
 
     submit = SubmitField("Submit")
 

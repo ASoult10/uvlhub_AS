@@ -97,8 +97,10 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-    #esto tiene que desaparecer:
+    #TODO: esto tiene que desaparecer:
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
+    # RELACIÓN: archivos asociados al dataset
+    hubfiles = db.relationship("Hubfile",backref="dataset",lazy=True,cascade="all, delete")
 
 
     def name(self):
