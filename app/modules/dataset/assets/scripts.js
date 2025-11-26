@@ -1,13 +1,8 @@
-var currentId = 0;
 var amount_authors = 0;
-var amount_observations = 0;  // contador de observaciones
+var amount_observations = 0;
 
 function show_upload_dataset() {
     document.getElementById("upload_dataset").style.display = "block";
-}
-
-function generateIncrementalId() {
-    return currentId++;
 }
 
 /* ==========================
@@ -49,14 +44,14 @@ function addRemoveButton(newAuthor) {
     newAuthor.appendChild(buttonWrapper);
 }
 
-function createAuthorBlock(idx, suffix) {
+function createAuthorBlock(idx) {
     let newAuthor = document.createElement('div');
     newAuthor.className = 'author row';
     newAuthor.style.cssText = "border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white";
 
-    addField(newAuthor, `${suffix}authors-${idx}-name`, 'Name *');
-    addField(newAuthor, `${suffix}authors-${idx}-affiliation`, 'Affiliation');
-    addField(newAuthor, `${suffix}authors-${idx}-orcid`, 'ORCID');
+    addField(newAuthor, `authors-${idx}-name`, 'Name *');
+    addField(newAuthor, `authors-${idx}-affiliation`, 'Affiliation');
+    addField(newAuthor, `authors-${idx}-orcid`, 'ORCID');
     addRemoveButton(newAuthor);
 
     return newAuthor;
@@ -147,7 +142,6 @@ function createObservationBlock(idx) {
         </div>
     `;
 
-    // botón de eliminar observación
     addRemoveObservationButton(wrapper);
 
     return wrapper;
@@ -187,21 +181,8 @@ function check_title_and_description() {
 
 document.getElementById('add_author').addEventListener('click', function () {
     let authors = document.getElementById('authors');
-    let newAuthor = createAuthorBlock(amount_authors++, "");
+    let newAuthor = createAuthorBlock(amount_authors++);
     authors.appendChild(newAuthor);
-});
-
-document.addEventListener('click', function (event) {
-    if (event.target && event.target.classList.contains('add_author_to_uvl')) {
-
-        let authorsButtonId = event.target.id;
-        let authorsId = authorsButtonId.replace("_button", "");
-        let authors = document.getElementById(authorsId);
-        let id = authorsId.replace("_form_authors", "")
-        let newAuthor = createAuthorBlock(amount_authors, `feature_models-${id}-`);
-        authors.appendChild(newAuthor);
-
-    }
 });
 
 /* ==========================
@@ -270,7 +251,7 @@ window.onload = function () {
             // process data form
             const formData = {};
 
-            ["basic_info_form", "uploaded_models_form"].forEach((formId) => {
+            ["basic_info_form", "uploaded_files_form"].forEach((formId) => {
                 const form = document.getElementById(formId);
                 const inputs = form.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
@@ -336,9 +317,7 @@ window.onload = function () {
                             response.json().then(data => {
                                 console.error('Error: ' + data.message);
                                 hide_loading();
-
                                 write_upload_error(data.message);
-
                             });
                         }
                     })

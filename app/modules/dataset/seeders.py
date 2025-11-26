@@ -227,9 +227,6 @@ class DataSetSeeder(BaseSeeder):
                 name=file_name,
                 checksum=f"checksum{i+1}",
                 size=os.path.getsize(file_path),
-                # 👇 NUEVO: relación directa con el dataset
                 dataset_id=dataset.id,
-                # 👇 IMPORTANTE: ya NO ponemos feature_model_id
-                # feature_model_id=None  # si la columna es nullable, ni siquiera hace falta poner esto
             )
             self.seed([uvl_file])
