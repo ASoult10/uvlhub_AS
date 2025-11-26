@@ -61,12 +61,11 @@ def create_dataset():
             logger.info("Creating dataset...")
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
-            dataset_service.move_feature_models(dataset)
+            dataset_service.move_hubfiles(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
 
-        # send dataset as deposition to Zenodo
         data = {}
         try:
             zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -84,9 +83,9 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+                # iterate for each hubfile (one hubfile = one request to Zenodo)
+                for hubfile in dataset.hubfiles:
+                    zenodo_service.upload_file(dataset, deposition_id, hubfile)
 
                 # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
@@ -282,12 +281,18 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
-
     # Get recommendations
     recommendations = dataset_service.get_recommendations(dataset.id, limit=5)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations)
+    # Crear servicio de hubfile (igual que en la ruta del DOI)
+    hubfile_service = HubfileService()
 
-
+    return render_template(
+        "dataset/view_dataset.html",
+        dataset=dataset,
+        recommendations=recommendations,
+        hubfile_service=hubfile_service,
+        current_user=current_user,
+    )
 
 from . import comments_routes

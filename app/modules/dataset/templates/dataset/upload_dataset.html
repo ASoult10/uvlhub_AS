@@ -10,7 +10,6 @@
         <div class="col-12 mb-3">
             <div class="alert alert-warning" role="alert" id="test_zenodo_connection_error" style="display: none">
                 <div class="alert-message">
-
                     <h4 class="alert-heading"><i class="align-middle" data-feather="alert-triangle"></i> Limited
                         connection to the Zenodo API</h4>
                     <p class="p-0 m-0">
@@ -22,7 +21,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     {% if messages %}
@@ -39,7 +37,7 @@
             <div id="basic_info_form">
 
                 {{ form.hidden_tag() }}
-
+                <input type="hidden" name="dataset_id" value="{{ dataset.id if dataset else '' }}">
                 <div class="row">
 
                     <div class="col-12">
@@ -73,7 +71,6 @@
                                     {{ form.publication_type.label(class="form-label") }}
                                     {{ form.publication_type(class="form-control") }}
                                 </div>
-
                             </div>
 
                             <div class="col-lg-6 col-6">
@@ -101,7 +98,7 @@
                         <h1 class="h3 mb-3 mt-4">
                           Authors
                           <a href="#" data-toggle="modal" data-target="#infoModal">
-                            <i data-feather="info"></i> <!-- Usamos "info" porque Feather no tiene un ícono específico llamado "feather" para más info -->
+                            <i data-feather="info"></i>
                           </a>
                         </h1>
 
@@ -189,6 +186,92 @@
 
                             </div>
 
+                        </div>
+
+                        {# ===========================
+                           OBSERVATIONS
+                           =========================== #}
+
+                        <h1 class="h3 mb-3 mt-4">
+                            Observations
+                        </h1>
+
+                        <div class="row" style="padding-left: 2rem">
+
+                            <div class="col-12">
+                                <div class="mb-3">
+
+                                    <div id="observations">
+                                        {% for subform in form.observations %}
+                                        <div class="row observation" {% if not loop.first %}
+                                             style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white"
+                                             {% endif %}
+                                        >
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.object_name.label(class="form-label") }}
+                                                {{ subform.form.object_name(class="form-control") }}
+                                                {% for error in subform.object_name.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.ra.label(class="form-label") }}
+                                                {{ subform.form.ra(class="form-control") }}
+                                                {% for error in subform.ra.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.dec.label(class="form-label") }}
+                                                {{ subform.form.dec(class="form-control") }}
+                                                {% for error in subform.dec.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.magnitude.label(class="form-label") }}
+                                                {{ subform.form.magnitude(class="form-control") }}
+                                                {% for error in subform.magnitude.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.observation_date.label(class="form-label") }}
+                                                {{ subform.form.observation_date(class="form-control") }}
+                                                {% for error in subform.observation_date.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-lg-6 col-12 mb-3">
+                                                {{ subform.form.filter_used.label(class="form-label") }}
+                                                {{ subform.form.filter_used(class="form-control") }}
+                                                {% for error in subform.filter_used.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-12 mb-3">
+                                                {{ subform.form.notes.label(class="form-label") }}
+                                                {{ subform.form.notes(class="form-control") }}
+                                                {% for error in subform.notes.errors %}
+                                                    <span style="color: red;">{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <button type="button" class="btn btn-secondary" id="add_observation">
+                                        Add observation
+                                    </button>
+
+                                </div>
+                            </div>
 
                         </div>
 
@@ -214,16 +297,16 @@
 
         <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
 
-            <h1 class="h3 mb-3 mt-2">UVL models</h1>
+            <h1 class="h3 mb-3 mt-2">JSON files</h1>
 
-            <div id="uploaded_models_form" style="padding-left: 2rem">
+            <div id="uploaded_files_form" style="padding-left: 2rem">
 
                 <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
                     <div id="dropzone-text"></div>
                 </form>
 
                 <span class="text-danger" id="alerts" style="display: none">
-                    </span>
+                </span>
 
                 <ul class="mt-2" id="file-list"></ul>
 
@@ -260,55 +343,22 @@
                                 show_upload_dataset();
 
                                 console.log("File uploaded: ", response);
-                                // actions when UVL model is uploaded
+                                
+                                // Crear elemento de lista para el archivo
                                 let listItem = document.createElement('li');
                                 let h4Element = document.createElement('h4');
                                 h4Element.textContent = response.filename;
                                 listItem.appendChild(h4Element);
 
-                                // generate incremental id for form
-                                let formUniqueId = generateIncrementalId();
-
-                                /*
-                                    ##########################################
-                                    FORM BUTTON
-                                    ##########################################
-                                */
-                                let formButton = document.createElement('button');
-                                formButton.innerHTML = 'Show info';
-                                formButton.classList.add('info-button', 'btn', 'btn-outline-secondary', "btn-sm");
-                                formButton.style.borderRadius = '5px';
-                                formButton.id = formUniqueId + "_button";
-
-                                formButton.addEventListener('click', function () {
-                                    if (formContainer.style.display === "none") {
-                                        formContainer.style.display = "block";
-                                        formButton.innerHTML = 'Hide info';
-                                    } else {
-                                        formContainer.style.display = "none";
-                                        formButton.innerHTML = 'Add info';
-                                    }
-                                });
-
-                                // append space
+                                // Agregar espacio
                                 let space = document.createTextNode(" ");
                                 listItem.appendChild(space);
 
-                                /*
-                                    ##########################################
-                                    REMOVE BUTTON
-                                    ##########################################
-                                */
-
-                                // remove button
+                                // Botón para eliminar archivo
                                 let removeButton = document.createElement('button');
-                                removeButton.innerHTML = 'Delete model';
-                                removeButton.classList.add("remove-button", "btn", "btn-outline-danger", "btn-sm", "remove-button");
+                                removeButton.innerHTML = 'Delete file';
+                                removeButton.classList.add("remove-button", "btn", "btn-outline-danger", "btn-sm");
                                 removeButton.style.borderRadius = '5px';
-
-                                // append space
-                                space = document.createTextNode(" ");
-                                listItem.appendChild(space);
 
                                 removeButton.addEventListener('click', function () {
                                     fileList.removeChild(listItem);
@@ -329,104 +379,11 @@
 
                                         }
                                     };
-                                    xhr.send(JSON.stringify({file: file.name}));
+                                    let dataset_id = document.querySelector('input[name="dataset_id"]').value;
+                                    xhr.send(JSON.stringify({file: file.name, dataset_id: dataset_id}));
                                 }.bind(this));
 
-                                /*
-                                    ##########################################
-                                    APPEND BUTTONS
-                                    ##########################################
-                                */
-                                listItem.appendChild(formButton);
                                 listItem.appendChild(removeButton);
-
-                                /*
-                                    ##########################################
-                                    UVL FORM
-                                    ##########################################
-                                */
-
-                                // create specific form for UVL
-                                let formContainer = document.createElement('div');
-                                formContainer.id = formUniqueId + "_form";
-                                formContainer.classList.add('uvl_form', "mt-3");
-                                formContainer.style.display = "none";
-
-                                formContainer.innerHTML = `
-                                    <div class="row">
-                                        <input type="hidden" value="${response.filename}" name="feature_models-${formUniqueId}-uvl_filename">
-                                        <div class="col-12">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Title</label>
-                                                        <input type="text" class="form-control" name="feature_models-${formUniqueId}-title">
-                                                    </div>
-                                                </div>
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Description</label>
-                                                        <textarea rows="4" class="form-control" name="feature_models-${formUniqueId}-desc"></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-6 col-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="publication_type">Publication type</label>
-                                                        <select class="form-control" name="feature_models-${formUniqueId}-publication_type">
-                                                            <option value="none">None</option>
-                                                            <option value="annotationcollection">Annotation Collection</option>
-                                                            <option value="book">Book</option>
-                                                            <option value="section">Book Section</option>
-                                                            <option value="conferencepaper">Conference Paper</option>
-                                                            <option value="datamanagementplan">Data Management Plan</option>
-                                                            <option value="article">Journal Article</option>
-                                                            <option value="patent">Patent</option>
-                                                            <option value="preprint">Preprint</option>
-                                                            <option value="deliverable">Project Deliverable</option>
-                                                            <option value="milestone">Project Milestone</option>
-                                                            <option value="proposal">Proposal</option>
-                                                            <option value="report">Report</option>
-                                                            <option value="softwaredocumentation">Software Documentation</option>
-                                                            <option value="taxonomictreatment">Taxonomic Treatment</option>
-                                                            <option value="technicalnote">Technical Note</option>
-                                                            <option value="thesis">Thesis</option>
-                                                            <option value="workingpaper">Working Paper</option>
-                                                            <option value="other">Other</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-6 col-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="publication_doi">Publication DOI</label>
-                                                        <input class="form-control" name="feature_models-${formUniqueId}-publication_doi" type="text" value="">
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Tags (separated by commas)</label>
-                                                        <input type="text" class="form-control" name="feature_models-${formUniqueId}-tags">
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">UVL version</label>
-                                                        <input type="text" class="form-control" name="feature_models-${formUniqueId}-uvl_version">
-                                                    </div>
-                                                </div>
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Authors</label>
-                                                        <div id="` + formContainer.id + `_authors">
-                                                        </div>
-                                                        <button type="button" class="add_author_to_uvl btn btn-secondary" id="` + formContainer.id + `_authors_button">Add author</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    `;
-
-                                listItem.appendChild(formContainer);
                                 fileList.appendChild(listItem);
 
                             });
@@ -441,8 +398,6 @@
 
                         }
                     };
-
-
                 </script>
 
             </div>
@@ -463,9 +418,9 @@
                 <label class="form-check">
                     <input id="agreeCheckbox" class="form-check-input" type="checkbox" value="">
                     <span class="form-check-label" style="font-size: 15px">
-                                I agree to have my feature models automatically uploaded to Zenodo and made available to the public according to the <a
+                        I agree to have my files automatically uploaded to Zenodo and made available to the public according to the <a
                             href="https://en.wikipedia.org/wiki/Open_science" target="_blank">Open Science</a> manifesto
-                            </span>
+                    </span>
                 </label>
 
                 <button id="upload_button" class="btn btn-primary mt-2" disabled>
@@ -502,8 +457,7 @@
 
 
                 <span class="text-danger mt-2" id="upload_error" style="display: none">
-
-                    </span>
+                </span>
 
                 <script>
                     const checkbox = document.getElementById('agreeCheckbox');
@@ -515,9 +469,6 @@
                 </script>
 
             </div>
-
-
-
 
         </div>
 
