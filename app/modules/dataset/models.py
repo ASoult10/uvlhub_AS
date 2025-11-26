@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum): #se cambia al tipo de publicación en astronomía
+class PublicationType(Enum):  # se cambia al tipo de publicación en astronomía
     NONE = "none"
     ANNOTATION_COLLECTION = "annotationcollection"
     BOOK = "book"
@@ -29,7 +29,7 @@ class PublicationType(Enum): #se cambia al tipo de publicación en astronomía
     OTHER = "other"
 
 
-class Author(db.Model):#se queda igual
+class Author(db.Model):  # se queda igual
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     affiliation = db.Column(db.String(120))
@@ -40,7 +40,8 @@ class Author(db.Model):#se queda igual
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
 
-class Observation(db.Model):#es nueva
+
+class Observation(db.Model):  # es nueva
     id = db.Column(db.Integer, primary_key=True)
     object_name = db.Column(db.String(255), nullable=False)
     ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
@@ -84,9 +85,24 @@ class DSMetaData(db.Model):
     dataset_doi = db.Column(db.String(120))
     tags = db.Column(db.String(120))
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey("ds_metrics.id"))
-    ds_metrics = db.relationship("DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete")
-    authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
-    observations = db.relationship("Observation", backref="ds_meta_data", lazy=True, cascade="all, delete")
+    ds_metrics = db.relationship(
+        "DSMetrics",
+        uselist=False,
+        backref="ds_meta_data",
+        cascade="all, delete",
+    )
+    authors = db.relationship(
+        "Author",
+        backref="ds_meta_data",
+        lazy=True,
+        cascade="all, delete",
+    )
+    observations = db.relationship(
+        "Observation",
+        backref="ds_meta_data",
+        lazy=True,
+        cascade="all, delete",
+    )
 
 
 class DataSet(db.Model):
@@ -97,17 +113,29 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-    #TODO: esto tiene que desaparecer:
-    feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
-    # RELACIÓN: archivos asociados al dataset
-    hubfiles = db.relationship("Hubfile",backref="dataset",lazy=True,cascade="all, delete")
 
+    # TODO: esto tiene que desaparecer:
+    feature_models = db.relationship(
+        "FeatureModel",
+        backref="data_set",
+        lazy=True,
+        cascade="all, delete",
+    )
+
+    # RELACIÓN: archivos asociados al dataset (one-to-many con Hubfile)
+    hubfiles = db.relationship(
+        "Hubfile",
+        backref="dataset",
+        lazy=True,
+        cascade="all, delete",
+    )
 
     def name(self):
         return self.ds_meta_data.title
 
+    # Ahora devolvemos directamente los hubfiles asociados al dataset
     def files(self):
-        return [file for fm in self.feature_models for file in fm.files]
+        return list(self.hubfiles)
 
     def delete(self):
         db.session.delete(self)
@@ -117,13 +145,19 @@ class DataSet(db.Model):
         return self.ds_meta_data.publication_type.name.replace("_", " ").title()
 
     def get_zenodo_url(self):
-        return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
+        return (
+            f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}"
+            if self.ds_meta_data.dataset_doi
+            else None
+        )
 
+    # Contamos los hubfiles (ya no pasamos por feature_models)
     def get_files_count(self):
-        return sum(len(fm.files) for fm in self.feature_models)
+        return len(self.hubfiles)
 
+    # Sumamos el tamaño de todos los hubfiles
     def get_file_total_size(self):
-        return sum(file.size for fm in self.feature_models for file in fm.files)
+        return sum(file.size for file in self.hubfiles)
 
     def get_file_total_size_for_human(self):
         from app.modules.dataset.services import SizeService
@@ -150,7 +184,8 @@ class DataSet(db.Model):
             "url": self.get_uvlhub_doi(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             "zenodo": self.get_zenodo_url(),
-            "files": [file.to_dict() for fm in self.feature_models for file in fm.files],
+            # Ahora exportamos directamente los hubfiles
+            "files": [file.to_dict() for file in self.hubfiles],
             "files_count": self.get_files_count(),
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
