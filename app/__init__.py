@@ -137,10 +137,8 @@ def create_app(config_name="development"):
         from flask_login import logout_user
         from app.modules.token.services import TokenService
         from flask_jwt_extended.exceptions import JWTExtendedException
-        #PARCHE RÁPIDO PARA SOLUCIONAR ERROR EN LA VALIDACIÓN DE TOKENS
-        return 
 
-        public_endpoints = [
+        excluded_endpoints = [
             'auth.login',
             'auth.logout',
             'auth.show_signup_form',
@@ -162,7 +160,12 @@ def create_app(config_name="development"):
             'static'
         ]
 
-        if request.endpoint in public_endpoints:
+        excluded_paths = ['/dataset/file/upload', '/dataset/file/delete', '/dataset/upload']
+
+        if request.endpoint in excluded_endpoints:
+            return
+        
+        if request.path in excluded_paths:
             return
         
         if request.is_json or request.path.startswith("/api"):
