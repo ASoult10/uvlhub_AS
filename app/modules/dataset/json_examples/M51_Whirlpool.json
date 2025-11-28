@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "object_name": "M51",
+    "object_type": "Galaxy - Spiral Interacting",
+    "ra": "13:29:52.7",
+    "dec": "+47:11:43",
+    "constellation": "Canes Venatici",
+    "observation_date_utc": "2020-05-12T00:30:00Z",
+    "observer": "Robert Chen",
+    "project": "Interacting Galaxies Study"
+  },
+  "instrumentation": {
+    "telescope": "Planewave CDK17",
+    "mount": "Planewave L-500",
+    "camera": "FLI ProLine PL16803",
+    "pixel_scale_arcsec": 0.65,
+    "gain": 1.5,
+    "readout_noise_e": 10.0,
+    "temperature_c": -25
+  },
+  "optics": {
+    "filters": [
+      {
+        "name": "Luminance",
+        "bandwidth_nm": 400
+      },
+      {
+        "name": "Red",
+        "bandwidth_nm": 120
+      },
+      {
+        "name": "Green",
+        "bandwidth_nm": 100
+      },
+      {
+        "name": "Blue",
+        "bandwidth_nm": 100
+      }
+    ],
+    "focal_length_mm": 2939,
+    "f_ratio": 6.8,
+    "binning": "1x1"
+  },
+  "exposure": {
+    "sub_exposures": 80,
+    "exposure_time_s": 300,
+    "total_integration_s": 24000,
+    "airmass": 1.25,
+    "moon_phase_percent": 10,
+    "sky_bortle": 3
+  },
+  "calibration": {
+    "darks_used": 50,
+    "flats_used": 50,
+    "bias_used": 100,
+    "dark_flat_used": 50,
+    "calibration_notes": "LRGB imaging with extended luminance"
+  },
+  "sky_conditions": {
+    "seeing_arcsec": 1.6,
+    "transparency": "Very Good",
+    "humidity_percent": 38,
+    "temperature_c": 11,
+    "wind_speed_kmh": 6
+  },
+  "astrometry": {
+    "field_center_ra": "13:29:52.7",
+    "field_center_dec": "+47:11:43",
+    "field_rotation_deg": 0.8,
+    "plate_solved": true,
+    "catalog_used": "Gaia DR2"
+  },
+  "photometry": {
+    "zero_point_mag": 21.8,
+    "limiting_magnitude": 23.0,
+    "background_noise_e": 110,
+    "saturation_level_adus": 62000
+  },
+  "analysis": {
+    "detected_sources": 3421,
+    "notable_objects": [
+      {
+        "name": "M51a",
+        "type": "Spiral Galaxy"
+      },
+      {
+        "name": "M51b (NGC 5195)",
+        "type": "Irregular Galaxy"
+      }
+    ],
+    "signal_to_noise_ratio": 168,
+    "preliminary_science_value": "Tidal interaction features clearly visible"
+  },
+  "notes": "Interaction bridge between galaxies well resolved. HII regions prominent."
+}

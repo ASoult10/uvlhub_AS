@@ -1,6 +1,7 @@
 import os
 import shutil
-import uuid
+import json
+import uuid;
 from datetime import datetime, timezone, date
 
 from app.modules.auth.models import User
@@ -287,29 +288,42 @@ class DataSetSeeder(BaseSeeder):
 
         self.seed(download_records)
 
-
-        # Crear ficheros UVL y asociarlos DIRECTAMENTE al DataSet vía dataset_id
+        # Crear ficheros JSON y asociarlos DIRECTAMENTE al DataSet vía dataset_id
         load_dotenv()  # isort: skip
         working_dir = os.getenv("WORKING_DIR", "")
-        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
+        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "json_examples")
 
-        for i in range(12):
-            file_name = f"file{i+1}.uvl"
+        # Lista de archivos JSON disponibles
+        json_files = [
+            "M31_Andromeda.json",
+            "M42_Orion.json",
+            "NGC7000_NorthAmerica.json",
+            "M13_Hercules.json",
+            "M51_Whirlpool.json",
+            "M57_Ring.json",
+            "NGC891_EdgeOn.json",
+        ]
 
-            # Asignamos 3 ficheros por dataset: 0–2 -> ds0, 3–5 -> ds1, etc.
-            dataset = seeded_datasets[i // 3]
+        # Asignar al menos 1 JSON por dataset
+        for i, dataset in enumerate(seeded_datasets):
+            # Seleccionar JSON correspondiente (ciclar si hay más datasets que JSONs)
+            json_file = json_files[i % len(json_files)]
             user_id = dataset.user_id
 
             dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
             os.makedirs(dest_folder, exist_ok=True)
-            shutil.copy(os.path.join(src_folder, file_name), dest_folder)
+            
+            src_file = os.path.join(src_folder, json_file)
+            dest_file = os.path.join(dest_folder, json_file)
+            
+            # Copiar el archivo JSON
+            shutil.copy(src_file, dest_file)
 
-            file_path = os.path.join(dest_folder, file_name)
-
-            uvl_file = Hubfile(
-                name=file_name,
+            # Crear registro en Hubfile
+            hubfile = Hubfile(
+                name=json_file,
                 checksum=f"checksum{i+1}",
-                size=os.path.getsize(file_path),
+                size=os.path.getsize(dest_file),
                 dataset_id=dataset.id,
             )
-            self.seed([uvl_file])
+            self.seed([hubfile])
