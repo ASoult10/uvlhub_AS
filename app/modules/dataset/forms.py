@@ -12,6 +12,7 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.validators import URL, DataRequired, Optional
+import re
 
 from app.modules.dataset.models import PublicationType
 
@@ -44,7 +45,7 @@ class ObservationForm(FlaskForm):
     notes = TextAreaField("Notes", validators=[Optional()])
 
     class Meta:
-        csrf = False  # disable CSRF because is subform
+        csrf = False 
 
     def is_empty(self):
         """Devuelve True si todos los campos están vacíos."""
@@ -69,6 +70,42 @@ class ObservationForm(FlaskForm):
             "filter_used": (self.filter_used.data or "").strip(),
             "notes": (self.notes.data or "").strip(),
         }
+
+    def validate(self, extra_validators=None):
+        rv = super().validate(extra_validators=extra_validators)
+
+        if self.is_empty():
+            return True
+
+        has_error = False
+
+        if not (self.object_name.data and self.object_name.data.strip()):
+            self.object_name.errors.append("Object name is required for an observation.")
+            has_error = True
+
+        if not (self.ra.data and self.ra.data.strip()):
+            self.ra.errors.append("RA is required for an observation.")
+            has_error = True
+
+        if not (self.dec.data and self.dec.data.strip()):
+            self.dec.errors.append("DEC is required for an observation.")
+            has_error = True
+
+        ra_val = (self.ra.data or "").strip()
+        dec_val = (self.dec.data or "").strip()
+
+        ra_regex = re.compile(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?$")
+        dec_regex = re.compile(r"^[+-]?(?:[0-8]?\d|90):[0-5]\d:[0-5]\d(?:\.\d+)?$")
+
+        if ra_val and not ra_regex.match(ra_val):
+            self.ra.errors.append("Invalid RA format. Expected hh:mm:ss(.sss) with valid ranges.")
+            has_error = True
+
+        if dec_val and not dec_regex.match(dec_val):
+            self.dec.errors.append("Invalid DEC format. Expected [+/-]dd:mm:ss(.sss) with valid ranges.")
+            has_error = True
+
+        return (rv and not has_error)
 
 
 class DataSetForm(FlaskForm):

@@ -151,6 +151,16 @@ function createObservationBlock(idx) {
    VALIDACIONES
    ========================== */
 
+function isValidRA(ra) {
+    const raRegex = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?$/;
+    return raRegex.test((ra || '').trim());
+}
+
+function isValidDEC(dec) {
+    const decRegex = /^[+-]?(?:[0-8]?\d|90):[0-5]\d:[0-5]\d(?:\.\d+)?$/;
+    return decRegex.test((dec || '').trim());
+}
+
 function check_title_and_description() {
     let titleInput = document.querySelector('input[name="title"]');
     let descriptionTextarea = document.querySelector('textarea[name="desc"]');
@@ -328,22 +338,56 @@ window.onload = function () {
             }
 
             if (checked_orcid && checked_name) {
-                // Client-side validation: ensure that any non-empty observation has an observation_date
+                // Client-side validation: for any non-empty observation require Object name, RA and DEC,
+                // validate RA/DEC formats and require observation_date.
                 const observationRows = document.querySelectorAll('#observations .observation');
                 for (let i = 0; i < observationRows.length; i++) {
                     const row = observationRows[i];
-                    const inputs = row.querySelectorAll('input, textarea');
-                    let hasContent = false;
-                    let dateValue = null;
-                    inputs.forEach(input => {
-                        if (input.name && input.name.endsWith('observation_date')) {
-                            dateValue = input.value && input.value.trim() !== '' ? input.value.trim() : null;
-                        } else if (input.value && input.value.toString().trim() !== '') {
-                            hasContent = true;
-                        }
-                    });
+                    const objectNameInput = row.querySelector("input[name$='object_name']");
+                    const raInput = row.querySelector("input[name$='ra']");
+                    const decInput = row.querySelector("input[name$='dec']");
+                    const dateInput = row.querySelector("input[name$='observation_date']");
 
-                    if (hasContent && !dateValue) {
+                    const objectName = objectNameInput ? (objectNameInput.value || '').trim() : '';
+                    const ra = raInput ? (raInput.value || '').trim() : '';
+                    const dec = decInput ? (decInput.value || '').trim() : '';
+                    const dateValue = dateInput ? (dateInput.value || '').trim() : '';
+
+                    // Determine if this observation has any content at all
+                    const anyFilled = objectName || ra || dec || Array.from(row.querySelectorAll('input, textarea')).some(inp => inp.value && inp.value.toString().trim() !== '');
+                    if (!anyFilled) continue;
+
+                    // Required fields
+                    if (!objectName) {
+                        hide_loading();
+                        showObservationError(row, 'Object name is required for each observation.');
+                        return;
+                    }
+                    if (!ra) {
+                        hide_loading();
+                        showObservationError(row, 'RA is required for each observation.');
+                        return;
+                    }
+                    if (!dec) {
+                        hide_loading();
+                        showObservationError(row, 'DEC is required for each observation.');
+                        return;
+                    }
+
+                    // Format checks
+                    if (!isValidRA(ra)) {
+                        hide_loading();
+                        showObservationError(row, 'RA must follow hh:mm:ss(.sss) format and valid ranges.');
+                        return;
+                    }
+                    if (!isValidDEC(dec)) {
+                        hide_loading();
+                        showObservationError(row, 'DEC must follow [+/-]dd:mm:ss(.sss) format and valid ranges.');
+                        return;
+                    }
+
+                    // Date required when observation has data
+                    if (!dateValue) {
                         hide_loading();
                         showObservationError(row, 'Each observation with data requires an Observation date.');
                         return; // stop submission
