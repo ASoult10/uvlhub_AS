@@ -223,6 +223,9 @@ function clean_upload_errors() {
     let upload_error = document.getElementById("upload_error");
     upload_error.innerHTML = "";
     upload_error.style.display = 'none';
+    // Remove any per-observation inline errors
+    const inlineErrors = document.querySelectorAll('.observation-error');
+    inlineErrors.forEach(e => e.remove());
 }
 
 function write_upload_error(error_message) {
@@ -233,6 +236,29 @@ function write_upload_error(error_message) {
     alert.textContent = 'Upload error: ' + error_message;
     upload_error.appendChild(alert);
     upload_error.style.display = 'block';
+}
+
+function showObservationError(row, message) {
+    // Remove existing error for this row
+    const existing = row.querySelector('.observation-error');
+    if (existing) existing.remove();
+
+    // Try to attach error next to the date input if present
+    let dateInput = row.querySelector("input[name$='observation_date']");
+    const errorElem = document.createElement('div');
+    errorElem.className = 'observation-error text-danger';
+    errorElem.style.marginTop = '4px';
+    errorElem.textContent = message;
+
+    if (dateInput) {
+        // Insert after the date input's parent so it appears near the field
+        const parent = dateInput.parentElement || row;
+        parent.appendChild(errorElem);
+        dateInput.focus();
+    } else {
+        // Fallback: append to the row
+        row.appendChild(errorElem);
+    }
 }
 
 window.onload = function () {
@@ -302,6 +328,28 @@ window.onload = function () {
             }
 
             if (checked_orcid && checked_name) {
+                // Client-side validation: ensure that any non-empty observation has an observation_date
+                const observationRows = document.querySelectorAll('#observations .observation');
+                for (let i = 0; i < observationRows.length; i++) {
+                    const row = observationRows[i];
+                    const inputs = row.querySelectorAll('input, textarea');
+                    let hasContent = false;
+                    let dateValue = null;
+                    inputs.forEach(input => {
+                        if (input.name && input.name.endsWith('observation_date')) {
+                            dateValue = input.value && input.value.trim() !== '' ? input.value.trim() : null;
+                        } else if (input.value && input.value.toString().trim() !== '') {
+                            hasContent = true;
+                        }
+                    });
+
+                    if (hasContent && !dateValue) {
+                        hide_loading();
+                        showObservationError(row, 'Each observation with data requires an Observation date.');
+                        return; // stop submission
+                    }
+                }
+
                 fetch('/dataset/upload', {
                     method: 'POST',
                     body: formUploadData
@@ -317,6 +365,16 @@ window.onload = function () {
                             response.json().then(data => {
                                 console.error('Error: ' + data.message);
                                 hide_loading();
+                                // If server indicates a missing observation date with an index, show inline
+                                const match = /Observation\s+(\d+)/i.exec(data.message || '');
+                                if (match) {
+                                    const idx = parseInt(match[1], 10) - 1; // server is 1-based
+                                    const observationRows = document.querySelectorAll('#observations .observation');
+                                    if (observationRows && observationRows[idx]) {
+                                        showObservationError(observationRows[idx], data.message);
+                                        return;
+                                    }
+                                }
                                 write_upload_error(data.message);
                             });
                         }
