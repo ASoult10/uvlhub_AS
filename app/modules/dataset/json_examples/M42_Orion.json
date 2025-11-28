@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "object_name": "M42",
+    "object_type": "Nebula - Emission",
+    "ra": "05:35:17.3",
+    "dec": "-05:23:28",
+    "constellation": "Orion",
+    "observation_date_utc": "2024-02-10T01:15:00Z",
+    "observer": "Carlos Mendez",
+    "project": "Nebula Imaging Campaign"
+  },
+  "instrumentation": {
+    "telescope": "William Optics RedCat 51",
+    "mount": "iOptron CEM40",
+    "camera": "ZWO ASI183MM Pro",
+    "pixel_scale_arcsec": 3.8,
+    "gain": 111,
+    "readout_noise_e": 1.2,
+    "temperature_c": -5
+  },
+  "optics": {
+    "filters": [
+      {
+        "name": "Ha",
+        "bandwidth_nm": 7
+      },
+      {
+        "name": "OIII",
+        "bandwidth_nm": 8.5
+      },
+      {
+        "name": "SII",
+        "bandwidth_nm": 8
+      }
+    ],
+    "focal_length_mm": 250,
+    "f_ratio": 4.9,
+    "binning": "1x1"
+  },
+  "exposure": {
+    "sub_exposures": 60,
+    "exposure_time_s": 180,
+    "total_integration_s": 10800,
+    "airmass": 1.1,
+    "moon_phase_percent": 5,
+    "sky_bortle": 3
+  },
+  "calibration": {
+    "darks_used": 40,
+    "flats_used": 40,
+    "bias_used": 100,
+    "dark_flat_used": 40,
+    "calibration_notes": "Narrowband imaging with separate filter calibrations"
+  },
+  "sky_conditions": {
+    "seeing_arcsec": 1.8,
+    "transparency": "Excellent",
+    "humidity_percent": 35,
+    "temperature_c": 8,
+    "wind_speed_kmh": 5
+  },
+  "astrometry": {
+    "field_center_ra": "05:35:17.3",
+    "field_center_dec": "-05:23:28",
+    "field_rotation_deg": 1.2,
+    "plate_solved": true,
+    "catalog_used": "UCAC4"
+  },
+  "photometry": {
+    "zero_point_mag": 19.8,
+    "limiting_magnitude": 20.5,
+    "background_noise_e": 180,
+    "saturation_level_adus": 60000
+  },
+  "analysis": {
+    "detected_sources": 892,
+    "notable_objects": [
+      {
+        "name": "Trapezium Cluster",
+        "type": "Open Cluster"
+      },
+      {
+        "name": "M43",
+        "type": "Emission Nebula"
+      }
+    ],
+    "signal_to_noise_ratio": 98,
+    "preliminary_science_value": "High quality narrowband data for nebula structure"
+  },
+  "notes": "Hubble Palette SHO composite. Trapezium region shows excellent detail."
+}
