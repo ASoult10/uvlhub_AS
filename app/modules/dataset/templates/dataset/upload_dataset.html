@@ -315,7 +315,7 @@
                         url: "/dataset/file/upload",
                         paramName: 'file',
                         maxFilesize: 10,
-                        acceptedFiles: '.uvl',
+                        acceptedFiles: '.json',   // Solo JSON
                         init: function () {
 
                             let fileList = document.getElementById('file-list');
@@ -324,12 +324,12 @@
 
                             this.on('addedfile', function (file) {
 
-                                let ext = file.name.split('.').pop();
-                                if (ext !== 'uvl') {
+                                let ext = file.name.split('.').pop().toLowerCase();
+                                if (ext !== 'json') {
                                     this.removeFile(file);
 
                                     let alert = document.createElement('p');
-                                    alert.textContent = 'Invalid file extension: ' + file.name;
+                                    alert.textContent = 'Invalid file extension (only JSON allowed): ' + file.name;
                                     alerts.appendChild(alert);
                                     alerts.style.display = 'block';
                                 }
@@ -391,7 +391,7 @@
                             this.on('error', function (file, response) {
                                 console.error("Error uploading file: ", response);
                                 let alert = document.createElement('p');
-                                alert.textContent = 'UVL not valid: ' + file.name;
+                                alert.textContent = 'JSON file not valid: ' + file.name;
                                 alerts.appendChild(alert);
                                 alerts.style.display = 'block';
                             });
