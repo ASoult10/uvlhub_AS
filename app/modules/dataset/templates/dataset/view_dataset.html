@@ -348,19 +348,12 @@
                             </ul>
                         </div>
 
-                        <div class="btn-group" role="group">
-                            <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                <i data-feather="download"></i> Export
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a>
-                                    <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a>
-                                </li>
-                                <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
-                            </ul>
-                        </div>
+                        <a href="{{ url_for('hubfile.download_file', file_id=file.id) }}" 
+                           class="btn btn-primary btn-sm" 
+                           style="border-radius: 5px;"
+                           download>
+                            <i data-feather="download"></i> Export JSON
+                        </a>
                     </div>
                 </div>
             </div>

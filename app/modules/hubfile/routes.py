@@ -265,7 +265,7 @@ def download_all_saved():
             zip_buffer,
             mimetype="application/zip",
             as_attachment=True,
-            download_name=f"saved_files_{export_format}.zip",
+            download_name=f"saved_files_JSON.zip",
         )
     )
     resp.set_cookie("file_download_cookie", user_cookie)
