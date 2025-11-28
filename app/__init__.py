@@ -155,6 +155,8 @@ def create_app(config_name="development"):
             'dataset.subdomain_index',
             'hubfile.view_file',
             'hubfile.download_file',
+            'hubfile.unsave_file',
+            'hubfile.save_file',
             'flamapy.check_uvl',
             'flamapy.valid',
             'static'
