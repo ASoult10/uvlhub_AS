@@ -193,38 +193,26 @@ def delete():
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
 
-    if os.path.exists(filepath):
-        os.remove(filepath)
-        return jsonify({"message": "File deleted successfully"})
-
-    return jsonify({"error": "Error: File not found"})
-
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
-
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
 
     with ZipFile(zip_path, "w") as zipf:
-        for subdir, dirs, files in os.walk(file_path):
-            for file in files:
-                full_path = os.path.join(subdir, file)
-
-                relative_path = os.path.relpath(full_path, file_path)
-
-                zipf.write(
-                    full_path,
-                    arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path),
-                )
+        # Iterar solo sobre los hubfiles del dataset
+        for hubfile in dataset.hubfiles:
+            file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+            full_path = os.path.join(file_path, hubfile.name)
+            
+            if os.path.exists(full_path):
+                zipf.write(full_path, arcname=hubfile.name)
 
     user_cookie = request.cookies.get("download_cookie")
     if not user_cookie:
-        user_cookie = str(uuid.uuid4())  # Generate a new unique identifier if it does not exist
-        # Save the cookie to the user's browser
+        user_cookie = str(uuid.uuid4())
         resp = make_response(
             send_from_directory(
                 temp_dir,
@@ -259,7 +247,6 @@ def download_dataset(dataset_id):
         )
 
     return resp
-
 
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
