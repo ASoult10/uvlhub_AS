@@ -338,60 +338,51 @@ window.onload = function () {
             }
 
             if (checked_orcid && checked_name) {
-                // Client-side validation: for any non-empty observation require Object name, RA and DEC,
-                // validate RA/DEC formats and require observation_date.
-                const observationRows = document.querySelectorAll('#observations .observation');
-                for (let i = 0; i < observationRows.length; i++) {
-                    const row = observationRows[i];
-                    const objectNameInput = row.querySelector("input[name$='object_name']");
-                    const raInput = row.querySelector("input[name$='ra']");
-                    const decInput = row.querySelector("input[name$='dec']");
-                    const dateInput = row.querySelector("input[name$='observation_date']");
+                // Client-side validation: observation fields are ALWAYS required
+                const objectNameInput = document.querySelector("input[name='observation-object_name']");
+                const raInput = document.querySelector("input[name='observation-ra']");
+                const decInput = document.querySelector("input[name='observation-dec']");
+                const dateInput = document.querySelector("input[name='observation-observation_date']");
 
-                    const objectName = objectNameInput ? (objectNameInput.value || '').trim() : '';
-                    const ra = raInput ? (raInput.value || '').trim() : '';
-                    const dec = decInput ? (decInput.value || '').trim() : '';
-                    const dateValue = dateInput ? (dateInput.value || '').trim() : '';
+                const objectName = objectNameInput ? (objectNameInput.value || '').trim() : '';
+                const ra = raInput ? (raInput.value || '').trim() : '';
+                const dec = decInput ? (decInput.value || '').trim() : '';
+                const dateValue = dateInput ? (dateInput.value || '').trim() : '';
 
-                    // Determine if this observation has any content at all
-                    const anyFilled = objectName || ra || dec || Array.from(row.querySelectorAll('input, textarea')).some(inp => inp.value && inp.value.toString().trim() !== '');
-                    if (!anyFilled) continue;
+                const observationRow = document.querySelector('#observations .observation');
+                
+                // Always require these fields
+                if (!objectName) {
+                    hide_loading();
+                    showObservationError(observationRow, 'Object name is required.');
+                    return;
+                }
+                if (!ra) {
+                    hide_loading();
+                    showObservationError(observationRow, 'RA is required.');
+                    return;
+                }
+                if (!dec) {
+                    hide_loading();
+                    showObservationError(observationRow, 'DEC is required.');
+                    return;
+                }
+                if (!dateValue) {
+                    hide_loading();
+                    showObservationError(observationRow, 'Observation date is required.');
+                    return;
+                }
 
-                    // Required fields
-                    if (!objectName) {
-                        hide_loading();
-                        showObservationError(row, 'Object name is required for each observation.');
-                        return;
-                    }
-                    if (!ra) {
-                        hide_loading();
-                        showObservationError(row, 'RA is required for each observation.');
-                        return;
-                    }
-                    if (!dec) {
-                        hide_loading();
-                        showObservationError(row, 'DEC is required for each observation.');
-                        return;
-                    }
-
-                    // Format checks
-                    if (!isValidRA(ra)) {
-                        hide_loading();
-                        showObservationError(row, 'RA must follow hh:mm:ss(.sss) format and valid ranges.');
-                        return;
-                    }
-                    if (!isValidDEC(dec)) {
-                        hide_loading();
-                        showObservationError(row, 'DEC must follow [+/-]dd:mm:ss(.sss) format and valid ranges.');
-                        return;
-                    }
-
-                    // Date required when observation has data
-                    if (!dateValue) {
-                        hide_loading();
-                        showObservationError(row, 'Each observation with data requires an Observation date.');
-                        return; // stop submission
-                    }
+                // Format validation
+                if (!isValidRA(ra)) {
+                    hide_loading();
+                    showObservationError(observationRow, 'RA must follow hh:mm:ss(.sss) format and valid ranges.');
+                    return;
+                }
+                if (!isValidDEC(dec)) {
+                    hide_loading();
+                    showObservationError(observationRow, 'DEC must follow [+/-]dd:mm:ss(.sss) format and valid ranges.');
+                    return;
                 }
 
                 fetch('/dataset/upload', {

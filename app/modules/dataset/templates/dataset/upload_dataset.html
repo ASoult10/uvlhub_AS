@@ -4,475 +4,461 @@
 
 {% block content %}
 
-    <h1 class="h2 mb-3"><b>Upload</b> dataset</h1>
+<h1 class="h2 mb-3"><b>Upload</b> dataset</h1>
 
-    <div class="row">
-        <div class="col-12 mb-3">
-            <div class="alert alert-warning" role="alert" id="test_zenodo_connection_error" style="display: none">
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="alert alert-warning" role="alert" id="test_zenodo_connection_error" style="display: none">
+            <div class="alert-message">
+                <h4 class="alert-heading"><i class="align-middle" data-feather="alert-triangle"></i> Limited
+                    connection to the Zenodo API</h4>
+                <p class="p-0 m-0">
+                    There seems to be some kind of problem with the Zenodo API and synchronization of your dataset
+                    files may not be possible. We will save your files locally to eventually synchronize them with
+                    Zenodo. Sorry for the inconvenience, Zenodo is an external service and we can't do
+                    anything about it.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<div class="row">
+
+    <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
+        <div id="basic_info_form">
+
+            {{ form.hidden_tag() }}
+            <input type="hidden" name="dataset_id" value="{{ dataset.id if dataset else '' }}">
+            <div class="row">
+
+                <div class="col-12">
+
+                    <h1 class="h3 mb-3">Basic info</h1>
+
+                    <div class="row" style="padding-left: 2rem">
+
+                        <div class="col-lg-6 col-xs-12 col-md-12">
+                            <div class="mb-3">
+                                {{ form.title.label(class="form-label") }} *
+                                {{ form.title(class="form-control") }}
+                                {% for error in form.title.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form.desc.label(class="form-label") }} *
+                                {{ form.desc(rows=4, class="form-control") }}
+                                {% for error in form.desc.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 col-6">
+                            <div class="mb-3">
+                                {{ form.publication_type.label(class="form-label") }}
+                                {{ form.publication_type(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 col-6">
+                            <div class="mb-3">
+                                {{ form.publication_doi.label(class="form-label") }}
+                                {{ form.publication_doi(class="form-control") }}
+                                {% for error in form.publication_doi.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                {{ form.tags.label(class="form-label") }}
+                                {{ form.tags(class="form-control") }}
+                                {% for error in form.tags.errors %}
+                                    <span style="color: red;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <h1 class="h3 mb-3 mt-4">
+                      Authors
+                      <a href="#" data-toggle="modal" data-target="#infoModal">
+                        <i data-feather="info"></i>
+                      </a>
+                    </h1>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true" style="display: none">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="infoModalLabel">Información Importante</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            ¡Cuidado! Los autores no se pueden editar una vez que el dataset se haya subido a UVLHub. Esta funcionalidad estará disponible para futuras versiones.
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row" style="padding-left: 2rem">
+
+                        <div class="col-lg-6 col-12 mb-3">
+                            <label class="form-label">Author name</label>
+                            <input class="form-control"
+                                   disabled
+                                   value="{{ current_user.profile.surname }}, {{ current_user.profile.name }}">
+                        </div>
+
+                        <div class="col-lg-6 col-12 mb-3">
+                            <label class="form-label">Author affiliation</label>
+                            <input class="form-control"
+                                   disabled value="{{ current_user.profile.affiliation }}">
+                        </div>
+
+                        <div class="col-lg-6 col-12 mb-3">
+                            <label class="form-label">Author ORCID</label>
+                            <input class="form-control"
+                                   disabled value="{{ current_user.profile.orcid }}">
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="mb-3">
+
+                                <div id="authors">
+                                    {% for subform in form.authors %}
+                                    <div class="row author" {% if not loop.first %}
+                                        style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white"
+                                        {% endif %}
+                                    >
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ subform.form.name.label(class="form-label") }}
+                                            {{ subform.form.name(class="form-control", disabled=loop.first) }}
+                                            {% for error in subform.name.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ subform.form.affiliation.label(class="form-label") }}
+                                            {{ subform.form.affiliation(class="form-control", disabled=loop.first) }}
+                                            {% for error in subform.name.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ subform.orcid.label(class="form-label") }}
+                                            {{ subform.orcid(class="form-control", disabled=loop.first) }}
+                                            {% for error in subform.orcid.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="btn btn-secondary" id="add_author">Add author
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <h1 class="h3 mb-3 mt-4">
+                        Observation
+                    </h1>
+
+                    <div class="row" style="padding-left: 2rem">
+
+                        <div class="col-12">
+                            <div class="mb-3">
+
+                                <div id="observations">  
+                                    <div class="row observation" style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white">
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.object_name.label(class="form-label") }} *
+                                            {{ form.observation.form.object_name(class="form-control", required=True, placeholder="e.g., M31, NGC1234") }}
+                                            {% for error in form.observation.form.object_name.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.ra.label(class="form-label") }} *
+                                            {{ form.observation.form.ra(class="form-control", required=True, placeholder="e.g., 12:34:56.78") }}
+                                            {% for error in form.observation.form.ra.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.dec.label(class="form-label") }} *
+                                            {{ form.observation.form.dec(class="form-control", required=True, placeholder="e.g., +45:30:15.0") }}
+                                            {% for error in form.observation.form.dec.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.magnitude.label(class="form-label") }}
+                                            {{ form.observation.form.magnitude(class="form-control", type="number", step="any", placeholder="e.g., 12.5") }}
+                                            {% for error in form.observation.form.magnitude.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.observation_date.label(class="form-label") }} *
+                                            {{ form.observation.form.observation_date(class="form-control", required=True) }}
+                                            {% for error in form.observation.form.observation_date.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-lg-6 col-12 mb-3">
+                                            {{ form.observation.form.filter_used.label(class="form-label") }}
+                                            {{ form.observation.form.filter_used(class="form-control", placeholder="e.g., V, R, I") }}
+                                            {% for error in form.observation.form.filter_used.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="col-12 mb-3">
+                                            {{ form.observation.form.notes.label(class="form-label") }}
+                                            {{ form.observation.form.notes(class="form-control", rows="3", placeholder="Additional observations or comments...") }}
+                                            {% for error in form.observation.form.notes.errors %}
+                                                <span style="color: red;">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                {% if error %}
+
+                    <div class="mt-3 col-lg-6 col-12">
+                        <span style="color: red;">{{ error }}</span>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
+
+        <h1 class="h3 mb-3 mt-2">JSON files</h1>
+
+        <div id="uploaded_files_form" style="padding-left: 2rem">
+
+            <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
+                <div id="dropzone-text"></div>
+            </form>
+
+            <span class="text-danger" id="alerts" style="display: none">
+            </span>
+
+            <ul class="mt-2" id="file-list"></ul>
+
+            <script>
+                let dropzone = Dropzone.options.myDropzone = {
+                    url: "/dataset/file/upload",
+                    paramName: 'file',
+                    maxFilesize: 10,
+                    acceptedFiles: '.json',   // Solo JSON
+                    init: function () {
+
+                        let fileList = document.getElementById('file-list');
+                        let dropzoneText = document.getElementById('dropzone-text');
+                        let alerts = document.getElementById('alerts');
+
+                        this.on('addedfile', function (file) {
+
+                            let ext = file.name.split('.').pop().toLowerCase();
+                            if (ext !== 'json') {
+                                this.removeFile(file);
+
+                                let alert = document.createElement('p');
+                                alert.textContent = 'Invalid file extension (only JSON allowed): ' + file.name;
+                                alerts.appendChild(alert);
+                                alerts.style.display = 'block';
+                            }
+
+                        });
+
+                        this.on('success', function (file, response) {
+
+                            let dropzone = this;
+
+                            show_upload_dataset();
+
+                            console.log("File uploaded: ", response);
+                            
+                            // Crear elemento de lista para el archivo
+                            let listItem = document.createElement('li');
+                            let h4Element = document.createElement('h4');
+                            h4Element.textContent = response.filename;
+                            listItem.appendChild(h4Element);
+
+                            // Agregar espacio
+                            let space = document.createTextNode(" ");
+                            listItem.appendChild(space);
+
+                            // Botón para eliminar archivo
+                            let removeButton = document.createElement('button');
+                            removeButton.innerHTML = 'Delete file';
+                            removeButton.classList.add("remove-button", "btn", "btn-outline-danger", "btn-sm");
+                            removeButton.style.borderRadius = '5px';
+
+                            removeButton.addEventListener('click', function () {
+                                fileList.removeChild(listItem);
+                                this.removeFile(file);
+
+                                // Ajax request
+                                let xhr = new XMLHttpRequest();
+                                xhr.open('POST', '/dataset/file/delete', true);
+                                xhr.setRequestHeader('Content-Type', 'application/json');
+                                xhr.onload = function () {
+                                    if (xhr.status === 200) {
+                                        console.log('Deleted file from server');
+
+                                        if (dropzone.files.length === 0) {
+                                            document.getElementById("upload_dataset").style.display = "none";
+                                            clean_upload_errors();
+                                        }
+
+                                    }
+                                };
+                                let dataset_id = document.querySelector('input[name="dataset_id"]').value;
+                                xhr.send(JSON.stringify({file: file.name, dataset_id: dataset_id}));
+                            }.bind(this));
+
+                            listItem.appendChild(removeButton);
+                            fileList.appendChild(listItem);
+
+                        });
+
+                        this.on('error', function (file, response) {
+                            console.error("Error uploading file: ", response);
+                            let alert = document.createElement('p');
+                            alert.textContent = 'JSON file not valid: ' + file.name;
+                            alerts.appendChild(alert);
+                            alerts.style.display = 'block';
+                        });
+
+                    }
+                };
+            </script>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="row" id="upload_dataset" style="display: none">
+
+    <div class="col-12">
+
+        <hr>
+
+        <h1 class="h3 mb-3 mt-2">Upload dataset</h1>
+
+        <div style="padding-left: 2rem">
+
+            <label class="form-check">
+                <input id="agreeCheckbox" class="form-check-input" type="checkbox" value="">
+                <span class="form-check-label" style="font-size: 15px">
+                    I agree to have my files automatically uploaded to Zenodo and made available to the public according to the <a
+                        href="https://en.wikipedia.org/wiki/Open_science" target="_blank">Open Science</a> manifesto
+                </span>
+            </label>
+
+            <button id="upload_button" class="btn btn-primary mt-2" disabled>
+                <i data-feather="upload" class="center-button-icon"></i>
+                Upload dataset</button>
+
+            <div id="loading" style="display: none">
+                <img width="40px" src="{{ url_for("static", filename="gifs/loading.svg") }}"/>
+                Uploading dataset, please wait...
+            </div>
+
+            <div class="row">
+                <div class="col-12 mb-3">
+
+                </div>
+            </div>
+
+            <div class="alert alert-error" role="alert" id="upload_error"
+                 style="display: none">
                 <div class="alert-message">
+
                     <h4 class="alert-heading"><i class="align-middle" data-feather="alert-triangle"></i> Limited
                         connection to the Zenodo API</h4>
                     <p class="p-0 m-0">
-                        There seems to be some kind of problem with the Zenodo API and synchronization of your dataset
-                        files may not be possible. We will save your files locally to eventually synchronize them with
+                        There seems to be some kind of problem with the Zenodo API and synchronization of your
+                        dataset
+                        files may not be possible. We will save your files locally to eventually synchronize
+                        them with
                         Zenodo. Sorry for the inconvenience, Zenodo is an external service and we can't do
                         anything about it.
                     </p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
 
-    <div class="row">
+            <span class="text-danger mt-2" id="upload_error" style="display: none">
+            </span>
 
-        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-            <div id="basic_info_form">
+            <script>
+                const checkbox = document.getElementById('agreeCheckbox');
+                const upload_button = document.getElementById('upload_button');
 
-                {{ form.hidden_tag() }}
-                <input type="hidden" name="dataset_id" value="{{ dataset.id if dataset else '' }}">
-                <div class="row">
+                checkbox.addEventListener('change', function () {
+                    upload_button.disabled = !checkbox.checked;
+                });
+            </script>
 
-                    <div class="col-12">
-
-                        <h1 class="h3 mb-3">Basic info</h1>
-
-                        <div class="row" style="padding-left: 2rem">
-
-                            <div class="col-lg-6 col-xs-12 col-md-12">
-                                <div class="mb-3">
-                                    {{ form.title.label(class="form-label") }} *
-                                    {{ form.title(class="form-control") }}
-                                    {% for error in form.title.errors %}
-                                        <span style="color: red;">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    {{ form.desc.label(class="form-label") }} *
-                                    {{ form.desc(rows=4, class="form-control") }}
-                                    {% for error in form.desc.errors %}
-                                        <span style="color: red;">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 col-6">
-                                <div class="mb-3">
-                                    {{ form.publication_type.label(class="form-label") }}
-                                    {{ form.publication_type(class="form-control") }}
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6 col-6">
-                                <div class="mb-3">
-                                    {{ form.publication_doi.label(class="form-label") }}
-                                    {{ form.publication_doi(class="form-control") }}
-                                    {% for error in form.publication_doi.errors %}
-                                        <span style="color: red;">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    {{ form.tags.label(class="form-label") }}
-                                    {{ form.tags(class="form-control") }}
-                                    {% for error in form.tags.errors %}
-                                        <span style="color: red;">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <h1 class="h3 mb-3 mt-4">
-                          Authors
-                          <a href="#" data-toggle="modal" data-target="#infoModal">
-                            <i data-feather="info"></i>
-                          </a>
-                        </h1>
-
-                        <!-- Modal -->
-                        <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true" style="display: none">
-                          <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="infoModalLabel">Información Importante</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">&times;</span>
-                                </button>
-                              </div>
-                              <div class="modal-body">
-                                ¡Cuidado! Los autores no se pueden editar una vez que el dataset se haya subido a UVLHub. Esta funcionalidad estará disponible para futuras versiones.
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="row" style="padding-left: 2rem">
-
-                            <div class="col-lg-6 col-12 mb-3">
-                                <label class="form-label">Author name</label>
-                                <input class="form-control"
-                                       disabled
-                                       value="{{ current_user.profile.surname }}, {{ current_user.profile.name }}">
-                            </div>
-
-                            <div class="col-lg-6 col-12 mb-3">
-                                <label class="form-label">Author affiliation</label>
-                                <input class="form-control"
-                                       disabled value="{{ current_user.profile.affiliation }}">
-                            </div>
-
-                            <div class="col-lg-6 col-12 mb-3">
-                                <label class="form-label">Author ORCID</label>
-                                <input class="form-control"
-                                       disabled value="{{ current_user.profile.orcid }}">
-                            </div>
-
-                            <div class="col-12">
-
-                                <div class="mb-3">
-
-                                    <div id="authors">
-                                        {% for subform in form.authors %}
-                                        <div class="row author" {% if not loop.first %}
-                                            style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white"
-                                            {% endif %}
-                                        >
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.name.label(class="form-label") }}
-                                                {{ subform.form.name(class="form-control", disabled=loop.first) }}
-                                                {% for error in subform.name.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.affiliation.label(class="form-label") }}
-                                                {{ subform.form.affiliation(class="form-control", disabled=loop.first) }}
-                                                {% for error in subform.name.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.orcid.label(class="form-label") }}
-                                                {{ subform.orcid(class="form-control", disabled=loop.first) }}
-                                                {% for error in subform.orcid.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                    <button type="button" class="btn btn-secondary" id="add_author">Add author
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        {# ===========================
-                           OBSERVATIONS
-                           =========================== #}
-
-                        <h1 class="h3 mb-3 mt-4">
-                            Observations
-                        </h1>
-
-                        <div class="row" style="padding-left: 2rem">
-
-                            <div class="col-12">
-                                <div class="mb-3">
-
-                                    <div id="observations">
-                                        {% for subform in form.observations %}
-                                        <div class="row observation" {% if not loop.first %}
-                                             style="border:2px dotted #ccc;border-radius:10px;padding:10px;margin:10px 0; background-color: white"
-                                             {% endif %}
-                                        >
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.object_name.label(class="form-label") }}
-                                                {{ subform.form.object_name(class="form-control") }}
-                                                {% for error in subform.object_name.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.ra.label(class="form-label") }}
-                                                {{ subform.form.ra(class="form-control") }}
-                                                {% for error in subform.ra.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.dec.label(class="form-label") }}
-                                                {{ subform.form.dec(class="form-control") }}
-                                                {% for error in subform.dec.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.magnitude.label(class="form-label") }}
-                                                {{ subform.form.magnitude(class="form-control") }}
-                                                {% for error in subform.magnitude.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.observation_date.label(class="form-label") }}
-                                                {{ subform.form.observation_date(class="form-control") }}
-                                                {% for error in subform.observation_date.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.filter_used.label(class="form-label") }}
-                                                {{ subform.form.filter_used(class="form-control") }}
-                                                {% for error in subform.filter_used.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-
-                                            <div class="col-12 mb-3">
-                                                {{ subform.form.notes.label(class="form-label") }}
-                                                {{ subform.form.notes(class="form-control") }}
-                                                {% for error in subform.notes.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-
-                                    <button type="button" class="btn btn-secondary" id="add_observation">
-                                        Add observation
-                                    </button>
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="row">
-
-                    {% if error %}
-
-                        <div class="mt-3 col-lg-6 col-12">
-                            <span style="color: red;">{{ error }}</span>
-                        </div>
-
-                    {% endif %}
-
-                </div>
-
-
-            </div>
-        </div>
-
-        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-
-            <h1 class="h3 mb-3 mt-2">JSON files</h1>
-
-            <div id="uploaded_files_form" style="padding-left: 2rem">
-
-                <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
-                    <div id="dropzone-text"></div>
-                </form>
-
-                <span class="text-danger" id="alerts" style="display: none">
-                </span>
-
-                <ul class="mt-2" id="file-list"></ul>
-
-                <script>
-                    let dropzone = Dropzone.options.myDropzone = {
-                        url: "/dataset/file/upload",
-                        paramName: 'file',
-                        maxFilesize: 10,
-                        acceptedFiles: '.json',   // Solo JSON
-                        init: function () {
-
-                            let fileList = document.getElementById('file-list');
-                            let dropzoneText = document.getElementById('dropzone-text');
-                            let alerts = document.getElementById('alerts');
-
-                            this.on('addedfile', function (file) {
-
-                                let ext = file.name.split('.').pop().toLowerCase();
-                                if (ext !== 'json') {
-                                    this.removeFile(file);
-
-                                    let alert = document.createElement('p');
-                                    alert.textContent = 'Invalid file extension (only JSON allowed): ' + file.name;
-                                    alerts.appendChild(alert);
-                                    alerts.style.display = 'block';
-                                }
-
-                            });
-
-                            this.on('success', function (file, response) {
-
-                                let dropzone = this;
-
-                                show_upload_dataset();
-
-                                console.log("File uploaded: ", response);
-                                
-                                // Crear elemento de lista para el archivo
-                                let listItem = document.createElement('li');
-                                let h4Element = document.createElement('h4');
-                                h4Element.textContent = response.filename;
-                                listItem.appendChild(h4Element);
-
-                                // Agregar espacio
-                                let space = document.createTextNode(" ");
-                                listItem.appendChild(space);
-
-                                // Botón para eliminar archivo
-                                let removeButton = document.createElement('button');
-                                removeButton.innerHTML = 'Delete file';
-                                removeButton.classList.add("remove-button", "btn", "btn-outline-danger", "btn-sm");
-                                removeButton.style.borderRadius = '5px';
-
-                                removeButton.addEventListener('click', function () {
-                                    fileList.removeChild(listItem);
-                                    this.removeFile(file);
-
-                                    // Ajax request
-                                    let xhr = new XMLHttpRequest();
-                                    xhr.open('POST', '/dataset/file/delete', true);
-                                    xhr.setRequestHeader('Content-Type', 'application/json');
-                                    xhr.onload = function () {
-                                        if (xhr.status === 200) {
-                                            console.log('Deleted file from server');
-
-                                            if (dropzone.files.length === 0) {
-                                                document.getElementById("upload_dataset").style.display = "none";
-                                                clean_upload_errors();
-                                            }
-
-                                        }
-                                    };
-                                    let dataset_id = document.querySelector('input[name="dataset_id"]').value;
-                                    xhr.send(JSON.stringify({file: file.name, dataset_id: dataset_id}));
-                                }.bind(this));
-
-                                listItem.appendChild(removeButton);
-                                fileList.appendChild(listItem);
-
-                            });
-
-                            this.on('error', function (file, response) {
-                                console.error("Error uploading file: ", response);
-                                let alert = document.createElement('p');
-                                alert.textContent = 'JSON file not valid: ' + file.name;
-                                alerts.appendChild(alert);
-                                alerts.style.display = 'block';
-                            });
-
-                        }
-                    };
-                </script>
-
-            </div>
         </div>
 
     </div>
 
-    <div class="row" id="upload_dataset" style="display: none">
-
-        <div class="col-12">
-
-            <hr>
-
-            <h1 class="h3 mb-3 mt-2">Upload dataset</h1>
-
-            <div style="padding-left: 2rem">
-
-                <label class="form-check">
-                    <input id="agreeCheckbox" class="form-check-input" type="checkbox" value="">
-                    <span class="form-check-label" style="font-size: 15px">
-                        I agree to have my files automatically uploaded to Zenodo and made available to the public according to the <a
-                            href="https://en.wikipedia.org/wiki/Open_science" target="_blank">Open Science</a> manifesto
-                    </span>
-                </label>
-
-                <button id="upload_button" class="btn btn-primary mt-2" disabled>
-                    <i data-feather="upload" class="center-button-icon"></i>
-                    Upload dataset</button>
-
-                <div id="loading" style="display: none">
-                    <img width="40px" src="{{ url_for("static", filename="gifs/loading.svg") }}"/>
-                    Uploading dataset, please wait...
-                </div>
-
-                <div class="row">
-                    <div class="col-12 mb-3">
-
-                    </div>
-                </div>
-
-                <div class="alert alert-error" role="alert" id="upload_error"
-                     style="display: none">
-                    <div class="alert-message">
-
-                        <h4 class="alert-heading"><i class="align-middle" data-feather="alert-triangle"></i> Limited
-                            connection to the Zenodo API</h4>
-                        <p class="p-0 m-0">
-                            There seems to be some kind of problem with the Zenodo API and synchronization of your
-                            dataset
-                            files may not be possible. We will save your files locally to eventually synchronize
-                            them with
-                            Zenodo. Sorry for the inconvenience, Zenodo is an external service and we can't do
-                            anything about it.
-                        </p>
-                    </div>
-                </div>
-
-
-                <span class="text-danger mt-2" id="upload_error" style="display: none">
-                </span>
-
-                <script>
-                    const checkbox = document.getElementById('agreeCheckbox');
-                    const upload_button = document.getElementById('upload_button');
-
-                    checkbox.addEventListener('change', function () {
-                        upload_button.disabled = !checkbox.checked;
-                    });
-                </script>
-
-            </div>
-
-        </div>
-
-    </div>
+</div>
 
 
 {% endblock %}

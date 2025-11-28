@@ -57,22 +57,29 @@ def create_dataset():
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
-        # Server-side validation: ensure that any non-empty observation includes an observation_date
-        observations = form.get_observations()
-        for idx, obs in enumerate(observations):
-            # obs is a dict returned by ObservationForm.get_observation()
-            if (
-                (obs.get("object_name") and obs.get("object_name").strip())
-                or (obs.get("ra") and obs.get("ra").strip())
-                or (obs.get("dec") and obs.get("dec").strip())
-                or obs.get("magnitude") is not None
-                or (obs.get("filter_used") and obs.get("filter_used").strip())
-                or (obs.get("notes") and obs.get("notes").strip())
-            ):
-                # If any other field is present, observation_date must be provided (DB currently requires it)
-                if not obs.get("observation_date"):
-                    msg = f"Observation {idx + 1} missing date. Please provide a date for each observation."
-                    return jsonify({"message": msg}), 400
+        # Server-side validation: observation essential fields are ALWAYS required
+        observation = form.get_observation()
+        
+        if not observation:
+            msg = "Observation data is required."
+            return jsonify({"message": msg}), 400
+        
+        # Check required fields
+        if not observation.get("object_name") or not observation.get("object_name").strip():
+            msg = "Object name is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("ra") or not observation.get("ra").strip():
+            msg = "RA is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("dec") or not observation.get("dec").strip():
+            msg = "DEC is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("observation_date"):
+            msg = "Observation date is required."
+            return jsonify({"message": msg}), 400
 
         try:
             logger.info("Creating dataset...")

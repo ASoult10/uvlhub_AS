@@ -120,7 +120,7 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    observations = FieldList(FormField(ObservationForm), min_entries=0)
+    observation = FormField(ObservationForm)
     #Archivos JSON asociados al dataset
     json_files = FileField("JSON Files",validators=[Optional(), FileAllowed(['json'], "Only JSON files allowed")],render_kw={"multiple": True}
 )
@@ -150,6 +150,7 @@ class DataSetForm(FlaskForm):
     def get_authors(self):
         return [author.get_author() for author in self.authors]
 
-    def get_observations(self):
-        """Devuelve solo observaciones no vacías."""
-        return [obs.get_observation() for obs in self.observations if not obs.is_empty()]
+    def get_observation(self):
+        if self.observation.form.is_empty():
+            return None
+        return self.observation.form.get_observation()
