@@ -146,53 +146,76 @@
         <!-- ==== OBSERVATIONS ==== -->
         <div class="card mt-3">
             <div class="card-body">
-                <h3 class="mb-3">Observations</h3>
+                <h3 class="mb-3">Observation</h3>
 
-                {% if not dataset.ds_meta_data.observations or dataset.ds_meta_data.observations|length == 0 %}
-                    <p class="text-muted mb-0">No observations associated with this dataset.</p>
-                {% else %}
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Object name</th>
-                                    <th>RA</th>
-                                    <th>DEC</th>
-                                    <th>Mag</th>
-                                    <th>Date</th>
-                                    <th>Filter</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for obs in dataset.ds_meta_data.observations %}
-                                <tr>
-                                    <td>{{ obs.object_name }}</td>
-                                    <td>{{ obs.ra }}</td>
-                                    <td>{{ obs.dec }}</td>
-                                    <td>
-                                        {% if obs.magnitude is not none %}
-                                            {{ obs.magnitude }}
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if obs.observation_date %}
-                                            {{ obs.observation_date.strftime('%Y-%m-%d') }}
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ obs.filter_used or '—' }}</td>
-                                    <td style="max-width: 250px; white-space: pre-wrap; word-break: break-word;">
-                                        {{ obs.notes or '' }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                {% if dataset.ds_meta_data.observation %}
+                    {% set obs = dataset.ds_meta_data.observation %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Object Name</small>
+                                <strong>{{ obs.object_name or '—' }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Observation Date</small>
+                                <strong>
+                                    {% if obs.observation_date %}
+                                        {{ obs.observation_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Right Ascension (RA)</small>
+                                <strong>{{ obs.ra or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Declination (Dec)</small>
+                                <strong>{{ obs.dec or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Magnitude</small>
+                                <strong>
+                                    {% if obs.magnitude is not none %}
+                                        {{ obs.magnitude }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Filter Used</small>
+                                <strong>{{ obs.filter_used or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        {% if obs.notes %}
+                        <div class="col-md-12">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Notes</small>
+                                <p class="mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ obs.notes }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
+                {% else %}
+                    <p class="text-muted mb-0">No observation data associated with this dataset.</p>
                 {% endif %}
             </div>
         </div>
@@ -276,7 +299,7 @@
             <div class="list-group-item">
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h4 style="margin-bottom: 0px">UVL models</h4>
+                        <h4 style="margin-bottom: 0px">Astronomy models</h4>
                         <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
                     </div>
                 </div>

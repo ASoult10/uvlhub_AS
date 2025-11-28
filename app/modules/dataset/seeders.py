@@ -1,10 +1,11 @@
 import os
 import shutil
-import uuid
-from datetime import datetime, timezone
+import json
+import uuid;
+from datetime import datetime, timezone, date
 
 from app.modules.auth.models import User
-from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, DSMetrics, PublicationType
+from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, DSMetrics, PublicationType, Observation
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from core.utils.utils import random_datetime
@@ -28,13 +29,20 @@ class DataSetSeeder(BaseSeeder):
         ds_metrics = DSMetrics(number_of_models="5", number_of_features="50")
         seeded_ds_metrics = self.seed([ds_metrics])[0]
 
-        # Create DSMetaData instances
+        # Create DSMetaData instances with new publication types
+        publication_types = [
+            PublicationType.OBSERVATION_DATA,
+            PublicationType.DATA_PAPER,
+            PublicationType.JOURNAL_ARTICLE,
+            PublicationType.PREPRINT,
+        ]
+
         ds_meta_data_list = [
             DSMetaData(
                 deposition_id=1 + i,
                 title=f"Sample dataset {i+1}",
                 description=f"Description for dataset {i+1}",
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=publication_types[i % len(publication_types)],
                 publication_doi=f"10.1234/dataset{i+1}",
                 dataset_doi=f"10.1234/dataset{i+1}",
                 tags="tag1, tag2",
@@ -50,7 +58,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=5,
                 title="Dataset with tag3,tag4 and author 1",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=PublicationType.TECHNICAL_REPORT,
                 publication_doi="10.1234/dataset5",
                 dataset_doi="10.1234/dataset5",
                 tags="tag3, tag4",
@@ -64,7 +72,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=6,
                 title="Dataset with author 1",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=PublicationType.THESIS,
                 publication_doi="10.1234/dataset6",
                 dataset_doi="10.1234/dataset6",
                 tags="tag3, tag2",
@@ -78,7 +86,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=7,
                 title="Dataset with tag5 and author 7",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=PublicationType.SOFTWARE,
                 publication_doi="10.1234/dataset7",
                 dataset_doi="10.1234/dataset7",
                 tags="tag5, tag6",
@@ -87,6 +95,82 @@ class DataSetSeeder(BaseSeeder):
         )
 
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
+
+        # Create Observation instances for each DSMetaData
+        observations = [
+            Observation(
+                object_name="M31",
+                ra="00:42:44.330",
+                dec="+41:16:07.50",
+                magnitude=3.44,
+                observation_date=date(2024, 1, 15),
+                filter_used="V",
+                notes="Andromeda Galaxy observation",
+                ds_meta_data_id=seeded_ds_meta_data[0].id,
+            ),
+            Observation(
+                object_name="M42",
+                ra="05:35:17.300",
+                dec="-05:23:28.00",
+                magnitude=4.0,
+                observation_date=date(2024, 2, 10),
+                filter_used="R",
+                notes="Orion Nebula observation",
+                ds_meta_data_id=seeded_ds_meta_data[1].id,
+            ),
+            Observation(
+                object_name="NGC 7000",
+                ra="20:58:47.000",
+                dec="+44:19:47.00",
+                magnitude=None,
+                observation_date=date(2024, 3, 5),
+                filter_used="Ha",
+                notes="North America Nebula in H-alpha",
+                ds_meta_data_id=seeded_ds_meta_data[2].id,
+            ),
+            Observation(
+                object_name="M13",
+                ra="16:41:41.440",
+                dec="+36:27:35.50",
+                magnitude=5.8,
+                observation_date=date(2024, 4, 20),
+                filter_used="B",
+                notes="Hercules Globular Cluster",
+                ds_meta_data_id=seeded_ds_meta_data[3].id,
+            ),
+            Observation(
+                object_name="M51",
+                ra="13:29:52.700",
+                dec="+47:11:43.00",
+                magnitude=8.4,
+                observation_date=date(2020, 5, 12),
+                filter_used="V",
+                notes="Whirlpool Galaxy observation",
+                ds_meta_data_id=seeded_ds_meta_data[4].id,
+            ),
+            Observation(
+                object_name="M57",
+                ra="18:53:35.080",
+                dec="+33:01:45.00",
+                magnitude=8.8,
+                observation_date=date(2024, 6, 8),
+                filter_used="OIII",
+                notes="Ring Nebula in OIII filter",
+                ds_meta_data_id=seeded_ds_meta_data[5].id,
+            ),
+            Observation(
+                object_name="NGC 891",
+                ra="02:22:33.400",
+                dec="+42:20:57.00",
+                magnitude=10.0,
+                observation_date=date(2024, 7, 14),
+                filter_used="L",
+                notes="Edge-on spiral galaxy",
+                ds_meta_data_id=seeded_ds_meta_data[6].id,
+            ),
+        ]
+
+        self.seed(observations)
 
         # Create Author instances and associate with DSMetaData
         authors = [
@@ -204,29 +288,42 @@ class DataSetSeeder(BaseSeeder):
 
         self.seed(download_records)
 
-
-        # Crear ficheros UVL y asociarlos DIRECTAMENTE al DataSet vía dataset_id
+        # Crear ficheros JSON y asociarlos DIRECTAMENTE al DataSet vía dataset_id
         load_dotenv()  # isort: skip
         working_dir = os.getenv("WORKING_DIR", "")
-        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
+        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "json_examples")
 
-        for i in range(12):
-            file_name = f"file{i+1}.uvl"
+        # Lista de archivos JSON disponibles
+        json_files = [
+            "M31_Andromeda.json",
+            "M42_Orion.json",
+            "NGC7000_NorthAmerica.json",
+            "M13_Hercules.json",
+            "M51_Whirlpool.json",
+            "M57_Ring.json",
+            "NGC891_EdgeOn.json",
+        ]
 
-            # Asignamos 3 ficheros por dataset: 0–2 -> ds0, 3–5 -> ds1, etc.
-            dataset = seeded_datasets[i // 3]
+        # Asignar al menos 1 JSON por dataset
+        for i, dataset in enumerate(seeded_datasets):
+            # Seleccionar JSON correspondiente (ciclar si hay más datasets que JSONs)
+            json_file = json_files[i % len(json_files)]
             user_id = dataset.user_id
 
             dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
             os.makedirs(dest_folder, exist_ok=True)
-            shutil.copy(os.path.join(src_folder, file_name), dest_folder)
+            
+            src_file = os.path.join(src_folder, json_file)
+            dest_file = os.path.join(dest_folder, json_file)
+            
+            # Copiar el archivo JSON
+            shutil.copy(src_file, dest_file)
 
-            file_path = os.path.join(dest_folder, file_name)
-
-            uvl_file = Hubfile(
-                name=file_name,
+            # Crear registro en Hubfile
+            hubfile = Hubfile(
+                name=json_file,
                 checksum=f"checksum{i+1}",
-                size=os.path.getsize(file_path),
+                size=os.path.getsize(dest_file),
                 dataset_id=dataset.id,
             )
-            self.seed([uvl_file])
+            self.seed([hubfile])

@@ -57,6 +57,30 @@ def create_dataset():
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
+        # Server-side validation: observation essential fields are ALWAYS required
+        observation = form.get_observation()
+        
+        if not observation:
+            msg = "Observation data is required."
+            return jsonify({"message": msg}), 400
+        
+        # Check required fields
+        if not observation.get("object_name") or not observation.get("object_name").strip():
+            msg = "Object name is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("ra") or not observation.get("ra").strip():
+            msg = "RA is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("dec") or not observation.get("dec").strip():
+            msg = "DEC is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("observation_date"):
+            msg = "Observation date is required."
+            return jsonify({"message": msg}), 400
+
         try:
             logger.info("Creating dataset...")
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
@@ -64,7 +88,9 @@ def create_dataset():
             dataset_service.move_hubfiles(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
-            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+            # Return a consistent JSON structure with a 'message' key so the frontend
+            # can always read `data.message` and display a controlled error message.
+            return jsonify({"message": str(exc)}), 400
 
         data = {}
         try:
@@ -124,7 +150,7 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
+    if not file or not file.filename.endswith(".json"):
         return jsonify({"message": "No valid file"}), 400
 
     # create temp folder
@@ -152,7 +178,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "JSON uploaded successfully",
                 "filename": new_filename,
             }
         ),

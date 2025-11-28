@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "object_name": "NGC 7000",
+    "object_type": "Nebula - Emission",
+    "ra": "20:58:47.0",
+    "dec": "+44:19:47",
+    "constellation": "Cygnus",
+    "observation_date_utc": "2024-03-05T23:45:00Z",
+    "observer": "Maria Santos",
+    "project": "Cygnus Region Survey"
+  },
+  "instrumentation": {
+    "telescope": "Takahashi FSQ-106EDX4",
+    "mount": "Paramount MX+",
+    "camera": "QHY600M",
+    "pixel_scale_arcsec": 2.3,
+    "gain": 56,
+    "readout_noise_e": 1.8,
+    "temperature_c": -15
+  },
+  "optics": {
+    "filters": [
+      {
+        "name": "Ha",
+        "bandwidth_nm": 3
+      }
+    ],
+    "focal_length_mm": 530,
+    "f_ratio": 5,
+    "binning": "1x1"
+  },
+  "exposure": {
+    "sub_exposures": 50,
+    "exposure_time_s": 600,
+    "total_integration_s": 30000,
+    "airmass": 1.3,
+    "moon_phase_percent": 0,
+    "sky_bortle": 2
+  },
+  "calibration": {
+    "darks_used": 50,
+    "flats_used": 50,
+    "bias_used": 100,
+    "dark_flat_used": 50,
+    "calibration_notes": "Extended integration for faint nebulosity"
+  },
+  "sky_conditions": {
+    "seeing_arcsec": 1.5,
+    "transparency": "Excellent",
+    "humidity_percent": 40,
+    "temperature_c": 10,
+    "wind_speed_kmh": 3
+  },
+  "astrometry": {
+    "field_center_ra": "20:58:47.0",
+    "field_center_dec": "+44:19:47",
+    "field_rotation_deg": 0.3,
+    "plate_solved": true,
+    "catalog_used": "Gaia DR3"
+  },
+  "photometry": {
+    "zero_point_mag": 21.2,
+    "limiting_magnitude": 22.1,
+    "background_noise_e": 120,
+    "saturation_level_adus": 58000
+  },
+  "analysis": {
+    "detected_sources": 2134,
+    "notable_objects": [
+      {
+        "name": "NGC 7000",
+        "type": "Emission Nebula"
+      },
+      {
+        "name": "IC 5070",
+        "type": "Emission Nebula"
+      }
+    ],
+    "signal_to_noise_ratio": 142,
+    "preliminary_science_value": "Deep Ha imaging reveals faint structures"
+  },
+  "notes": "Pelican Nebula also well captured. Excellent H-alpha data."
+}

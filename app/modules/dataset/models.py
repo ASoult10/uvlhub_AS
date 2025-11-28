@@ -9,23 +9,13 @@ from app import db
 
 class PublicationType(Enum):  # se cambia al tipo de publicación en astronomía
     NONE = "none"
-    ANNOTATION_COLLECTION = "annotationcollection"
-    BOOK = "book"
-    BOOK_SECTION = "section"
-    CONFERENCE_PAPER = "conferencepaper"
-    DATA_MANAGEMENT_PLAN = "datamanagementplan"
-    JOURNAL_ARTICLE = "article"
-    PATENT = "patent"
+    OBSERVATION_DATA = "observation_data"
+    DATA_PAPER = "data_paper"
+    JOURNAL_ARTICLE = "journal_article"
     PREPRINT = "preprint"
-    PROJECT_DELIVERABLE = "deliverable"
-    PROJECT_MILESTONE = "milestone"
-    PROPOSAL = "proposal"
-    REPORT = "report"
-    SOFTWARE_DOCUMENTATION = "softwaredocumentation"
-    TAXONOMIC_TREATMENT = "taxonomictreatment"
-    TECHNICAL_NOTE = "technicalnote"
+    TECHNICAL_REPORT = "technical_report"
     THESIS = "thesis"
-    WORKING_PAPER = "workingpaper"
+    SOFTWARE = "software"
     OTHER = "other"
 
 
@@ -96,9 +86,10 @@ class DSMetaData(db.Model):
         lazy=True,
         cascade="all, delete",
     )
-    observations = db.relationship(
+    observation = db.relationship(
         "Observation",
         backref="ds_meta_data",
+        uselist=False,
         lazy=True,
         cascade="all, delete",
     )
