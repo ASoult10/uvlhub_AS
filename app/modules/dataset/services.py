@@ -139,23 +139,24 @@ class DataSetService(BaseService):
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
             # ==========================
-            # Crear observaciones
+            # Crear observacion 
             # ==========================
-            observations_data = form.get_observations()
-            logger.info(f"Creating {len(observations_data)} observations from form...")
-            for obs_data in observations_data:
-                obs = Observation(
+            obs_data = form.get_observation()
+            if obs_data:
+                observation = Observation(
                     ds_meta_data_id=dsmetadata.id,
-                    object_name=obs_data["object_name"],
-                    ra=obs_data["ra"],
-                    dec=obs_data["dec"],
-                    magnitude=obs_data["magnitude"],
-                    observation_date=obs_data["observation_date"],
-                    filter_used=obs_data["filter_used"],
-                    notes=obs_data["notes"],
+                    object_name=obs_data.get("object_name"),
+                    ra=obs_data.get("ra"),
+                    dec=obs_data.get("dec"),
+                    magnitude=obs_data.get("magnitude"),
+                    observation_date=obs_data.get("observation_date"),
+                    filter_used=obs_data.get("filter_used"),
+                    notes=obs_data.get("notes"),
                 )
-                self.repository.session.add(obs)
-            # ==========================
+               
+                dsmetadata.observation = observation
+                
+                self.repository.session.add(observation)
 
             # Create Hubfile records for any uploaded files in the user's temp folder
             temp_folder = current_user.temp_folder()
