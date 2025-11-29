@@ -57,16 +57,41 @@ def create_dataset():
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
+        # Server-side validation: observation essential fields are ALWAYS required
+        observation = form.get_observation()
+        
+        if not observation:
+            msg = "Observation data is required."
+            return jsonify({"message": msg}), 400
+        
+        # Check required fields
+        if not observation.get("object_name") or not observation.get("object_name").strip():
+            msg = "Object name is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("ra") or not observation.get("ra").strip():
+            msg = "RA is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("dec") or not observation.get("dec").strip():
+            msg = "DEC is required."
+            return jsonify({"message": msg}), 400
+        
+        if not observation.get("observation_date"):
+            msg = "Observation date is required."
+            return jsonify({"message": msg}), 400
+
         try:
             logger.info("Creating dataset...")
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
-            dataset_service.move_feature_models(dataset)
+            dataset_service.move_hubfiles(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
-            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+            # Return a consistent JSON structure with a 'message' key so the frontend
+            # can always read `data.message` and display a controlled error message.
+            return jsonify({"message": str(exc)}), 400
 
-        # send dataset as deposition to Zenodo
         data = {}
         try:
             zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -84,9 +109,9 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+                # iterate for each hubfile (one hubfile = one request to Zenodo)
+                for hubfile in dataset.hubfiles:
+                    zenodo_service.upload_file(dataset, deposition_id, hubfile)
 
                 # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
@@ -125,7 +150,7 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
+    if not file or not file.filename.endswith(".json"):
         return jsonify({"message": "No valid file"}), 400
 
     # create temp folder
@@ -153,7 +178,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "JSON uploaded successfully",
                 "filename": new_filename,
             }
         ),
@@ -168,38 +193,26 @@ def delete():
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
 
-    if os.path.exists(filepath):
-        os.remove(filepath)
-        return jsonify({"message": "File deleted successfully"})
-
-    return jsonify({"error": "Error: File not found"})
-
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
-
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
 
     with ZipFile(zip_path, "w") as zipf:
-        for subdir, dirs, files in os.walk(file_path):
-            for file in files:
-                full_path = os.path.join(subdir, file)
-
-                relative_path = os.path.relpath(full_path, file_path)
-
-                zipf.write(
-                    full_path,
-                    arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path),
-                )
+        # Iterar solo sobre los hubfiles del dataset
+        for hubfile in dataset.hubfiles:
+            file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+            full_path = os.path.join(file_path, hubfile.name)
+            
+            if os.path.exists(full_path):
+                zipf.write(full_path, arcname=hubfile.name)
 
     user_cookie = request.cookies.get("download_cookie")
     if not user_cookie:
-        user_cookie = str(uuid.uuid4())  # Generate a new unique identifier if it does not exist
-        # Save the cookie to the user's browser
+        user_cookie = str(uuid.uuid4())
         resp = make_response(
             send_from_directory(
                 temp_dir,
@@ -234,7 +247,6 @@ def download_dataset(dataset_id):
         )
 
     return resp
-
 
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
@@ -282,12 +294,18 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
-
     # Get recommendations
     recommendations = dataset_service.get_recommendations(dataset.id, limit=5)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, recommendations=recommendations)
+    # Crear servicio de hubfile (igual que en la ruta del DOI)
+    hubfile_service = HubfileService()
 
-
+    return render_template(
+        "dataset/view_dataset.html",
+        dataset=dataset,
+        recommendations=recommendations,
+        hubfile_service=hubfile_service,
+        current_user=current_user,
+    )
 
 from . import comments_routes

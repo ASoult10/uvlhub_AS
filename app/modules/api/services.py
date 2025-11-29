@@ -7,7 +7,7 @@ from app.modules.api.models import ApiKey
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
+    storage_uri="memory://"  
 )
 
 def require_api_key(scope='read:datasets'):

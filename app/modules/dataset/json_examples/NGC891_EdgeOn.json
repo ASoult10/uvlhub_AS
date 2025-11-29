@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "object_name": "NGC 891",
+    "object_type": "Galaxy - Spiral Edge-on",
+    "ra": "02:22:33.4",
+    "dec": "+42:20:57",
+    "constellation": "Andromeda",
+    "observation_date_utc": "2024-07-14T23:30:00Z",
+    "observer": "Thomas Mueller",
+    "project": "Edge-on Galaxy Dust Lane Study"
+  },
+  "instrumentation": {
+    "telescope": "Officina Stellare RiFast 400",
+    "mount": "10Micron GM2000 HPS II",
+    "camera": "QHY268M",
+    "pixel_scale_arcsec": 1.45,
+    "gain": 0,
+    "readout_noise_e": 1.6,
+    "temperature_c": -12
+  },
+  "optics": {
+    "filters": [
+      {
+        "name": "Luminance",
+        "bandwidth_nm": 400
+      }
+    ],
+    "focal_length_mm": 1520,
+    "f_ratio": 3.8,
+    "binning": "1x1"
+  },
+  "exposure": {
+    "sub_exposures": 70,
+    "exposure_time_s": 360,
+    "total_integration_s": 25200,
+    "airmass": 1.22,
+    "moon_phase_percent": 12,
+    "sky_bortle": 2
+  },
+  "calibration": {
+    "darks_used": 45,
+    "flats_used": 45,
+    "bias_used": 90,
+    "dark_flat_used": 45,
+    "calibration_notes": "Deep luminance for dust lane detail"
+  },
+  "sky_conditions": {
+    "seeing_arcsec": 1.7,
+    "transparency": "Very Good",
+    "humidity_percent": 48,
+    "temperature_c": 9,
+    "wind_speed_kmh": 9
+  },
+  "astrometry": {
+    "field_center_ra": "02:22:33.4",
+    "field_center_dec": "+42:20:57",
+    "field_rotation_deg": 0.4,
+    "plate_solved": true,
+    "catalog_used": "Gaia DR3"
+  },
+  "photometry": {
+    "zero_point_mag": 21.5,
+    "limiting_magnitude": 22.8,
+    "background_noise_e": 105,
+    "saturation_level_adus": 60000
+  },
+  "analysis": {
+    "detected_sources": 1876,
+    "notable_objects": [
+      {
+        "name": "NGC 891",
+        "type": "Spiral Galaxy"
+      }
+    ],
+    "signal_to_noise_ratio": 152,
+    "preliminary_science_value": "Dust lane structure excellent for galactic disk studies"
+  },
+  "notes": "Central dust lane very prominent. Halo structure faintly visible."
+}

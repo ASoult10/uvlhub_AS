@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "object_name": "M13",
+    "object_type": "Globular Cluster",
+    "ra": "16:41:41.4",
+    "dec": "+36:27:37",
+    "constellation": "Hercules",
+    "observation_date_utc": "2024-04-20T02:20:00Z",
+    "observer": "James Patterson",
+    "project": "Globular Cluster Photometry"
+  },
+  "instrumentation": {
+    "telescope": "Meade LX200 14-inch",
+    "mount": "Meade Equatorial Wedge",
+    "camera": "SBIG STL-11000M",
+    "pixel_scale_arcsec": 0.8,
+    "gain": 0.8,
+    "readout_noise_e": 9.0,
+    "temperature_c": -20
+  },
+  "optics": {
+    "filters": [
+      {
+        "name": "Johnson B",
+        "bandwidth_nm": 90
+      },
+      {
+        "name": "Johnson V",
+        "bandwidth_nm": 85
+      },
+      {
+        "name": "Johnson R",
+        "bandwidth_nm": 150
+      }
+    ],
+    "focal_length_mm": 3556,
+    "f_ratio": 10,
+    "binning": "1x1"
+  },
+  "exposure": {
+    "sub_exposures": 30,
+    "exposure_time_s": 120,
+    "total_integration_s": 3600,
+    "airmass": 1.15,
+    "moon_phase_percent": 20,
+    "sky_bortle": 4
+  },
+  "calibration": {
+    "darks_used": 25,
+    "flats_used": 25,
+    "bias_used": 50,
+    "dark_flat_used": 25,
+    "calibration_notes": "BVR photometric calibration sequence"
+  },
+  "sky_conditions": {
+    "seeing_arcsec": 1.2,
+    "transparency": "Photometric",
+    "humidity_percent": 30,
+    "temperature_c": 15,
+    "wind_speed_kmh": 10
+  },
+  "astrometry": {
+    "field_center_ra": "16:41:41.4",
+    "field_center_dec": "+36:27:37",
+    "field_rotation_deg": 0.1,
+    "plate_solved": true,
+    "catalog_used": "2MASS"
+  },
+  "photometry": {
+    "zero_point_mag": 22.1,
+    "limiting_magnitude": 23.5,
+    "background_noise_e": 95,
+    "saturation_level_adus": 65000
+  },
+  "analysis": {
+    "detected_sources": 4523,
+    "notable_objects": [
+      {
+        "name": "M13",
+        "type": "Globular Cluster"
+      }
+    ],
+    "signal_to_noise_ratio": 156,
+    "preliminary_science_value": "Excellent for color-magnitude diagram construction"
+  },
+  "notes": "Core resolved. Individual stars visible to cluster center."
+}

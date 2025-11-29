@@ -267,9 +267,9 @@ def search_datasets(api_key_obj):
 
 @api_bp.route('/stats', methods=['GET'])
 @limiter.limit("100 per hour")
-@require_api_key(scope='read:stats')
+@require_api_key(scope='read:datasets')
 def api_stats(api_key_obj):
-    """Stats protegidas por API Key (scope: read:stats)"""
+    """Stats protegidas por API Key """
     return jsonify({
         'total_datasets': DataSet.query.count(),
         'version': '1.0'
