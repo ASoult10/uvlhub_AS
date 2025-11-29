@@ -16,7 +16,6 @@ def manage_keys():
     form = ApiKeyForm()
     revoke_form = RevokeApiKeyForm()
     
-    # Obtener las keys del usuario actual
     user_keys = ApiKey.query.filter_by(user_id=current_user.id).order_by(ApiKey.created_at.desc()).all()
     
     return render_template('api/manage_keys.html', 
@@ -32,7 +31,6 @@ def create_key():
     form = ApiKeyForm()
     
     if form.validate_on_submit():
-        # Generar la key
         new_key = ApiKey(
             key=ApiKey.generate_key(),
             user_id=current_user.id,
@@ -58,7 +56,6 @@ def revoke_key(key_id):
     """Revocar una API key"""
     api_key = ApiKey.query.get_or_404(key_id)
     
-    # Verificar que la key pertenece al usuario actual
     if api_key.user_id != current_user.id:
         flash('You do not have permission to revoke this key.', 'danger')
         return redirect(url_for('api.manage_keys'))
@@ -88,28 +85,125 @@ def delete_key(key_id):
 
 
 
-@api_bp.route('/datasets/<int:id>', methods=['GET'])
+
+@api_bp.route('/datasets/id/<int:id>', methods=['GET'])
 @limiter.limit("100 per hour")
 @require_api_key(scope='read:datasets')
-def get_dataset(api_key_obj, id):
+def get_dataset_by_id(api_key_obj, id):
     """
-    GET /api/datasets/123
+    GET /api/datasets/id/123
     Headers: X-API-Key: your_api_key_here
     """
     try:
-        dataset = DataSet.query.get_or_404(id)
-        metadata = DSMetaData.query.filter_by(data_set_id=id).first()
+        dataset = DataSet.query.get(id)
+        
+        if not dataset:
+            return jsonify({
+                'error': 'not_found',
+                'message': f'Dataset with id {id} not found'
+            }), 404
+        
+        metadata = DSMetaData.query.get(dataset.ds_meta_data_id) if dataset.ds_meta_data_id else None
         
         return jsonify({
             'id': dataset.id,
             'title': metadata.title if metadata else None,
             'description': metadata.description if metadata else None,
+            'publication_type': metadata.publication_type.value if metadata and metadata.publication_type else None,
+            'tags': metadata.tags if metadata else None,
             'created_at': dataset.created_at.isoformat() if dataset.created_at else None,
             'user_id': dataset.user_id
         }), 200
         
     except Exception as e:
         return jsonify({'error': 'Internal server error', 'message': str(e)}), 500
+
+
+
+
+@api_bp.route('/datasets/title/<string:title>', methods=['GET'])
+@limiter.limit("100 per hour")
+@require_api_key(scope='read:datasets')
+def get_dataset_by_title(api_key_obj, title):
+    """
+    GET /api/datasets/title/My-Dataset-Title
+    Headers: X-API-Key: your_api_key_here
+    """
+    try:
+        search_title = title.replace('-', ' ')
+        metadata = DSMetaData.query.filter(
+            DSMetaData.title.ilike(f'%{search_title}%')
+        ).first()
+        
+        if not metadata:
+            return jsonify({
+                'error': 'not_found',
+                'message': f'No dataset found with title containing "{search_title}"'
+            }), 404
+        
+        dataset = DataSet.query.filter_by(ds_meta_data_id=metadata.id).first()
+        
+        if not dataset:
+            return jsonify({
+                'error': 'not_found',
+                'message': 'Dataset metadata found but dataset record is missing'
+            }), 404
+        
+        return jsonify({
+            'id': dataset.id,
+            'title': metadata.title,
+            'description': metadata.description,
+            'publication_type': metadata.publication_type.value if metadata.publication_type else None,
+            'tags': metadata.tags,
+            'created_at': dataset.created_at.isoformat() if dataset.created_at else None,
+            'user_id': dataset.user_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'internal_error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/datasets', methods=['GET'])
+@limiter.limit("100 per hour")
+@require_api_key(scope='read:datasets')
+def list_datasets(api_key_obj):
+    """
+    GET /api/datasets
+    Headers: X-API-Key: your_api_key_here
+    
+    Devuelve TODOS los datasets sin paginación
+    """
+    try:
+        datasets = DataSet.query.all()
+        
+        results = []
+        for dataset in datasets:
+            metadata = DSMetaData.query.get(dataset.ds_meta_data_id) if dataset.ds_meta_data_id else None
+            
+            results.append({
+                'id': dataset.id,
+                'title': metadata.title if metadata else None,
+                'description': metadata.description if metadata else None,
+                'publication_type': metadata.publication_type.value if metadata and metadata.publication_type else None,
+                'tags': metadata.tags if metadata else None,
+                'created_at': dataset.created_at.isoformat() if dataset.created_at else None,
+                'user_id': dataset.user_id
+            })
+        
+        return jsonify({
+            'total': len(results),
+            'datasets': results
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'internal_error',
+            'message': str(e)
+        }), 500
+
 
 
 @api_bp.route('/search', methods=['GET'])
@@ -127,18 +221,30 @@ def search_datasets(api_key_obj):
         
         if not query:
             return jsonify({'error': 'Query parameter "q" is required'}), 400
-        
-        # Búsqueda
-        datasets_query = DataSet.query.join(DSMetaData).filter(
+      
+        metadata_results = DSMetaData.query.filter(
             DSMetaData.title.ilike(f'%{query}%') |
             DSMetaData.description.ilike(f'%{query}%')
-        )
+        ).all()
         
+        metadata_ids = [m.id for m in metadata_results]
+        
+        if not metadata_ids:
+            return jsonify({
+                'query': query,
+                'total': 0,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': 0,
+                'results': []
+            }), 200
+        
+        datasets_query = DataSet.query.filter(DataSet.ds_meta_data_id.in_(metadata_ids))
         pagination = datasets_query.paginate(page=page, per_page=per_page, error_out=False)
         
         results = []
         for ds in pagination.items:
-            metadata = DSMetaData.query.filter_by(data_set_id=ds.id).first()
+            metadata = DSMetaData.query.get(ds.ds_meta_data_id)
             results.append({
                 'id': ds.id,
                 'title': metadata.title if metadata else None,
