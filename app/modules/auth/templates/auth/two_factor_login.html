@@ -4,22 +4,77 @@
 
 {% block content %}
 
-<h1 class="h2 mb-3"><b>TwoFactor-Login</b></h1>
+<div class="d-flex justify-content-center mt-4">
+    <div class="card shadow-lg p-4" style="max-width: 430px; width: 100%; border-radius: 20px;">
+        
+        <h1 class="h3 text-center mb-2 fw-bold">Two-Factor Login</h1>
 
-<h2>Use your temporary code app to input the time limited code</h2>
+        <form action="{{ url_for('auth.verify_2fa_login') }}" method="post">
 
-    <form action="{{ url_for('auth.verify_2fa_login') }}" method="post">
-        {{ form.code.label(class="form-label") }}
-        {{ form.code(class="form-control",placeholder="Temporary Code") }}
-        {% for error in form.code.errors %}
-        <span style="color: red;">{{ error }}</span>
-        {% endfor %}
-        {{ form.submit(class="btn btn-primary") }}
-    </form>
+            <label class="form-label fw-semibold">Enter 6-digit Code</label>
 
+  
+            <div id="otp-container" class="d-flex justify-content-between mb-3">
+                {% for i in range(6) %}
+                    <input type="text" 
+                           maxlength="1"
+                           class="form-control otp-input text-center fs-4"
+                           style="width: 48px; height: 55px; border-radius: 10px; border: 1px solid #ccc;"
+                           inputmode="numeric"
+                           pattern="[0-9]*">
+                {% endfor %}
+            </div>
+
+            {{ form.code(type="hidden") }}
+
+            {% for error in form.code.errors %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+
+            <button class="btn btn-primary w-100 mt-2 py-2 fw-semibold" type="submit">
+                Verify Code
+            </button>
+
+        </form>
+    </div>
+</div>
 
 {% endblock %}
 
+
+
 {% block scripts %}
+    <script>
+        // Auto-advance OTP inputs
+        const inputs = document.querySelectorAll(".otp-input");
+        const hiddenInput = document.querySelector("input[name='code']");
+
+        inputs.forEach((input, index) => {
+            input.addEventListener("input", () => {
+                if (input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                updateHiddenField();
+            });
+
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && input.value === "" && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        function updateHiddenField() {
+            let code = "";
+            inputs.forEach(inp => code += inp.value);
+            hiddenInput.value = code;
+
+            if (code.length === 6) {
+                hiddenInput.form.submit()
+            }
+        }
+    </script>
+
     <script src="{{ url_for('auth.scripts') }}"></script>
+
 {% endblock %}
