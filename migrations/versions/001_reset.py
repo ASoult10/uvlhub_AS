@@ -219,6 +219,7 @@ def downgrade():
     op.drop_table('ds_download_record')
     op.drop_table('ds_comment')
     op.drop_table('data_set')
+    op.drop_table('observation')
     op.drop_table('author')
     op.drop_table('user_profile')
     op.drop_table('ds_meta_data')
