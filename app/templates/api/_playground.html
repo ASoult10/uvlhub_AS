@@ -1,0 +1,147 @@
+<div class="card mt-4">
+  <div class="card-header">
+    <strong>API Playground</strong> · Prueba tus endpoints
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">API Key (X-API-Key)</label>
+        <input id="ap_key" type="text" class="form-control" placeholder="Pega aquí tu API key">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Endpoint</label>
+        <select id="ap_endpoint" class="form-select">
+          <option value="datasets">GET /api/datasets/{id}</option>
+          <option value="search">GET /api/search?q=...</option>
+          <option value="stats">GET /api/stats </option>
+        </select>
+      </div>
+
+      <div id="ap_params_datasets" class="col-12">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Dataset ID</label>
+            <input id="ap_ds_id" type="number" class="form-control" value="1">
+          </div>
+        </div>
+      </div>
+
+      <div id="ap_params_search" class="col-12 d-none">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">q</label>
+            <input id="ap_q" type="text" class="form-control" placeholder="feature">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">page</label>
+            <input id="ap_page" type="number" class="form-control" value="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">per_page</label>
+            <input id="ap_per_page" type="number" class="form-control" value="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <button id="ap_send" class="btn btn-primary">
+          Enviar petición
+        </button>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label mt-3">cURL</label>
+        <pre class="bg-dark text-light p-3 rounded" style="white-space:pre-wrap"><code id="ap_curl"></code></pre>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Respuesta (status y headers)</label>
+        <pre class="bg-light p-3 rounded" style="white-space:pre-wrap"><code id="ap_meta"></code></pre>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Body</label>
+        <pre class="bg-light p-3 rounded" style="white-space:pre-wrap"><code id="ap_body"></code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const endpointSel = document.getElementById('ap_endpoint');
+  const paramsDatasets = document.getElementById('ap_params_datasets');
+  const paramsSearch = document.getElementById('ap_params_search');
+  const btn = document.getElementById('ap_send');
+  const keyInput = document.getElementById('ap_key');
+
+  function toggleParams(){
+    const value = endpointSel.value;
+    paramsDatasets.classList.toggle('d-none', value !== 'datasets');
+    paramsSearch.classList.toggle('d-none', value !== 'search');
+  }
+  endpointSel.addEventListener('change', toggleParams);
+  toggleParams();
+
+  function buildRequest(){
+    const base = window.location.origin;
+    const endpoint = endpointSel.value;
+    let url = '';
+    let headers = {};
+    let curl = '';
+    const key = keyInput.value.trim();
+
+    if (endpoint === 'datasets') {
+      const id = document.getElementById('ap_ds_id').value || '1';
+      url = `${base}/api/datasets/${id}`;
+    } else if (endpoint === 'search') {
+      const q = encodeURIComponent(document.getElementById('ap_q').value || 'feature');
+      const page = encodeURIComponent(document.getElementById('ap_page').value || '1');
+      const per = encodeURIComponent(document.getElementById('ap_per_page').value || '10');
+      url = `${base}/api/search?q=${q}&page=${page}&per_page=${per}`;
+    } else {
+      url = `${base}/api/stats`;
+    }
+
+    if ( key) {
+      headers['X-API-Key'] = key;
+      curl = `curl -i -H "X-API-Key: ${key}" "${url}"`;
+    } else {
+      curl = `curl -i "${url}"`;
+    }
+
+    return { url, headers, curl };
+  }
+
+  btn.addEventListener('click', async function(){
+    const meta = document.getElementById('ap_meta');
+    const body = document.getElementById('ap_body');
+    const curlBox = document.getElementById('ap_curl');
+
+    const req = buildRequest();
+    curlBox.textContent = req.curl;
+
+    meta.textContent = 'Enviando...';
+    body.textContent = '';
+
+    try {
+      const res = await fetch(req.url, { headers: req.headers });
+      const text = await res.text();
+
+      let headersStr = `HTTP ${res.status} ${res.statusText}\n`;
+      res.headers.forEach((v, k) => { headersStr += `${k}: ${v}\n`; });
+
+      meta.textContent = headersStr;
+
+      try {
+        const json = JSON.parse(text);
+        body.textContent = JSON.stringify(json, null, 2);
+      } catch {
+        body.textContent = text;
+      }
+    } catch (e) {
+      meta.textContent = 'Error de red: ' + e;
+    }
+  });
+})();
+</script>

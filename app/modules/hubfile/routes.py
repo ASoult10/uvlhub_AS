@@ -24,8 +24,8 @@ import tempfile
 def download_file(file_id):
     file = HubfileService().get_or_404(file_id)
     filename = file.name
-
-    directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+    dataset= file.get_dataset()
+    directory_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
 
@@ -59,8 +59,8 @@ def download_file(file_id):
 def view_file(file_id):
     file = HubfileService().get_or_404(file_id)
     filename = file.name
-
-    directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+    dataset = file.get_dataset()
+    directory_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path, filename)
 
@@ -151,7 +151,7 @@ def view_saved_files():
             {
                 "id": f.id,
                 "name": f.name,
-                "dataset_title": f.feature_model.data_set.ds_meta_data.title,
+                "dataset_title": f.get_dataset().ds_meta_data.title if f.get_dataset() else "",
                 "saved": hubfile_service.is_saved_by_user(f.id, current_user.id),
             }
         )
@@ -183,9 +183,10 @@ def download_all_saved():
     with zipfile.ZipFile(zip_buffer, "w") as zipf:
         for file in saved_files:
             try:
+                dataset = file.get_dataset()
                 # Construimos la ruta al archivo original
                 directory_path = (
-                    f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
+                    f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
                 )
                 parent_directory_path = os.path.dirname(current_app.root_path)
                 original_path = os.path.join(parent_directory_path, directory_path, file.name)
@@ -264,7 +265,7 @@ def download_all_saved():
             zip_buffer,
             mimetype="application/zip",
             as_attachment=True,
-            download_name=f"saved_files_{export_format}.zip",
+            download_name=f"saved_files_JSON.zip",
         )
     )
     resp.set_cookie("file_download_cookie", user_cookie)

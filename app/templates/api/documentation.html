@@ -1,0 +1,106 @@
+{% extends "base_template.html" %}
+
+{% block title %}API Documentation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1><i class="fas fa-book"></i> API Documentation</h1>
+    <p class="lead">Access datasets programmatically using our REST API</p>
+    <hr>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Authentication</h4>
+        </div>
+        <div class="card-body">
+            <p>All API requests require an API key. Include it in the request header:</p>
+            <pre class="bg-light p-3"><code>X-API-Key: your_api_key_here</code></pre>
+            <a href="{{ url_for('api.manage_keys') }}" class="btn btn-primary">
+                <i class="fas fa-key"></i> Manage Your API Keys
+            </a>
+        </div>
+    </div>
+
+    <h2>Endpoints</h2>
+
+    <!-- GET Dataset -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <span class="badge bg-success">GET</span> 
+            <code>/api/datasets/{id}</code>
+        </div>
+        <div class="card-body">
+            <h5>Get a specific dataset</h5>
+            <p><strong>Rate Limit:</strong> 100 requests/hour</p>
+            <p><strong>Required Scope:</strong> <code>read:datasets</code></p>
+            
+            <h6>Example Request:</h6>
+            <pre class="bg-dark text-light p-3"><code>curl -H "X-API-Key: YOUR_KEY" \
+     {{ request.url_root }}api/datasets/1</code></pre>
+
+            <h6>Example Response:</h6>
+            <pre class="bg-light p-3"><code>{
+  "id": 1,
+  "title": "Sample Dataset",
+  "description": "A sample dataset",
+  "created_at": "2024-01-01T12:00:00",
+  "user_id": 5
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- Search Datasets -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <span class="badge bg-success">GET</span> 
+            <code>/api/search</code>
+        </div>
+        <div class="card-body">
+            <h5>Search datasets</h5>
+            <p><strong>Rate Limit:</strong> 100 requests/hour</p>
+            <p><strong>Required Scope:</strong> <code>read:datasets</code></p>
+            
+            <h6>Query Parameters:</h6>
+            <ul>
+                <li><code>q</code> - Search query (required)</li>
+                <li><code>page</code> - Page number (default: 1)</li>
+                <li><code>per_page</code> - Results per page (default: 10, max: 100)</li>
+            </ul>
+
+            <h6>Example Request:</h6>
+            <pre class="bg-dark text-light p-3"><code>curl -H "X-API-Key: YOUR_KEY" \
+     "{{ request.url_root }}api/search?q=feature&page=1&per_page=10"</code></pre>
+
+            <h6>Example Response:</h6>
+            <pre class="bg-light p-3"><code>{
+  "query": "feature",
+  "total": 42,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 5,
+  "results": [...]
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- Stats (Public) -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <span class="badge bg-info">GET</span> 
+            <code>/api/stats</code>
+            <span class="badge bg-warning text-dark">Public</span>
+        </div>
+        <div class="card-body">
+            <h5>Get API statistics</h5>
+            <p><strong>Authentication:</strong> Not required</p>
+            
+            <h6>Example Request:</h6>
+            <pre class="bg-dark text-light p-3"><code>curl {{ request.url_root }}api/stats</code></pre>
+        </div>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Rate Limiting:</strong> Exceeding rate limits will result in HTTP 429 responses.
+    </div>
+</div>
+{% endblock %}

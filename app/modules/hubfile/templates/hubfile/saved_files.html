@@ -48,20 +48,12 @@
                         </ul>
                     </div>
 
-                    <div class="btn-group" role="group">
-                        <button id="btnGroupDropExport{{ file.id }}" type="button" 
-                                class="btn btn-primary btn-sm dropdown-toggle" 
-                                data-bs-toggle="dropdown" aria-expanded="false" 
-                                style="border-radius: 5px;">
-                            <i data-feather="download"></i> Export
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
-                            <li><a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
-                        </ul>
-                    </div>
+                    <a href="{{ url_for('hubfile.download_file', file_id=file.id) }}" 
+                       class="btn btn-primary btn-sm" 
+                       style="border-radius: 5px;"
+                       download>
+                        <i data-feather="download"></i> Export JSON
+                    </a>
 
                 </td>
             </tr>
@@ -69,19 +61,13 @@
         </tbody>
     </table>
 
-    <!-- Botón global Export All como dropdown -->
+    <!-- Botón global Export All en JSON -->
     <div class="text-end mt-3">
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <i data-feather="download"></i> Export All
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='uvl') }}">UVL</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='glencoe') }}">Glencoe</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='cnf') }}">DIMACS</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('hubfile.download_all_saved', export_format='splot') }}">SPLOT</a></li>
-            </ul>
-        </div>
+        <a href="{{ url_for('hubfile.download_all_saved', export_format='uvl') }}" 
+           class="btn btn-primary"
+           download>
+            <i data-feather="download"></i> Export All as JSON
+        </a>
     </div>
 
     {% else %}
@@ -92,11 +78,113 @@
 
 </div>
 
+<!-- Modal para visualizar archivos -->
+<div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileViewerModalLabel">File Viewer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="height: 70vh;">
+                <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
 });
 
-// Aquí irían tus funciones saveInCart, viewFile, checkUVL como antes
+var currentFileId;
+
+function saveInCart(fileId) {
+    const btn = document.getElementById(`save-btn-${fileId}`);
+    const textNode = btn.querySelector('span');
+
+    const isSaved = btn.classList.contains('btn-secondary');
+    const url = isSaved ? `/file/unsave/${fileId}` : `/file/save/${fileId}`;
+
+    const previousText = textNode ? textNode.textContent : '';
+    const previousClasses = btn.className;
+
+    btn.disabled = true;
+    if (textNode) textNode.textContent = isSaved ? 'Removing...' : 'Saving...';
+
+    fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text().then(text => ({ response, text })))
+        .then(({ response, text }) => {
+            if (!response.ok) {
+                const msg = text || response.statusText || `HTTP ${response.status}`;
+                throw new Error(msg);
+            }
+
+            let parsedData = null;
+            if (text) {
+                try { parsedData = JSON.parse(text); }
+                catch (_) {}
+            }
+
+            if (parsedData && ((parsedData.success === false) || parsedData.error)) {
+                const err = parsedData.error || 'Operación no permitida';
+                if (err === 'not_authenticated') throw new Error('Debes iniciar sesión para guardar archivos');
+                throw new Error(err);
+            }
+
+            if (isSaved) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-outline-secondary');
+                if (textNode) textNode.textContent = 'Save';
+            } else {
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-secondary');
+                if (textNode) textNode.textContent = 'Saved';
+            }
+        })
+        .catch(error => {
+            console.error('Error al guardar/quitar archivo:', error);
+            btn.className = previousClasses;
+            if (textNode) textNode.textContent = previousText;
+            alert(error.message || 'Error al guardar. Inténtalo de nuevo.');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75');
+            btn.removeAttribute('aria-busy');
+        });
+}
+
+function viewFile(fileId) {
+    fetch(`/file/view/${fileId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('fileContent').textContent = data.content;
+            currentFileId = fileId;
+            var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al cargar el archivo:', error);
+            alert('Error al cargar el archivo');
+        });
+}
+
+function checkUVL(fileId) {
+    fetch(`/flamapy/check_uvl/${fileId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                alert('✓ Syntax is valid!');
+            } else {
+                alert('✗ Syntax errors found:\n\n' + data.errors);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking syntax:', error);
+            alert('Error checking syntax');
+        });
+}
 </script>
 {% endblock %}

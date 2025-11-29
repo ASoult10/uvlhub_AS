@@ -41,6 +41,7 @@
         <a href="/explore" class="btn btn-primary btn-sm" id="search" style="border-radius: 5px;">
             <i data-feather="search" class="center-button-icon"></i>
             Explore more datasets
+
         </a>
     </div>
 </div>
@@ -48,6 +49,7 @@
 <div class="row">
     <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
 
+        <!-- ==== DATASET INFO ==== -->
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -82,7 +84,9 @@
                 {% if dataset.ds_meta_data.publication_doi %}
                 <div class="row mb-2">
                     <div class="col-md-4 col-12"><span class="text-secondary">Publication DOI</span></div>
-                    <div class="col-md-8 col-12"><a href="{{ dataset.ds_meta_data.publication_doi }}">{{ dataset.ds_meta_data.publication_doi }}</a></div>
+                    <div class="col-md-8 col-12">
+                        <a href="{{ dataset.ds_meta_data.publication_doi }}">{{ dataset.ds_meta_data.publication_doi }}</a>
+                    </div>
                 </div>
                 {% endif %}
 
@@ -114,9 +118,13 @@
                 <div class="row mb-2">
                     <div class="col-md-4 col-12"><span class=" text-secondary">Tags</span></div>
                     <div class="col-md-8 col-12">
-                        {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                        {% endfor %}
+                        {% if dataset.ds_meta_data.tags %}
+                            {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                            <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No tags</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -135,7 +143,85 @@
             {% endif %}
         </div>
 
-        <div class="card">
+        <!-- ==== OBSERVATIONS ==== -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3 class="mb-3">Observation</h3>
+
+                {% if dataset.ds_meta_data.observation %}
+                    {% set obs = dataset.ds_meta_data.observation %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Object Name</small>
+                                <strong>{{ obs.object_name or '—' }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Observation Date</small>
+                                <strong>
+                                    {% if obs.observation_date %}
+                                        {{ obs.observation_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Right Ascension (RA)</small>
+                                <strong>{{ obs.ra or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Declination (Dec)</small>
+                                <strong>{{ obs.dec or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Magnitude</small>
+                                <strong>
+                                    {% if obs.magnitude is not none %}
+                                        {{ obs.magnitude }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Filter Used</small>
+                                <strong>{{ obs.filter_used or '—' }}</strong>
+                            </div>
+                        </div>
+
+                        {% if obs.notes %}
+                        <div class="col-md-12">
+                            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                                <small class="text-muted d-block mb-1">Notes</small>
+                                <p class="mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ obs.notes }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No observation data associated with this dataset.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==== RELATED PUBLICATION ==== -->
+        <div class="card mt-3">
             <div class="card-body">
                 <h3> Related publication </h3>
                 David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides,
@@ -207,77 +293,70 @@
 
     </div>
 
+    <!-- ==== RIGHT COLUMN ==== -->
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
         <div class="list-group">
             <div class="list-group-item">
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h4 style="margin-bottom: 0px">UVL models</h4>
+                        <h4 style="margin-bottom: 0px">Astronomy models</h4>
                         <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
                     </div>
                 </div>
             </div>
 
-            {% for feature_model in dataset.feature_models %}
-                {% for file in feature_model.files %}
-                <div class="list-group-item">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="row">
-                                <div class="col-8">
-                                    <i data-feather="file"></i> {{ file.name }}
-                                    <br><small class="text-muted">({{ file.get_formatted_size() }})</small>
-                                </div>
-                                <div class="col-2">
-                                    <div id="check_{{ file.id }}"></div>
-                                </div>
+            {# AHORA iteramos directamente por los hubfiles del dataset #}
+            {% for file in dataset.hubfiles %}
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-8">
+                                <i data-feather="file"></i> {{ file.name }}
+                                <br><small class="text-muted">({{ file.get_formatted_size() }})</small>
                             </div>
-                        </div>
-
-                        <div class="col-12 text-end">
-                            <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
-                                <i data-feather="eye"></i> View
-                            </button>
-
-                            {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
-                            <button id="save-btn-{{ file.id }}"
-                                    onclick="saveInCart('{{ file.id }}')"
-                                    class="btn btn-sm {{ 'btn-secondary' if saved else 'btn-outline-secondary' }}"
-                                    style="border-radius: 5px;">
-                                <i data-feather="bookmark"></i>
-                                <span>{{ 'Saved' if saved else 'Save' }}</span>
-                            </button>
-
-                            <div class="btn-group" role="group">
-                                <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                    <i data-feather="check"></i> Check
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">
-                                            Syntax check
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="btn-group" role="group">
-                                <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                    <i data-feather="download"></i> Export
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">UVL</a>
-                                        <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">Glencoe</a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">DIMACS</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">SPLOT</a></li>
-                                </ul>
+                            <div class="col-2">
+                                <div id="check_{{ file.id }}"></div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 text-end">
+                        <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                            <i data-feather="eye"></i> View
+                        </button>
+
+                        {% set saved = hubfile_service.is_saved_by_user(file.id, current_user.id) %}
+                        <button id="save-btn-{{ file.id }}"
+                                onclick="saveInCart('{{ file.id }}')"
+                                class="btn btn-sm {{ 'btn-secondary' if saved else 'btn-outline-secondary' }}"
+                                style="border-radius: 5px;">
+                            <i data-feather="bookmark"></i>
+                            <span>{{ 'Saved' if saved else 'Save' }}</span>
+                        </button>
+
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
+                                <i data-feather="check"></i> Check
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">
+                                        Syntax check
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <a href="{{ url_for('hubfile.download_file', file_id=file.id) }}" 
+                           class="btn btn-primary btn-sm" 
+                           style="border-radius: 5px;"
+                           download>
+                            <i data-feather="download"></i> Export JSON
+                        </a>
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
             {% endfor %}
         </div>
 
@@ -329,7 +408,7 @@
     <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
         <div class="modal-content" style="height: 80vh;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h5 class="modal-title" id="fileViewerModalLabel">Feature model view</h5>
+                <h5 class="modal-title" id="fileViewerModalLabel">File view</h5>
                 <div>
                     <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton" style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
                         <i data-feather="download"></i>

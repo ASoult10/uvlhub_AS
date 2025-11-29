@@ -3,7 +3,6 @@ from sqlalchemy import func
 from app import db
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
 from app.modules.hubfile.models import Hubfile, HubfileDownloadRecord, HubfileViewRecord
 from core.repositories.BaseRepository import BaseRepository
 
@@ -16,17 +15,17 @@ class HubfileRepository(BaseRepository):
         return db.session.get(self.model, id)
 
     def get_owner_user_by_hubfile(self, hubfile: Hubfile) -> User:
+        # Find the User that owns the DataSet that the hubfile belongs to
         return (
             db.session.query(User)
-            .join(DataSet)
-            .join(FeatureModel)
-            .join(Hubfile)
+            .join(DataSet, User.id == DataSet.user_id)
+            .join(Hubfile, DataSet.id == Hubfile.dataset_id)
             .filter(Hubfile.id == hubfile.id)
             .first()
         )
 
     def get_dataset_by_hubfile(self, hubfile: Hubfile) -> DataSet:
-        return db.session.query(DataSet).join(FeatureModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
+        return db.session.query(DataSet).filter(DataSet.id == hubfile.dataset_id).first()
 
     # Nuevos métodos para el carrito
     def is_saved_by_user(self, hubfile_id: int, user_id: int) -> bool:

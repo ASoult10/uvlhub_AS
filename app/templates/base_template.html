@@ -38,6 +38,8 @@ chico sundermann">
 <body>
 <div class="wrapper">
 
+
+
     <nav id="sidebar" class="sidebar js-sidebar">
         <div class="sidebar-content js-simplebar">
             <a class="sidebar-brand" href="{{ url_for('public.index') }}">
@@ -119,6 +121,25 @@ chico sundermann">
 
 
                     <li class="sidebar-header">
+                        API Access
+                    </li>
+
+
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'api.manage_keys' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('api.manage_keys') }}">
+                            <i class="align-middle" data-feather="key"></i> <span
+                                class="align-middle">Manage API Keys</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'api.api_documentation' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('api.api_documentation') }}">
+                            <i class="align-middle" data-feather="book"></i> <span
+                                class="align-middle">API Documentation</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-header">
                         Options
                     </li>
 
@@ -132,7 +153,7 @@ chico sundermann">
 
                         <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.two_factor_setup' else '' }}">
                             <a class="sidebar-link" href="{{ url_for('auth.two_factor_setup') }}">
-                                <i class="align-middle" data-feather="key"></i> <span
+                                <i class="align-middle" data-feather="lock"></i> <span
                                     class="align-middle">Activate 2FA</span>
                             </a>
                         </li>

@@ -138,7 +138,7 @@ def create_app(config_name="development"):
         from app.modules.token.services import TokenService
         from flask_jwt_extended.exceptions import JWTExtendedException
 
-        public_endpoints = [
+        excluded_endpoints = [
             'auth.login',
             'auth.logout',
             'auth.show_signup_form',
@@ -155,12 +155,19 @@ def create_app(config_name="development"):
             'dataset.subdomain_index',
             'hubfile.view_file',
             'hubfile.download_file',
+            'hubfile.unsave_file',
+            'hubfile.save_file',
             'flamapy.check_uvl',
             'flamapy.valid',
             'static'
         ]
 
-        if request.endpoint in public_endpoints:
+        excluded_paths = ['/dataset/file/upload', '/dataset/file/delete', '/dataset/upload']
+
+        if request.endpoint in excluded_endpoints:
+            return
+        
+        if request.path in excluded_paths:
             return
         
         if request.is_json or request.path.startswith("/api"):
