@@ -14,7 +14,8 @@ class ApiKeyForm(FlaskForm):
         choices=[
             ('read:datasets', 'Read Datasets'),
             ('write:datasets', 'Write Datasets'),
-            ('delete:datasets', 'Delete Datasets')
+            ('delete:datasets', 'Delete Datasets'),
+            ('read:stats', 'Read Stats')
         ],
         default=['read:datasets'],
         validators=[DataRequired()]
@@ -26,7 +27,7 @@ class ApiKeyForm(FlaskForm):
         render_kw={
             "class": "form-control"
         },
-        format='%Y-%m-%dT%H:%M'  # Formato compatible con datetime-local
+        format='%Y-%m-%dT%H:%M' 
     )
     
     submit = SubmitField('Generate API Key')

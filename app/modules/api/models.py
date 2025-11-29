@@ -7,15 +7,15 @@ class ApiKey(db.Model):
     __tablename__ = 'api_keys'
     
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(64), unique=True, nullable=False, index=True) #la API key en sí
+    key = db.Column(db.String(64), unique=True, nullable=False, index=True) 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    name = db.Column(db.String(100))  # Nombre descriptivo: "Mi app", "Proyecto X"
-    scopes = db.Column(db.String(255), default='read:datasets')  # Permisos: read:datasets, write:datasets
+    name = db.Column(db.String(100))  
+    scopes = db.Column(db.String(255), default='read:datasets')  
     is_active = db.Column(db.Boolean, default=True)
-    requests_count = db.Column(db.Integer, default=0)  # Contador de usos
+    requests_count = db.Column(db.Integer, default=0)  
     last_used_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    expires_at = db.Column(db.DateTime)  # Opcional: fecha de expiración
+    expires_at = db.Column(db.DateTime)  
     
     user = db.relationship('User', backref='api_keys')
     
