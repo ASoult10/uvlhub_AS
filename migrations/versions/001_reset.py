@@ -207,6 +207,36 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('jti')
     )
+    op.create_table('api_keys',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('key', sa.String(length=64), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=True),
+    sa.Column('scopes', sa.String(length=255), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('requests_count', sa.Integer(), nullable=True),
+    sa.Column('last_used_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('expires_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+
+    op.create_table('observation',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('object_name', sa.String(length=255), nullable=False),
+    sa.Column('ra', sa.String(length=64), nullable=False),
+    sa.Column('dec', sa.String(length=64), nullable=False),
+    sa.Column('magnitude', sa.Float(), nullable=True),
+    sa.Column('observation_date', sa.Date(), nullable=False),
+    sa.Column('filter_used', sa.String(length=16), nullable=True),
+    sa.Column('notes', sa.Text(), nullable=True),
+    sa.Column('ds_meta_data_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+
+
     # ### end Alembic commands ###
 
 
@@ -225,7 +255,6 @@ def downgrade():
     op.drop_table('data_set')
     op.drop_table('observation')
     op.drop_table('author')
-    op.drop_table('user_profile')
     op.drop_table('fm_meta_data')
     op.drop_table('ds_meta_data')
     op.drop_table('user_profile')
