@@ -198,6 +198,10 @@ def delete():
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
+    # Increment download count
+    dataset.download_count += 1
+    dataset_service.update(dataset)
+
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
 
