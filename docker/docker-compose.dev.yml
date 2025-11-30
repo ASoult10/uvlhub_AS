@@ -46,6 +46,15 @@ services:
     networks:
       - uvlhub_network
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    networks:
+      - uvlhub_network
+
 volumes:
   db_data:
 
