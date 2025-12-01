@@ -14488,4 +14488,10 @@ a.btn.btn-outline-dark:hover {
 .feather.feather-download.stats-color {
     stroke: #ff3fa4 !important; /* galaxy pink/red */
 }
+.feather.feather-users.stats-color {
+    stroke: #ff3fa4 !important; /* galaxy pink/red */
+}
+.feather.feather-hash.stats-color {
+    stroke: #ff3fa4 !important; /* galaxy pink/red */
+}
 /*# sourceMappingURL=app.css.map*/
