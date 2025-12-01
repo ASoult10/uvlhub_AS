@@ -31,10 +31,10 @@ class DataSetSeeder(BaseSeeder):
 
         # Create DSMetaData instances with new publication types
         publication_types = [
-            PublicationType.OBSERVATION_DATA,
-            PublicationType.DATA_PAPER,
-            PublicationType.JOURNAL_ARTICLE,
-            PublicationType.PREPRINT,
+            PublicationType.OBSERVATION_DATA.value,
+            PublicationType.DATA_PAPER.value,
+            PublicationType.JOURNAL_ARTICLE.value,
+            PublicationType.PREPRINT.value,
         ]
 
         ds_meta_data_list = [
@@ -58,7 +58,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=5,
                 title="Dataset with tag3,tag4 and author 1",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.TECHNICAL_REPORT,
+                publication_type=PublicationType.TECHNICAL_REPORT.value,
                 publication_doi="10.1234/dataset5",
                 dataset_doi="10.1234/dataset5",
                 tags="tag3, tag4",
@@ -72,7 +72,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=6,
                 title="Dataset with author 1",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.THESIS,
+                publication_type=PublicationType.THESIS.value,
                 publication_doi="10.1234/dataset6",
                 dataset_doi="10.1234/dataset6",
                 tags="tag3, tag2",
@@ -86,7 +86,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=7,
                 title="Dataset with tag5 and author 7",
                 description="Description for dataset with specific tags and author",
-                publication_type=PublicationType.SOFTWARE,
+                publication_type=PublicationType.SOFTWARE.value,
                 publication_doi="10.1234/dataset7",
                 dataset_doi="10.1234/dataset7",
                 tags="tag5, tag6",

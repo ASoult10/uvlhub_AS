@@ -46,7 +46,7 @@ def upgrade():
         sa.Column('deposition_id', sa.Integer(), nullable=True),
         sa.Column('title', sa.String(length=120), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
-        sa.Column('publication_type', sa.Enum('NONE', 'ANNOTATION_COLLECTION', 'BOOK', 'BOOK_SECTION', 'CONFERENCE_PAPER', 'DATA_MANAGEMENT_PLAN', 'JOURNAL_ARTICLE', 'PATENT', 'PREPRINT', 'PROJECT_DELIVERABLE', 'PROJECT_MILESTONE', 'PROPOSAL', 'REPORT', 'SOFTWARE_DOCUMENTATION', 'TAXONOMIC_TREATMENT', 'TECHNICAL_NOTE', 'THESIS', 'WORKING_PAPER', 'OTHER', name='publicationtype'), nullable=False),
+        sa.Column('publication_type', sa.Enum('NONE', 'OBSERVATION_DATA', 'DATA_PAPER', 'JOURNAL_ARTICLE', 'PREPRINT', 'TECHNICAL_REPORT', 'THESIS', 'SOFTWARE', 'OTHER', name='publicationtype'), nullable=False),
         sa.Column('publication_doi', sa.String(length=120), nullable=True),
         sa.Column('dataset_doi', sa.String(length=120), nullable=True),
         sa.Column('tags', sa.String(length=120), nullable=True),
