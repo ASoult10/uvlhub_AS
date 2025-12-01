@@ -7,16 +7,16 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum):  # se cambia al tipo de publicación en astronomía
-    NONE = "none"
-    OBSERVATION_DATA = "observation_data"
-    DATA_PAPER = "data_paper"
-    JOURNAL_ARTICLE = "journal_article"
-    PREPRINT = "preprint"
-    TECHNICAL_REPORT = "technical_report"
-    THESIS = "thesis"
-    SOFTWARE = "software"
-    OTHER = "other"
+class PublicationType(Enum): 
+    NONE = "NONE"
+    OBSERVATION_DATA = "OBSERVATION_DATA"
+    DATA_PAPER = "DATA_PAPER"
+    JOURNAL_ARTICLE = "JOURNAL_ARTICLE"
+    PREPRINT = "PREPRINT"
+    TECHNICAL_REPORT = "TECHNICAL_REPORT"
+    THESIS = "THESIS"
+    SOFTWARE = "SOFTWARE"
+    OTHER = "OTHER"
 
 
 class Author(db.Model):
