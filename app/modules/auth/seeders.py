@@ -15,6 +15,24 @@ class AuthSeeder(BaseSeeder):
             User(email="user2@example.com", password="1234", user_secret= "23467"),
         ]
 
+        #Seeding roles
+        roles = [
+            Role(name='admin', description='Full system administrator'),
+            Role(name='curator', description='Content curator'),
+            Role(name='user', description='Standard authenticated user'),
+            Role(name='guest', description='Read-only guest'),
+        ]
+
+        # Verificar qué roles ya existen para no duplicar
+        existing = {r.name for r in Role.query.all()}
+        roles_to_create = []
+        for role in roles:
+            if role.name not in existing:
+                roles_to_create.append(role)
+
+        if roles_to_create:
+            seeded_roles = self.seed(roles_to_create)
+
         # Inserted users with their assigned IDs are returned by `self.seed`.
         seeded_users = self.seed(users)
 
