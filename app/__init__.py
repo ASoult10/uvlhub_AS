@@ -40,13 +40,13 @@ def create_app(config_name="development"):
     
     # Configurar para usar cookies
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
-    app.config['JWT_COOKIE_SECURE'] = False # If True, only send cookies over HTTPS
-    app.config['JWT_COOKIE_CSRF_PROTECT'] = True # Enable CSRF protection
-    app.config['JWT_COOKIE_SAMESITE'] = 'Lax' # 'Lax' or 'Strict' or 'None'
+    app.config['JWT_COOKIE_SECURE'] = False 
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = True 
+    app.config['JWT_COOKIE_SAMESITE'] = 'Lax' 
     app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token_cookie'
     app.config['JWT_REFRESH_COOKIE_NAME'] = 'refresh_token_cookie'
-    app.config['JWT_CSRF_IN_COOKIES'] = True # Store CSRF tokens in cookies
-    app.config['JWT_COOKIE_DOMAIN'] = None  # None = same domain as server
+    app.config['JWT_CSRF_IN_COOKIES'] = True 
+    app.config['JWT_COOKIE_DOMAIN'] = None  
     app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
     app.config['JWT_REFRESH_COOKIE_PATH'] = '/'
 
@@ -60,6 +60,9 @@ def create_app(config_name="development"):
     # Register modules
     module_manager = ModuleManager(app)
     module_manager.register_modules()
+
+    from app.modules.dataset.import_api import import_api  
+    app.register_blueprint(import_api)  
 
     # Initialize Flask-Mail (simulado cambiar luego)
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -108,7 +111,6 @@ def create_app(config_name="development"):
     # Initialize JWT blocklist loader
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
-        """Check if a JWT token has been revoked or expired"""
         from app.modules.token.services import TokenService
         from datetime import datetime, timezone
         
@@ -131,7 +133,6 @@ def create_app(config_name="development"):
 
     @app.before_request
     def refresh_expired_access_token():
-        """Refresh expired access tokens using refresh tokens stored in cookies"""
         from flask import request, redirect, url_for
         from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, set_access_cookies, unset_jwt_cookies
         from flask_login import logout_user
@@ -174,12 +175,10 @@ def create_app(config_name="development"):
             return
 
         try:
-            """ First, try to verify the access token """
             verify_jwt_in_request(locations=["cookies"])
             return
         except Exception:
             try:
-                """ If access token is invalid, try to verify the refresh token """
                 token_service = TokenService()
                 verify_jwt_in_request(locations=["cookies"], refresh=True)
                 
@@ -197,7 +196,6 @@ def create_app(config_name="development"):
                 return response
             
             except Exception:
-                """ If both tokens are invalid, log out the user and redirect to login page """
                 logout_user()
                 response = redirect(url_for("auth.login"))
                 unset_jwt_cookies(response)
