@@ -23,8 +23,30 @@ class Role(db.Model):
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    #Relación: roles del usuario
+    permissions = db.relationship(
+        'Permission',
+        secondary='role_permissions',
+        backref=db.backref('roles', lazy='dynamic'),
+        lazy='dynamic'
+    )
+
     def __repr__(self):
         return f"<Role {self.name}>"
+
+class Permission(db.Model):
+    __tablename__ = 'permissions'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+
+    def __repr__(self):
+        return f"<Permission {self.name}>"
+
+class role_permissions(db.Model):
+    __tablename__ = 'role_permissions'
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
+    permission_id = db.Column(db.Integer, db.ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True)
 
 
 class User(db.Model, UserMixin):

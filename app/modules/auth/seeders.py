@@ -1,4 +1,4 @@
-from app.modules.auth.models import Role, User
+from app.modules.auth.models import User, Role, Permission
 from app.modules.profile.models import UserProfile
 from core.seeders.BaseSeeder import BaseSeeder
 
@@ -31,7 +31,47 @@ class AuthSeeder(BaseSeeder):
                 roles_to_create.append(role)
 
         if roles_to_create:
-            seeded_roles = self.seed(roles_to_create)
+            self.seed(roles_to_create)
+
+        # Reload roles
+        admin_role = Role.query.filter_by(name='admin').first()
+        curator_role = Role.query.filter_by(name='curator').first()
+        user_role = Role.query.filter_by(name='user').first()
+        guest_role = Role.query.filter_by(name='guest').first()
+
+        # Seeding permissions TODO: define more permissions
+        permissions = [
+            # Define permissions here if needed
+            Permission(name='give_roles', description='Can assign roles to users'),
+        ]
+
+        # Verificar qué permisos ya existen para no duplicar
+        existing_perms = {p.name for p in Permission.query.all()}
+        perms_to_create = []
+        for perm in permissions:
+            if perm.name not in existing_perms:
+                perms_to_create.append(perm)
+
+        if perms_to_create:
+            self.seed(perms_to_create)
+
+        #Reload permissions
+        perm = lambda n: Permission.query.filter_by(name=n).first()
+
+        # Assign permissions to roles
+
+        #Admin: (tiene todos los permisos)
+        for p in Permission.query.all():
+            if not admin_role.permissions.filter_by(name=p.name).first():
+                admin_role.permissions.append(p)
+
+        #Curator:
+        #TODO: assign curator permissions
+
+        #User permissions TODO: define user permissions
+
+        #Guest permissions TODO: define guest permissions
+
 
         # Inserted users with their assigned IDs are returned by `self.seed`.
         seeded_users = self.seed(users)
