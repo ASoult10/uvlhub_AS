@@ -70,12 +70,15 @@ def import_model():
     dsmeta = dsmetadata_service.repository.create(
         title="Imported Dataset",
         description=f"Imported automatically from {result['source']}",
-        publication_type=PublicationType.NONE,     # ← ENUM REAL
+        publication_type=PublicationType.NONE.value,
         tags="imported"
     )
 
+    # IMPORTANT: commit para generar dsmeta.id
+    dataset_service.repository.session.commit()
+
     # -------------------------------------------------
-    # 3B. CREAR OBSERVATION MÍNIMA (OBLIGATORIA)
+    # 3B. CREAR OBSERVATION MÍNIMA
     # -------------------------------------------------
     observation = Observation(
         ds_meta_data_id=dsmeta.id,
@@ -87,7 +90,6 @@ def import_model():
         filter_used=None,
         notes="Auto-generated during import"
     )
-
     dataset_service.repository.session.add(observation)
 
     # -------------------------------------------------
