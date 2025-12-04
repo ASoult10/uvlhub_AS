@@ -30,6 +30,8 @@ def sample_hubfile():
     hubfile.saved_by_users = []
     return hubfile
 
+    
+
 
 class TestSavedByUser:
     def test_comprobar_archivo_guardado_verdadero(self, hubfile_service, mock_repository):
@@ -140,3 +142,113 @@ class TestGetSavedFilesForUser:
         result = hubfile_service.get_saved_files_for_user(user_id=999)
         
         assert result == []
+
+
+class TestRutaGuardarArchivo:
+    @patch('app.modules.hubfile.routes.current_user')
+    @patch('app.modules.hubfile.routes.HubfileService')
+    def test_guardar_archivo_usuario_autenticado(self, mock_service, mock_user, hubfile_service):
+        # Verifica que un usuario autenticado puede guardar un archivo correctamente
+        from app.modules.hubfile.routes import save_file
+        
+        mock_user.is_authenticated = True
+        mock_user.id = 1
+        mock_service_instance = MagicMock()
+        mock_service.return_value = mock_service_instance
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            mock_jsonify.return_value = {"success": True, "message": "File saved successfully", "saved": True}
+            result = save_file(1)
+            
+            mock_service_instance.add_to_user_saved.assert_called_once_with(1, 1)
+
+    @patch('app.modules.hubfile.routes.current_user')
+    def test_guardar_archivo_usuario_no_autenticado(self, mock_user):
+        # Verifica que un usuario no autenticado no puede guardar archivos
+        from app.modules.hubfile.routes import save_file
+        
+        mock_user.is_authenticated = False
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            save_file(1)
+            mock_jsonify.assert_called_once()
+            call_args = mock_jsonify.call_args[0][0]
+            assert call_args["success"] is False
+            assert "logged in" in call_args["error"]
+
+
+class TestRutaEliminarArchivo:
+    @patch('app.modules.hubfile.routes.current_user')
+    @patch('app.modules.hubfile.routes.HubfileService')
+    def test_eliminar_archivo_usuario_autenticado(self, mock_service, mock_user):
+        # Verifica que un usuario autenticado puede eliminar un archivo de sus guardados
+        from app.modules.hubfile.routes import unsave_file
+        
+        mock_user.is_authenticated = True
+        mock_user.id = 1
+        mock_service_instance = MagicMock()
+        mock_service.return_value = mock_service_instance
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            mock_jsonify.return_value = {"success": True, "message": "File removed successfully", "removed": True}
+            result = unsave_file(1)
+            
+            mock_service_instance.remove_from_user_saved.assert_called_once_with(1, 1)
+
+    @patch('app.modules.hubfile.routes.current_user')
+    def test_eliminar_archivo_usuario_no_autenticado(self, mock_user):
+        # Verifica que un usuario no autenticado no puede eliminar archivos
+        from app.modules.hubfile.routes import unsave_file
+        
+        mock_user.is_authenticated = False
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            unsave_file(1)
+            mock_jsonify.assert_called_once()
+            call_args = mock_jsonify.call_args[0][0]
+            assert call_args["success"] is False
+            assert call_args["error"] == "not_authenticated"
+
+
+class TestRutaObtenerArchivosGuardados:
+    @patch('app.modules.hubfile.routes.current_user')
+    @patch('app.modules.hubfile.routes.HubfileService')
+    def test_obtener_archivos_guardados_exitosamente(self, mock_service, mock_user):
+        # Verifica que se pueden obtener todos los archivos guardados del usuario
+        from app.modules.hubfile.routes import get_saved_files
+        
+        mock_user.id = 1
+        mock_service_instance = MagicMock()
+        mock_file1 = MagicMock()
+        mock_file1.to_dict.return_value = {"id": 1, "name": "file1.uvl"}
+        mock_file2 = MagicMock()
+        mock_file2.to_dict.return_value = {"id": 2, "name": "file2.uvl"}
+        
+        mock_service_instance.get_saved_files_for_user.return_value = [mock_file1, mock_file2]
+        mock_service.return_value = mock_service_instance
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            get_saved_files()
+            mock_jsonify.assert_called_once()
+            call_args = mock_jsonify.call_args[0][0]
+            assert call_args["success"] is True
+            assert len(call_args["files"]) == 2
+
+    @patch('app.modules.hubfile.routes.current_user')
+    @patch('app.modules.hubfile.routes.HubfileService')
+    def test_obtener_archivos_guardados_lista_vacia(self, mock_service, mock_user):
+        # Verifica que se devuelve una lista vacía cuando no hay archivos guardados
+        from app.modules.hubfile.routes import get_saved_files
+        
+        mock_user.id = 1
+        mock_service_instance = MagicMock()
+        mock_service_instance.get_saved_files_for_user.return_value = []
+        mock_service.return_value = mock_service_instance
+        
+        with patch('app.modules.hubfile.routes.jsonify') as mock_jsonify:
+            get_saved_files()
+            mock_jsonify.assert_called_once()
+            call_args = mock_jsonify.call_args[0][0]
+            assert call_args["success"] is True
+            assert len(call_args["files"]) == 0
+
