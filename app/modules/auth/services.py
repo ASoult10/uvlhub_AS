@@ -3,11 +3,11 @@ import os
 import pyotp, qrcode
 import base64
 from io import BytesIO
-from flask import request, redirect
+from flask import request, redirect, g
 from flask_login import current_user, login_user
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 
-from app.modules.auth.models import User
+from app.modules.auth.models import User, Role
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
@@ -18,6 +18,15 @@ from flask import url_for
 from flask_mail import Message
 from app import mail
 from app.modules.token.services import service as TokenService
+
+
+def load_user_permissions(user):
+    permissions = set()
+    for role in user.roles:
+        for perm in role.permissions:
+            permissions.add(perm.name)
+    g.current_user_permissions = permissions
+    g.current_user = user
 
 
 class AuthenticationService(BaseService):
@@ -40,9 +49,11 @@ class AuthenticationService(BaseService):
             response = redirect(redirect_url)
             set_access_cookies(response, access_token)
             set_refresh_cookies(response, refresh_token)
+            load_user_permissions(user)
             return response
 
         return False
+
 
     def is_email_available(self, email: str) -> bool:
         return self.repository.get_by_email(email) is None
@@ -73,6 +84,17 @@ class AuthenticationService(BaseService):
             user = self.create(commit=False, **user_data)
             profile_data["user_id"] = user.id
             self.user_profile_repository.create(**profile_data)
+
+            session = self.repository.session
+            role_user = session.query(Role).filter_by(name="user").first()
+            if not role_user:
+                role_user = Role(name="user")
+            session.add(role_user)
+            session.flush()
+
+            if role_user not in user.roles:
+                user.roles.append(role_user)
+
             self.repository.session.commit()
         except Exception as exc:
             self.repository.session.rollback()
