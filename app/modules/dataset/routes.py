@@ -324,5 +324,3 @@ def get_unsynchronized_dataset(dataset_id):
         hubfile_service=hubfile_service,
         current_user=current_user,
     )
-
-from . import comments_routes
