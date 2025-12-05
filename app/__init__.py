@@ -13,6 +13,8 @@ from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
 from flask_jwt_extended import JWTManager, get_jwt
 from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +23,7 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize JWT Manager
 jwt = JWTManager()
@@ -54,12 +57,19 @@ def create_app(config_name="development"):
     db.init_app(app)
     migrate.init_app(app, db)
     
+    # Initialize Limiter
+    limiter.init_app(app)
+
     # Initialize JWT with the app
     jwt.init_app(app)
 
     # Register modules
     module_manager = ModuleManager(app)
     module_manager.register_modules()
+
+    # Initialize error handler manager
+    error_handler_manager = ErrorHandlerManager(app)
+    error_handler_manager.register_error_handlers()
 
     # Initialize Flask-Mail
     mail.init_app(app)

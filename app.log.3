@@ -1,4 +1,4 @@
-2025-12-04 19:21:01,821 - app - ERROR - Exception on /login [GET]
+2025-12-04 18:43:52,946 - app - ERROR - Exception on /login [POST]
 Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -15,54 +15,56 @@ Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 54, in login
-    if request.method == "POST" and form.validate_on_submit():
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'Limiter' object has no attribute 'check_and_get_limits'
-2025-12-04 19:21:01,833 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-12-04 19:22:33,740 - app - ERROR - Exception on /login [POST]
-Traceback (most recent call last):
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
-    return original_handler(e)
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 70, in login
-    limiter.check()
-    ^^^^^^^^^^^^^
-AttributeError: 'Limiter' object has no attribute 'check'
-2025-12-04 19:22:33,774 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-12-04 19:22:43,802 - app - ERROR - Exception on /login [POST]
-Traceback (most recent call last):
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
-    return original_handler(e)
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 55, in login
+  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 63, in login
+    user = authentication_service.check_credentials(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
-2025-12-04 19:22:43,809 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-12-04 19:24:57,346 - app - ERROR - Exception on /login [POST]
+2025-12-04 18:43:52,960 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-04 18:43:58,271 - app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 63, in login
+    user = authentication_service.check_credentials(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
+2025-12-04 18:43:58,274 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-04 18:44:29,641 - app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 63, in login
+    # Intento de login fallido, se consume un intento del limiter
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
+2025-12-04 18:44:29,648 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-04 18:44:42,709 - app - ERROR - Exception on /login [POST]
 Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -83,8 +85,8 @@ Traceback (most recent call last):
     user = authentication_service.check_credentials(
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
-2025-12-04 19:24:57,357 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-12-04 19:26:35,599 - app - ERROR - Exception on /login [GET]
+2025-12-04 18:44:42,716 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-04 18:44:55,194 - app - ERROR - Exception on /login [POST]
 Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -101,12 +103,12 @@ Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 54, in login
-    limit_obj = limiter.check_and_get_limits(limit_str)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'Limiter' object has no attribute 'check_and_get_limits'
-2025-12-04 19:26:35,604 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
-2025-12-04 19:27:58,712 - app - ERROR - Exception on /login [GET]
+  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 55, in login
+    user = authentication_service.check_credentials(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
+2025-12-04 18:44:55,198 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-04 18:46:47,003 - app - ERROR - Exception on /login [POST]
 Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -123,8 +125,8 @@ Traceback (most recent call last):
   File "/home/ianam/astronomiahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 54, in login
-    limits = limiter.get_limits(limit_str)
-             ^^^^^^^^^^^^^^^^^^
-AttributeError: 'Limiter' object has no attribute 'get_limits'. Did you mean: '_meta_limits'?
-2025-12-04 19:27:58,720 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+  File "/home/ianam/astronomiahub/app/modules/auth/routes.py", line 55, in login
+    user = authentication_service.check_credentials(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AuthenticationService' object has no attribute 'check_credentials'
+2025-12-04 18:46:47,012 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
