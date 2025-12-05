@@ -356,3 +356,54 @@ def test_get_bot_name_by_request(test_client):
     ):
         device_name = token_service.get_device_name_by_request(request)
         assert "Googlebot" in device_name or "Bot" in device_name, "Device name should contain bot information."
+
+def test_get_token_sessions_route(test_client):
+    """
+    Sample test to verify the /token/sessions route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+
+    response = test_client.get('/token/sessions')
+    assert response.status_code == 302, "Failed to access the /token/sessions route."
+
+def test_revoke_token_route(test_client):
+    """
+    Sample test to verify the /token/revoke route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+
+    response = test_client.post('/token/revoke/'+str(TOKEN_ID))
+    assert response.status_code == 302, "Failed to access the /token/revoke route."
+
+def test_revoke_all_tokens_route(test_client):
+    """
+    Sample test to verify the /token/revoke_all route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+        
+    response = test_client.post('/token/revoke_all')
+    assert response.status_code == 302, "Failed to access the /token/revoke_all route."
