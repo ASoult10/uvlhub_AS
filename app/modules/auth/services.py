@@ -30,12 +30,12 @@ class AuthenticationService(BaseService):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
-
+            token_service = TokenService()
             user_id = int(user.id)
-            device_info = TokenService.get_device_name_by_request(request) if request else None
-            location_info = TokenService.get_location_by_ip(request.remote_addr) if request else None
+            device_info = token_service.get_device_name_by_request(request) if request else None
+            location_info = token_service.get_location_by_ip(request.remote_addr) if request else None
 
-            access_token, refresh_token = TokenService.create_tokens(user_id, device_info, location_info)
+            access_token, refresh_token = token_service.create_tokens(user_id, device_info, location_info)
 
             response = redirect(redirect_url)
             set_access_cookies(response, access_token)

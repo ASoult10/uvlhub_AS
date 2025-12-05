@@ -156,10 +156,7 @@ class TokenService(BaseService):
             return "Unknown location"
         
         finally:
-            try:
-                geo_reader.close()
-            except Exception:
-                pass
+            geo_reader.close()
     
     def get_device_name_by_request(self, request):
         ua_string = request.user_agent.string

@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import request
 from flask_jwt_extended import decode_token
 import pytest
 from app import db
@@ -277,25 +278,81 @@ def test_get_location_by_ip(test_client):
 
     local_ip_address = "127.0.0.1"
     local_location = token_service.get_location_by_ip(local_ip_address)
-    assert local_location == "Localhost", "Location for localhost IP should be 'Localhost'."
+    assert local_location == "Local Network", "Location for localhost IP should be 'Local Network'."
 
     private_ip_address = "192.168.1.1"
     private_location = token_service.get_location_by_ip(private_ip_address)
     assert private_location == "Private Network", "Location for private IP should be 'Private Network'."
 
-    public_ip_address = "8.8.8.8"
+    public_ip_address = "79.117.197.244"
     public_location = token_service.get_location_by_ip(public_ip_address)
-    assert public_location != "Localhost", "Location for public IP should not be 'Localhost'."
+    assert public_location == "Dos Hermanas, Spain", "Location for public IP should be 'Dos Hermanas, Spain'."
 
-def test_get_device_name_by_request(test_client):
+    error_ip_address = "999.999.999.999"
+    error_location = token_service.get_location_by_ip(error_ip_address)
+    assert error_location == "Unknown location", "Location for invalid IP should be 'Unknown location'."
+    
+def test_get_computer_name_by_request(test_client):
     """
     Sample test to verify the get_device_name_by_request function.
     """
-    class MockRequest:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
         }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "Windows" in device_name or "Chrome" in device_name, "Device name should contain OS or browser information."
 
-    mock_request = MockRequest()
-    device_name = token_service.get_device_name_by_request(mock_request.headers)
-    assert "Windows" in device_name or "Chrome" in device_name, "Device name should contain OS or browser information."
+def test_get_mobile_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for mobile user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "iPhone" in device_name or "Mobile" in device_name, "Device name should contain mobile device information."
+
+def test_get_unknown_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for unknown user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': ''
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert device_name == "Unknown Device", "Device name should be 'Unknown Device' for empty user agent."
+
+def test_get_tablet_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for tablet user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 9; SM-T865) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.89 Safari/537.36'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "SM-T865" in device_name or "Tablet" in device_name, "Device name should contain tablet device information."
+
+def test_get_bot_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for bot user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "Googlebot" in device_name or "Bot" in device_name, "Device name should contain bot information."
