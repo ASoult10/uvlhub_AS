@@ -119,6 +119,21 @@ chico sundermann">
                         </a>
                     </li>
 
+                    {% if current_user.has_role('admin') %}
+
+                        <li class="sidebar-header">
+                            Admin
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.two_factor_setup' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('admin.list_users') }}">
+                                <i class="align-middle" data-feather="lock"></i> <span
+                                    class="align-middle">Users</span>
+                            </a>
+                        </li>
+
+                    {% endif %}
+
 
                     <li class="sidebar-header">
                         API Access
@@ -165,6 +180,7 @@ chico sundermann">
                                 class="align-middle">Log out</span>
                         </a>
                     </li>
+                    
 
                 {% endif %}
 
