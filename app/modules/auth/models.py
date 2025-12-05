@@ -5,8 +5,26 @@ import pyotp, qrcode
 from werkzeug.security import check_password_hash, generate_password_hash
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
+from datetime import datetime
 
 from app import db
+
+# Tabla asociativa many-to-many entre usuarios y roles
+user_roles = db.Table(
+    'user_roles',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True),
+)
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<Role {self.name}>"
 
 
 class User(db.Model, UserMixin):
@@ -34,6 +52,14 @@ class User(db.Model, UserMixin):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="dynamic"
+    )
+
+    #Relación: roles del usuario
+    roles = db.relationship(
+        'Role',
+        secondary='user_roles',
+        backref=db.backref('users', lazy='dynamic'),
+        lazy='dynamic'
     )
 
     def __init__(self, **kwargs):
@@ -77,3 +103,24 @@ class User(db.Model, UserMixin):
         except Exception:
             return None
         return User.query.get(user_id)
+
+    def has_role(self, role_name: str) -> bool:
+        return self.roles.filter_by(name=role_name).count() > 0
+
+    def add_role(self, role):
+        if isinstance(role, str):
+            from app.modules.auth.roles import Role as RoleModel
+            role_obj = RoleModel.query.filter_by(name=role).first()
+        else:
+            role_obj = role
+        if role_obj and not self.has_role(role_obj.name):
+            self.roles.append(role_obj)
+
+    def remove_role(self, role):
+        if isinstance(role, str):
+            from app.modules.auth.roles import Role as RoleModel
+            role_obj = RoleModel.query.filter_by(name=role).first()
+        else:
+            role_obj = role
+        if role_obj and self.has_role(role_obj.name):
+            self.roles.remove(role_obj)

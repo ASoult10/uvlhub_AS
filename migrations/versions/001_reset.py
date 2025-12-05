@@ -37,6 +37,21 @@ def upgrade():
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('email')
     )
+    op.create_table('roles',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('description', sa.String(length=255), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
+    op.create_table('user_roles',
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('role_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('user_id', 'role_id')
+    )
     op.create_table('zenodo',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint('id')
@@ -46,7 +61,7 @@ def upgrade():
         sa.Column('deposition_id', sa.Integer(), nullable=True),
         sa.Column('title', sa.String(length=120), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
-        sa.Column('publication_type', sa.Enum('NONE', 'ANNOTATION_COLLECTION', 'BOOK', 'BOOK_SECTION', 'CONFERENCE_PAPER', 'DATA_MANAGEMENT_PLAN', 'JOURNAL_ARTICLE', 'PATENT', 'PREPRINT', 'PROJECT_DELIVERABLE', 'PROJECT_MILESTONE', 'PROPOSAL', 'REPORT', 'SOFTWARE_DOCUMENTATION', 'TAXONOMIC_TREATMENT', 'TECHNICAL_NOTE', 'THESIS', 'WORKING_PAPER', 'OTHER', name='publicationtype'), nullable=False),
+        sa.Column('publication_type', sa.Enum('NONE', 'OBSERVATION_DATA', 'DATA_PAPER', 'JOURNAL_ARTICLE', 'PREPRINT', 'TECHNICAL_REPORT', 'THESIS', 'SOFTWARE', 'OTHER', name='publicationtype'), nullable=False),
         sa.Column('publication_doi', sa.String(length=120), nullable=True),
         sa.Column('dataset_doi', sa.String(length=120), nullable=True),
         sa.Column('tags', sa.String(length=120), nullable=True),
@@ -79,6 +94,7 @@ def upgrade():
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('ds_meta_data_id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('download_count', sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id']),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
@@ -219,6 +235,8 @@ def downgrade():
     op.drop_table('user_profile')
     op.drop_table('fakenodo')
     op.drop_table('zenodo')
+    op.drop_table('user_roles')
+    op.drop_table('roles')
     op.drop_table('user')
     op.drop_table('ds_metrics')
     op.drop_table('doi_mapping')
