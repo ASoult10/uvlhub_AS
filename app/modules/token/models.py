@@ -25,13 +25,6 @@ class Token(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     device_info = db.Column(db.String(256), nullable=False, default="Unknown Device")
     location_info = db.Column(db.String(256), nullable=False, default="Unknown Location")
-
-
-    def __repr__(self):
-        return f'Token<{self.id} for User {self.user_id}>'
     
     def __init__(self, **kwargs):
         super(Token, self).__init__(**kwargs)
-
-    def is_expired(self, current_time):
-        return current_time >= self.expires_at
