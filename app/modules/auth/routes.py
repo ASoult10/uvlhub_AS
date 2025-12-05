@@ -62,7 +62,9 @@ def login():
             user = authentication_service.repository.get_by_email(form.email.data)
 
             if user and user.check_password(form.password.data):
-                # El login es exitoso, el límite se reiniciará después de que expire la ventana de tiempo.
+                # En un login exitoso, reseteamos el contador de intentos para este usuario.
+                limiter.reset()
+
                 if user.has2FA:
                     redirect_url = url_for("auth.login_with_two_factor")
                 else:

@@ -50,6 +50,7 @@ class TestingConfig(Config):
         f"{os.getenv('MARIADB_TEST_DATABASE', 'default_db')}"
     )
     WTF_CSRF_ENABLED = False
+    RATELIMIT_ENABLED = False
 
 
 class ProductionConfig(Config):
