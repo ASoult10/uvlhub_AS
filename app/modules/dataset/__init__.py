@@ -8,3 +8,6 @@ dataset_bp = BaseBlueprint("dataset", __name__, template_folder="templates")
 
 api = Api(dataset_bp)
 init_blueprint_api(api)
+
+# Import comments routes to register them
+from app.modules.dataset import comments_routes  # noqa: F401, E402
