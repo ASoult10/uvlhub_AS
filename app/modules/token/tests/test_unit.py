@@ -90,7 +90,7 @@ def test_get_token_by_id(test_client):
     token = token_service.get_token_by_id(TOKEN_ID)
     assert token is None or token.id == TOKEN_ID, "The token ID does not match the requested ID."
 
-def get_token_by_jti(test_client):
+def test_get_token_by_jti(test_client):
     """
     Sample test to verify the get_token_by_jti function.
     """
