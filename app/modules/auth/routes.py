@@ -1,10 +1,11 @@
-from flask import current_app, jsonify, redirect, render_template, request, url_for, flash
+from flask import current_app, jsonify, redirect, render_template, request, url_for, flash, g, session
 from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
 from flask_login import current_user, login_user, logout_user
 import pyotp
 from datetime import datetime, timezone
+from werkzeug.exceptions import TooManyRequests
 
-from app import db
+from app import db, limiter
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorForm,RecoverPasswordForm,ResetPasswordForm
 from app.modules.auth.services import AuthenticationService
@@ -20,6 +21,9 @@ token_service = TokenService()
 def show_signup_form():
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
+
+    # Resetea el contador de intentos de login al visitar la página de registro
+    session.pop('login_attempts', None)
 
     form = SignupForm()
     if form.validate_on_submit():
@@ -49,30 +53,57 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
+    # Inicializa el contador en la sesión si no existe
+    if 'login_attempts' not in session:
+        session['login_attempts'] = 4
+
+    remaining_attempts = session.get('login_attempts', 4)
+    
     form = LoginForm()
-    if request.method == "POST" and form.validate_on_submit():
+    error_message = None
 
-        user = authentication_service.repository.get_by_email(form.email.data)
+    if request.method == "POST":
+        # Si ya no quedan intentos, lanza la excepción que activa el error 429
+        if remaining_attempts <= 0:
+            raise TooManyRequests()
 
-        if user and user.check_password(form.password.data):
-            if user.has2FA:
-                redirect_url = url_for("auth.login_with_two_factor")
-            else:
-                redirect_url = url_for("public.index")
-            
-            response = authentication_service.login(
-                form.email.data,
-                form.password.data,
-                form.remember_me.data,
-                redirect_url=redirect_url
-            )
-            
-            if response:
-                return response
+        # Decrementa el contador en la sesión con cada intento POST
+        session['login_attempts'] = remaining_attempts - 1
         
-        return render_template("auth/login_form.html", form=form, error="Invalid credentials")
+        if form.validate_on_submit():
+            user = authentication_service.repository.get_by_email(form.email.data)
 
-    return render_template("auth/login_form.html", form=form)
+            if user and user.check_password(form.password.data):
+                # Si el login es exitoso, resetea el contador
+                session.pop('login_attempts', None)
+
+                if user.has2FA:
+                    redirect_url = url_for("auth.login_with_two_factor")
+                else:
+                    redirect_url = url_for("public.index")
+                
+                response = authentication_service.login(
+                    form.email.data,
+                    form.password.data,
+                    form.remember_me.data,
+                    redirect_url=redirect_url
+                )
+                
+                if response:
+                    return response
+            
+            error_message = "Invalid credentials"
+        else:
+            error_message = "Invalid form submission"
+
+    # Obtiene el valor actualizado para pasarlo a la plantilla
+    remaining_attempts = session.get('login_attempts', 3)
+    return render_template(
+        "auth/login_form.html", 
+        form=form, 
+        error=error_message, 
+        remaining_attempts=remaining_attempts
+    )
 
 #Redirects to the 2fa login form
 @auth_bp.route("/login/2fa-step", methods=["GET", "POST"])
