@@ -60,6 +60,14 @@
 
                     </div>
 
+                    {% if remaining_attempts is defined %}
+                    <div class="row">
+                        <div class="col-lg-6 col-12 mt-2">
+                            <small class="text-muted">You have {{ remaining_attempts }} attempts remaining.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="row">
 
                         {% if error %}

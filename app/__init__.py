@@ -14,6 +14,10 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
+from flask_jwt_extended import JWTManager, get_jwt
+from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -56,7 +60,7 @@ def create_app(config_name="development"):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
-
+    
     # Initialize Limiter
     limiter.init_app(app)
 
@@ -79,6 +83,7 @@ def create_app(config_name="development"):
     app.config["MAIL_USE_TLS"] = True
     app.config["MAIL_DEFAULT_SENDER"] = "astronomiahub@gmail.com"
 
+    # Initialize Flask-Mail
     mail.init_app(app)
 
     # Register login manager
