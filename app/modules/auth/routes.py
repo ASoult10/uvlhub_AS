@@ -1,10 +1,11 @@
-from flask import current_app, jsonify, redirect, render_template, request, url_for, flash
+from flask import current_app, jsonify, redirect, render_template, request, url_for, flash, g, session
 from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
 from flask_login import current_user, login_user, logout_user
 import pyotp
 from datetime import datetime, timezone
+from werkzeug.exceptions import TooManyRequests
 
-from app import db
+from app import db, limiter
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorForm,RecoverPasswordForm,ResetPasswordForm
 from app.modules.auth.services import AuthenticationService
@@ -20,6 +21,9 @@ token_service = TokenService()
 def show_signup_form():
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
+
+    # Resetea el contador de intentos de login al visitar la página de registro
+    session.pop('login_attempts', None)
 
     form = SignupForm()
     if form.validate_on_submit():
@@ -45,34 +49,44 @@ def show_signup_form():
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("3/minute", methods=["POST"], override_defaults=True)
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
     form = LoginForm()
-    if request.method == "POST" and form.validate_on_submit():
+    error_message = None
 
-        user = authentication_service.repository.get_by_email(form.email.data)
+    if request.method == "POST":
+        if form.validate_on_submit():
+            user = authentication_service.repository.get_by_email(form.email.data)
 
-        if user and user.check_password(form.password.data):
-            if user.has2FA:
-                redirect_url = url_for("auth.login_with_two_factor")
-            else:
-                redirect_url = url_for("public.index")
+            if user and user.check_password(form.password.data):
+                # El login es exitoso, el límite se reiniciará después de que expire la ventana de tiempo.
+                if user.has2FA:
+                    redirect_url = url_for("auth.login_with_two_factor")
+                else:
+                    redirect_url = url_for("public.index")
+                
+                response = authentication_service.login(
+                    form.email.data,
+                    form.password.data,
+                    form.remember_me.data,
+                    redirect_url=redirect_url
+                )
+                
+                if response:
+                    return response
             
-            response = authentication_service.login(
-                form.email.data,
-                form.password.data,
-                form.remember_me.data,
-                redirect_url=redirect_url
-            )
-            
-            if response:
-                return response
-        
-        return render_template("auth/login_form.html", form=form, error="Invalid credentials")
+            error_message = "Invalid credentials"
+        else:
+            error_message = "Invalid form submission"
 
-    return render_template("auth/login_form.html", form=form)
+    return render_template(
+        "auth/login_form.html", 
+        form=form, 
+        error=error_message
+    )
 
 #Redirects to the 2fa login form
 @auth_bp.route("/login/2fa-step", methods=["GET", "POST"])
