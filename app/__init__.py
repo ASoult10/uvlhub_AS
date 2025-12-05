@@ -172,6 +172,9 @@ def create_app(config_name="development"):
         
         if request.is_json or request.path.startswith("/api"):
             return
+        
+        if request.blueprint == 'fakenodo' or request.path.startswith('/fakenodo/api'):
+            return
 
         try:
             """ First, try to verify the access token """
