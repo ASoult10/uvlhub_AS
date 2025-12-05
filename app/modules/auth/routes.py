@@ -49,34 +49,20 @@ def show_signup_form():
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("3/minute", methods=["POST"], override_defaults=True)
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
-    # Inicializa el contador en la sesión si no existe
-    if 'login_attempts' not in session:
-        session['login_attempts'] = 4
-
-    remaining_attempts = session.get('login_attempts', 4)
-    
     form = LoginForm()
     error_message = None
 
     if request.method == "POST":
-        # Si ya no quedan intentos, lanza la excepción que activa el error 429
-        if remaining_attempts <= 0:
-            raise TooManyRequests()
-
-        # Decrementa el contador en la sesión con cada intento POST
-        session['login_attempts'] = remaining_attempts - 1
-        
         if form.validate_on_submit():
             user = authentication_service.repository.get_by_email(form.email.data)
 
             if user and user.check_password(form.password.data):
-                # Si el login es exitoso, resetea el contador
-                session.pop('login_attempts', None)
-
+                # El login es exitoso, el límite se reiniciará después de que expire la ventana de tiempo.
                 if user.has2FA:
                     redirect_url = url_for("auth.login_with_two_factor")
                 else:
@@ -96,13 +82,10 @@ def login():
         else:
             error_message = "Invalid form submission"
 
-    # Obtiene el valor actualizado para pasarlo a la plantilla
-    remaining_attempts = session.get('login_attempts', 3)
     return render_template(
         "auth/login_form.html", 
         form=form, 
-        error=error_message, 
-        remaining_attempts=remaining_attempts
+        error=error_message
     )
 
 #Redirects to the 2fa login form
