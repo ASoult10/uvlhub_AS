@@ -32,4 +32,4 @@ class ErrorHandlerManager:
             self.app.logger.warning("Rate limit exceeded: %s", str(e))
             flash("You have exceeded the login attempt limit. Please try again later.", "error")
             form = LoginForm()
-            return render_template("auth/login_form.html", form=form, remaining_attempts=0), 429
+            return render_template("auth/login_form.html", form=form), 429
