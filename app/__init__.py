@@ -69,6 +69,8 @@ def create_app(config_name="development"):
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_DEFAULT_SENDER'] = 'astronomiahub@gmail.com'
 
+    mail.init_app(app)
+
     # Register login manager
     from flask_login import LoginManager
 
