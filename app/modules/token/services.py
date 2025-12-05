@@ -3,7 +3,6 @@ from app.modules.token.repositories import TokenRepository
 from core.services.BaseService import BaseService
 from app.modules.token.models import Token, TokenType
 from flask_jwt_extended import create_access_token, create_refresh_token, decode_token
-from flask import request, current_app
 from datetime import datetime
 import geoip2.database
 
@@ -137,26 +136,23 @@ class TokenService(BaseService):
         self.repository.delete_token(token_to_delete)
     
     def get_location_by_ip(self, ip_address):
-        if not ip_address or str(ip_address) in ['127.0.0.1', 'localhost', '::1']:
+        if not ip_address:
+            return "Unknown location"
+
+        if str(ip_address) in ['127.0.0.1', 'localhost', '::1']:
             return "Local Network"
     
         if str(ip_address).startswith(('192.168.', '10.', '172.')):
             return "Private Network"
         
         try:
-            print("A - " + ip_address)
             geo_reader = geoip2.database.Reader("app/static/geo/GeoLite2-City.mmdb")
-            print("B - " + geo_reader)
             response = geo_reader.city(ip_address)
-            print("C - " + response)
             city = response.city.name or "Unknown city"
-            print("D - " + city)
             country = response.country.name or "Unknown country"
-            print("E - " + country + " - AMOOOOO TI TI TI, TI TI TII, TI TIII TI TI TIIII TI TI TIII TIII TI")
             return f"{city}, {country}"
         
         except Exception:
-            print("EXCEPCION")
             return "Unknown location"
         
         finally:
