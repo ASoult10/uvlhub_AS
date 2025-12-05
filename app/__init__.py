@@ -152,6 +152,7 @@ def create_app(config_name="development"):
         excluded_endpoints = [
             'auth.login',
             'auth.logout',
+            'auth.signup',
             'auth.show_signup_form',
             'auth.recover_password',
             'auth.reset_password',
@@ -159,6 +160,7 @@ def create_app(config_name="development"):
             'auth.two_factor_setup',
             'auth.verify_2fa',
             'auth.verify_2fa_login',
+            'auth.scripts',
             'public.index',
             'public.scripts',
             'explore.index',
@@ -183,7 +185,7 @@ def create_app(config_name="development"):
         if request.path in excluded_paths:
             return
         
-        if request.is_json or request.path.startswith("/api"):
+        if request.is_json or request.path.startswith("/api") or request.path.endswith('/scripts.js'):
             return
         
         if request.blueprint == 'fakenodo' or request.path.startswith('/fakenodo/api'):
