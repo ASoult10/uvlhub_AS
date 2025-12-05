@@ -1,0 +1,103 @@
+{% extends "base_template.html" %}
+
+{% block title %}List Users{% endblock %}
+
+{% block content %}
+<style>
+    /* Contenedor de la tabla */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Poppins', sans-serif;
+        background: #1e1e2f;
+        color: #f5f5f5;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    thead {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    th, td {
+        padding: 12px 20px;
+        text-align: left;
+    }
+
+    tbody tr {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #2b2b3f;
+    }
+
+    tbody tr:hover {
+        background: #3a3a55;
+        transform: scale(1.02);
+    }
+
+    td:last-child {
+        font-weight: bold;
+        color: #ffb86c;
+    }
+
+    td span.role-badge {
+        background: #ff79c6;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+        margin-right: 5px;
+    }
+
+    /* Mensaje si no hay roles */
+    td .no-role {
+        font-style: italic;
+        color: #999;
+    }
+</style>
+
+<h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; color: #000;">Users Dashboard</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.profile.name or "N/A" }}</td>
+            <td>{{ user.profile.surname or "N/A" }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+                {% if user.roles %}
+                    {% for role in user.roles %}
+                        <span class="role-badge">{{ role.name }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="no-role">No roles assigned</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="/admin/users" class="btn btn-sm btn-primary">Edit</a>
+                <a href="/admin/users" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -146,3 +146,13 @@ class User(db.Model, UserMixin):
             role_obj = role
         if role_obj and self.has_role(role_obj.name):
             self.roles.remove(role_obj)
+    
+    def has_permission(self, permission_name: str) -> bool:
+        for role in self.roles:
+            for p in role.permissions.all():
+                if p.name == permission_name:
+                    return True
+        return False
+
+    def role_names(self):
+        return [role.name for role in self.roles.all()]
