@@ -153,6 +153,7 @@ def create_app(config_name="development"):
             'explore.index',
             'team.index',
             'dataset.subdomain_index',
+            'dataset.list_dataset_comments',
             'hubfile.view_file',
             'hubfile.download_file',
             'hubfile.unsave_file',

@@ -33,7 +33,6 @@ from app.modules.dataset.services import (
 from app.modules.zenodo.services import ZenodoService
 
 from app.modules.hubfile.services import HubfileService
-from flask_login import current_user
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +191,15 @@ def delete():
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            return jsonify({"message": "File deleted", "filename": filename}), 200
+        else:
+            return jsonify({"message": "File not found"}), 404
+    except Exception as e:
+        logger.exception(f"Error deleting temp file: {e}")
+        return jsonify({"message": str(e)}), 500
 
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
@@ -252,6 +260,7 @@ def download_dataset(dataset_id):
 
     return resp
 
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
 
@@ -281,7 +290,11 @@ def subdomain_index(doi):
 
     resp = make_response(
         render_template(
-            "dataset/view_dataset.html", dataset=dataset, hubfile_service=hubfile_service, current_user=current_user
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            hubfile_service=hubfile_service,
+            current_user=current_user,
+            recommendations=recommendations,
         )
     )
     resp.set_cookie("view_cookie", user_cookie)
@@ -311,5 +324,3 @@ def get_unsynchronized_dataset(dataset_id):
         hubfile_service=hubfile_service,
         current_user=current_user,
     )
-
-from . import comments_routes

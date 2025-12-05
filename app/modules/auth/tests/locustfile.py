@@ -1,7 +1,9 @@
-from locust import HttpUser, TaskSet, task
+from locust import HttpUser, TaskSet, task, between
 
 from core.environment.host import get_host_for_locust_testing
 from core.locust.common import fake, get_csrf_token
+import random
+import re
 
 
 class SignupBehavior(TaskSet):
@@ -47,9 +49,9 @@ class LoginBehavior(TaskSet):
         if response.status_code != 200:
             print(f"Login failed: {response.status_code}")
 
-
 class AuthUser(HttpUser):
     tasks = [SignupBehavior, LoginBehavior]
     min_wait = 5000
     max_wait = 9000
     host = get_host_for_locust_testing()
+
