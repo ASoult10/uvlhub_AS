@@ -61,7 +61,14 @@ def create_app(config_name="development"):
     module_manager = ModuleManager(app)
     module_manager.register_modules()
 
-    # Initialize Flask-Mail
+    # Initialize Flask-Mail (simulado cambiar luego)
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USERNAME'] = 'astronomiahub@gmail.com'
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_DEFAULT_SENDER'] = 'astronomiahub@gmail.com'
+
     mail.init_app(app)
 
     # Register login manager

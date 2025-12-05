@@ -33,26 +33,11 @@ class Config:
     TIMEZONE = "Europe/Madrid"
     TEMPLATES_AUTO_RELOAD = True
     UPLOAD_FOLDER = "uploads"
-     # Mail configuration for production
-    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'true').lower() in ['true', '1', 't']
-    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'false').lower() in ['true', '1', 't']
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'astronomiahub@gmail.com')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'astronomiahub@gmail.com')
+
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # MailHog configuration for development
-    MAIL_SERVER = "mailhog"
-    MAIL_PORT = 1025
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = False
-    MAIL_USERNAME = None
-    MAIL_PASSWORD = None
-    MAIL_DEFAULT_SENDER = "test@example.com"
 
 
 class TestingConfig(Config):
