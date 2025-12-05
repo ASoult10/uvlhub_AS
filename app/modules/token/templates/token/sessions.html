@@ -76,7 +76,7 @@
         function revokeToken(tokenId) {
             if (confirm('Are you sure you want to revoke this session?')) {
                 fetch(`/token/revoke/${tokenId}`, {
-                    method: 'DELETE',
+                    method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     }
@@ -94,7 +94,7 @@
         function revokeAllTokens() {
             if (confirm('Are you sure you want to revoke ALL sessions? You will be logged out :(')) {
                 fetch('/token/revoke/all', {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     }
