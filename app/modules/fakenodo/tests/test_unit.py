@@ -62,12 +62,12 @@ def client():
         yield client
 
 def test_connection(client):
-    response = client.get("/fakenodo/api/")
+    response = client.get("/fakenodo/api")
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == "success"
     assert data['message'] == "Connected to FakenodoAPI"
-'''
+
 def test_delete_deposition(client):
     deposition_id = "12345"
     response = client.delete(f"/fakenodo/api/deposit/depositions/{deposition_id}")
@@ -75,4 +75,24 @@ def test_delete_deposition(client):
     data = response.get_json()
     assert data['status'] == "success"
     assert data['message'] == f"Succesfully deleted deposition {deposition_id}"
-'''
+
+def test_get_all_depositions(client):
+    response = client.get("/fakenodo/api/deposit/depositions")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "depositions" in data
+    assert isinstance(data["depositions"], list)
+    assert len(data["depositions"]) >= 2
+
+def test_create_new_deposition_route(client):
+    dataset_payload = {
+        "title": "Test Dataset for Fakenodo"
+    }
+    response = client.post("/fakenodo/api/deposit/depositions",json=dataset_payload)
+    assert response.status_code == 201
+    data = response.get_json()
+    assert "fakenodo_doi" in data
+    assert data["status_code"] == 201
+    expected_doi_pattern = rf"^\d{{2}}\.\d{{4}}/{re.escape(dataset_payload['title'])}$"
+    assert data["fakenodo_doi"].endswith(dataset_payload['title'])
+
