@@ -1,5 +1,4 @@
 import pytest
-from app.modules.fakenodo.services import FakenodoService
 import re
 from app import db, create_app
 
@@ -12,43 +11,6 @@ class FakeMeta:
 class FakeDataSet:
     def __init__(self, title):
         self.ds_meta_data = FakeMeta(title)
-
-def test_create_new_deposition_successful():
-    fakenodo_service = FakenodoService()
-    dataset = FakeDataSet(title="My Test Dataset")
-
-    response = fakenodo_service.create_new_deposition(dataset)
-
-    assert response.get("status_code") == 201
-    doi = response.get("fakenodo_doi")
-    assert doi is not None
-
-    pattern = rf"^\d{{2}}\.\d{{4}}/{re.escape(dataset.ds_meta_data.title)}$"
-    assert re.match(pattern, doi)
-
-def test_create_new_deposition_including_title():
-    fakenodo_service = FakenodoService()
-    dataset_title = "Galaxy"
-    dataset = FakeDataSet(title=dataset_title)
-    response = fakenodo_service.create_new_deposition(dataset)
-
-    doi = response.get("fakenodo_doi")
-    assert dataset_title in doi
-
-def test_create_new_deposition_different_titles():
-    fakenodo_service = FakenodoService()
-    dataset1 = FakeDataSet(title="Dataset One")
-    dataset2 = FakeDataSet(title="Dataset Two")
-
-    response1 = fakenodo_service.create_new_deposition(dataset1)
-    response2 = fakenodo_service.create_new_deposition(dataset2)
-
-    doi1 = response1.get("fakenodo_doi")
-    doi2 = response2.get("fakenodo_doi")
-
-    assert doi1 != doi2
-
-# TESTS PARA FakenodoRoutes
 
 @pytest.fixture
 def client():
@@ -68,13 +30,23 @@ def test_connection(client):
     assert data['status'] == "success"
     assert data['message'] == "Connected to FakenodoAPI"
 
-def test_delete_deposition(client):
-    deposition_id = "12345"
-    response = client.delete(f"/fakenodo/api/deposit/depositions/{deposition_id}")
-    assert response.status_code == 200
+def test_create_new_deposition_route(client):
+    dataset_payload = {
+        "title": "Test Dataset for Fakenodo"
+    }
+    response = client.post("/fakenodo/api/deposit/depositions", json={
+        "metadata": {
+            "title": dataset_payload["title"]
+        }
+    })
+    assert response.status_code == 201
     data = response.get_json()
-    assert data['status'] == "success"
-    assert data['message'] == f"Succesfully deleted deposition {deposition_id}"
+
+    assert data['id'] == 1
+    assert data['metadata']['title'] == dataset_payload["title"]
+    assert data['files'] == []
+    assert data['doi'] is None
+    assert data['published'] is False
 
 def test_get_all_depositions(client):
     response = client.get("/fakenodo/api/deposit/depositions")
@@ -82,17 +54,72 @@ def test_get_all_depositions(client):
     data = response.get_json()
     assert "depositions" in data
     assert isinstance(data["depositions"], list)
-    assert len(data["depositions"]) >= 2
+    assert len(data["depositions"]) == 1
 
-def test_create_new_deposition_route(client):
-    dataset_payload = {
-        "title": "Test Dataset for Fakenodo"
-    }
-    response = client.post("/fakenodo/api/deposit/depositions",json=dataset_payload)
+def test_get_deposition(client):
+    deposition_id = "1"
+    response = client.get(f"/fakenodo/api/deposit/depositions/{deposition_id}")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['id'] == int(deposition_id)
+    assert data['metadata']['title'] == "Test Dataset for Fakenodo"
+
+def test_get_deposition_not_found(client):
+    deposition_id = "999"
+    response = client.get(f"/fakenodo/api/deposit/depositions/{deposition_id}")
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['message'] == "Deposition not found"
+
+def test_upload_file(client):
+    deposition_id = 1
+    response = client.post(
+        f"/fakenodo/api/deposit/depositions/{deposition_id}/files",
+        data={'filename': 'testfile.txt'}
+    )
     assert response.status_code == 201
     data = response.get_json()
-    assert "fakenodo_doi" in data
-    assert data["status_code"] == 201
-    expected_doi_pattern = rf"^\d{{2}}\.\d{{4}}/{re.escape(dataset_payload['title'])}$"
-    assert data["fakenodo_doi"].endswith(dataset_payload['title'])
+    assert data['filename'] == 'testfile.txt'
+    assert re.match(r"http://fakenodo.org/files/1/files/testfile.txt", data['link'])
 
+def test_upload_file_deposition_not_found(client):
+    deposition_id = 999
+    response = client.post(
+        f"/fakenodo/api/deposit/depositions/{deposition_id}/files",
+        data={'filename': 'testfile.txt'}
+    )
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['message'] == "Deposition not found"
+
+def test_publish_deposition(client):
+    deposition_id = 1
+    response = client.post(f"/fakenodo/api/deposit/depositions/{deposition_id}/actions/publish")
+    assert response.status_code == 202
+    data = response.get_json()
+    assert data['id'] == deposition_id
+    assert data['doi'] == f"10.5072/fakenodo.{deposition_id}"
+
+def test_publish_deposition_not_found(client):
+    deposition_id = 999
+    response = client.post(f"/fakenodo/api/deposit/depositions/{deposition_id}/actions/publish")
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['message'] == "Deposition not found"
+
+def test_delete_deposition(client):
+    deposition_id = 1
+    response = client.delete(f"/fakenodo/api/deposit/depositions/{deposition_id}")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['message'] == "Deposition deleted"
+
+    response = client.get(f"/fakenodo/api/deposit/depositions/{deposition_id}")
+    assert response.status_code == 404
+
+def test_delete_deposition_not_found(client):
+    deposition_id = 999
+    response = client.delete(f"/fakenodo/api/deposit/depositions/{deposition_id}")
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['message'] == "Deposition not found"
