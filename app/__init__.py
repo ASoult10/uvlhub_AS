@@ -13,6 +13,8 @@ from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
 from flask_jwt_extended import JWTManager, get_jwt
 from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +23,7 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize JWT Manager
 jwt = JWTManager()
@@ -54,6 +57,9 @@ def create_app(config_name="development"):
     db.init_app(app)
     migrate.init_app(app, db)
     
+    # Initialize Limiter
+    limiter.init_app(app)
+
     # Initialize JWT with the app
     jwt.init_app(app)
 
@@ -61,7 +67,18 @@ def create_app(config_name="development"):
     module_manager = ModuleManager(app)
     module_manager.register_modules()
 
-    # Initialize Flask-Mail
+    # Initialize error handler manager
+    error_handler_manager = ErrorHandlerManager(app)
+    error_handler_manager.register_error_handlers()
+
+    # Initialize Flask-Mail (simulado cambiar luego)
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USERNAME'] = 'astronomiahub@gmail.com'
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_DEFAULT_SENDER'] = 'astronomiahub@gmail.com'
+
     mail.init_app(app)
 
     # Register login manager
@@ -134,6 +151,7 @@ def create_app(config_name="development"):
         excluded_endpoints = [
             'auth.login',
             'auth.logout',
+            'auth.signup',
             'auth.show_signup_form',
             'auth.recover_password',
             'auth.reset_password',
@@ -141,11 +159,13 @@ def create_app(config_name="development"):
             'auth.two_factor_setup',
             'auth.verify_2fa',
             'auth.verify_2fa_login',
+            'auth.scripts',
             'public.index',
             'public.scripts',
             'explore.index',
             'team.index',
             'dataset.subdomain_index',
+            'dataset.list_dataset_comments',
             'hubfile.view_file',
             'hubfile.download_file',
             'hubfile.unsave_file',
@@ -163,7 +183,7 @@ def create_app(config_name="development"):
         if request.path in excluded_paths:
             return
         
-        if request.is_json or request.path.startswith("/api"):
+        if request.is_json or request.path.startswith("/api") or request.path.endswith('/scripts.js'):
             return
         
         if request.blueprint == 'fakenodo' or request.path.startswith('/fakenodo/api'):

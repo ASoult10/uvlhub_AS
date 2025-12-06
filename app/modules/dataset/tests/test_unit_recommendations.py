@@ -103,41 +103,99 @@ class TestRecommendationSystemUnit:
             result = mock_dataset_service.get_recommendations(999, limit=5)
             assert result == []
 
-    def test_recommendation_excludes_current_dataset(self):
+    def test_recommendation_excludes_current_dataset(self, mock_dataset_service, sample_current_dataset):
         """Test that the current dataset is not included in recommendations"""
-        # Simple logic test - the algorithm filters with "DataSet.id != dataset_id"
-        current_dataset_id = 1
-        all_dataset_ids = [1, 2, 3, 4, 5]
-        
-        # Filter out current dataset (this is what the algorithm does)
-        filtered_ids = [id for id in all_dataset_ids if id != current_dataset_id]
-        
-        # Verify current dataset is not in filtered list
-        assert current_dataset_id not in filtered_ids
-        assert len(filtered_ids) == 4
+        with patch.object(mock_dataset_service.repository, 'get_by_id') as mock_get, \
+             patch('app.modules.dataset.models.DataSet.query') as mock_query:
+            
+            mock_get.return_value = sample_current_dataset
+            
+            # Create candidate datasets
+            candidates = []
+            for i in range(2, 6):
+                dataset = Mock()
+                dataset.id = i
+                dataset.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+                dataset.ds_meta_data = Mock()
+                dataset.ds_meta_data.tags = "python"
+                dataset.ds_meta_data.authors = []
+                candidates.append(dataset)
+            
+            mock_query.filter.return_value.all.return_value = candidates
+            
+            with patch.object(mock_dataset_service.dsdownloadrecord_repository, 'count_downloads_for_dataset') as mock_downloads:
+                mock_downloads.return_value = 10
+                
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                
+                # Verify current dataset is not in results
+                for rec in result:
+                    assert rec['dataset'].id != 1
 
-    def test_recommendation_requires_tag_or_author_match(self):
+    def test_recommendation_requires_tag_or_author_match(self, mock_dataset_service):
         """Test that only datasets with matching tags or authors are recommended"""
-        current_tags = {"python", "machine learning"}
-        current_authors = {"john doe"}
+        # Create current dataset with specific tags and authors
+        current = Mock()
+        current.id = 1
+        current.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        current.ds_meta_data = Mock()
+        current.ds_meta_data.tags = "python, machine learning"
+        author1 = Mock()
+        author1.name = "John Doe"
+        current.ds_meta_data.authors = [author1]
         
-        # Dataset with matching tag
-        candidate1_tags = {"python", "java"}
-        candidate1_authors = {"jane smith"}
-        has_match1 = bool(current_tags & candidate1_tags) or bool(current_authors & candidate1_authors)
-        assert has_match1 == True
+        # Create candidates
+        candidates = []
         
-        # Dataset with matching author (FIX: compare with correct variable)
-        candidate2_tags = {"rust", "go"}
-        candidate2_authors = {"john doe"}
-        has_match2 = bool(current_tags & candidate2_tags) or bool(current_authors & candidate2_authors)
-        assert has_match2 == True
+        # Candidate 1: matching tag
+        candidate1 = Mock()
+        candidate1.id = 2
+        candidate1.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        candidate1.ds_meta_data = Mock()
+        candidate1.ds_meta_data.tags = "python, java"
+        author2 = Mock()
+        author2.name = "Jane Smith"
+        candidate1.ds_meta_data.authors = [author2]
+        candidates.append(candidate1)
         
-        # Dataset with no matches
-        candidate3_tags = {"rust", "go"}
-        candidate3_authors = {"jane smith"}
-        has_match3 = bool(current_tags & candidate3_tags) or bool(current_authors & candidate3_authors)
-        assert has_match3 == False
+        # Candidate 2: matching author
+        candidate2 = Mock()
+        candidate2.id = 3
+        candidate2.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        candidate2.ds_meta_data = Mock()
+        candidate2.ds_meta_data.tags = "rust, go"
+        author3 = Mock()
+        author3.name = "John Doe"
+        candidate2.ds_meta_data.authors = [author3]
+        candidates.append(candidate2)
+        
+        # Candidate 3: no matches
+        candidate3 = Mock()
+        candidate3.id = 4
+        candidate3.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        candidate3.ds_meta_data = Mock()
+        candidate3.ds_meta_data.tags = "rust, blockchain"
+        author4 = Mock()
+        author4.name = "Alice"
+        candidate3.ds_meta_data.authors = [author4]
+        candidates.append(candidate3)
+        
+        with patch.object(mock_dataset_service.repository, 'get_by_id') as mock_get, \
+             patch('app.modules.dataset.models.DataSet.query') as mock_query:
+            
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = candidates
+            
+            with patch.object(mock_dataset_service.dsdownloadrecord_repository, 'count_downloads_for_dataset') as mock_downloads:
+                mock_downloads.return_value = 10
+                
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                
+                # Should return only candidates with matches (1 and 2, not 3)
+                result_ids = [rec['dataset'].id for rec in result]
+                assert 2 in result_ids  # Has matching tag
+                assert 3 in result_ids  # Has matching author
+                assert 4 not in result_ids  # No matches
 
     def test_recommendation_scoring_downloads(self):
         """Test that downloads are scored correctly (3 points max)"""
@@ -211,25 +269,42 @@ class TestRecommendationSystemUnit:
         total_max_score = max_downloads_score + max_recency_score + max_coincidences_score
         assert total_max_score == 10.0
 
-    def test_recommendation_limit_parameter(self):
+    def test_recommendation_limit_parameter(self, mock_dataset_service):
         """Test that the limit parameter correctly limits results"""
-        # Simulate the algorithm's limit logic
-        all_recommendations = [
-            {"dataset": Mock(id=i), "score": 10-i, "downloads": 10, "coincidences": 2}
-            for i in range(1, 11)  # 10 recommendations
-        ]
+        # Create current dataset
+        current = Mock()
+        current.id = 1
+        current.ds_meta_data = Mock()
+        current.ds_meta_data.tags = "python"
+        current.ds_meta_data.authors = []
         
-        # Test limit of 5
-        limited_5 = all_recommendations[:5]
-        assert len(limited_5) == 5
+        # Create 10 candidate datasets
+        candidates = []
+        for i in range(2, 12):
+            dataset = Mock()
+            dataset.id = i
+            dataset.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            dataset.ds_meta_data = Mock()
+            dataset.ds_meta_data.tags = "python"
+            dataset.ds_meta_data.authors = []
+            candidates.append(dataset)
         
-        # Test limit of 3
-        limited_3 = all_recommendations[:3]
-        assert len(limited_3) == 3
-        
-        # Test limit greater than available
-        limited_20 = all_recommendations[:20]
-        assert len(limited_20) == 10  # Only 10 available
+        with patch.object(mock_dataset_service.repository, 'get_by_id') as mock_get, \
+             patch('app.modules.dataset.models.DataSet.query') as mock_query:
+            
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = candidates
+            
+            with patch.object(mock_dataset_service.dsdownloadrecord_repository, 'count_downloads_for_dataset') as mock_downloads:
+                mock_downloads.return_value = 10
+                
+                # Test limit of 5
+                result = mock_dataset_service.get_recommendations(1, limit=5)
+                assert len(result) == 5
+                
+                # Test limit of 3
+                result = mock_dataset_service.get_recommendations(1, limit=3)
+                assert len(result) == 3
 
     def test_recommendation_sorting_by_score(self):
         """Test that recommendations are sorted by score (descending)"""

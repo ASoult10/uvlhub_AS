@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import request
 from flask_jwt_extended import decode_token
 import pytest
 from app import db
@@ -89,7 +90,7 @@ def test_get_token_by_id(test_client):
     token = token_service.get_token_by_id(TOKEN_ID)
     assert token is None or token.id == TOKEN_ID, "The token ID does not match the requested ID."
 
-def get_token_by_jti(test_client):
+def test_get_token_by_jti(test_client):
     """
     Sample test to verify the get_token_by_jti function.
     """
@@ -103,8 +104,8 @@ def test_pairs_of_tokens_by_jti(test_client):
     access_token, refresh_token = token_service.get_pair_of_tokens_by_jti(TOKEN_JTI)
     if access_token:
         assert access_token.jti == TOKEN_JTI, "The access token JTI does not match the requested JTI."
-        if refresh_token:
-            assert refresh_token.jti == TOKEN_PARENT_JTI, "The refresh token JTI does not match the expected parent JTI."
+    if refresh_token:
+        assert refresh_token.jti == TOKEN_PARENT_JTI, "The refresh token JTI does not match the expected parent JTI."
 
 def test_get_active_tokens_by_user(test_client):
     """
@@ -129,9 +130,27 @@ def test_revoke_token(test_client):
     """
     result = token_service.revoke_token(TOKEN_ID, USER_ID)
     assert result is True, "Failed to revoke the token."
-    token = token_service.get_token_by_id(TOKEN_ID)
+    token, parent_token = token_service.get_pair_of_tokens_by_jti(TOKEN_JTI)
     if token:
         assert not token.is_active, "The token is still active after revocation."
+    if parent_token:
+        assert not parent_token.is_active, "The parent token is still active after revocation."
+    token_service.edit_token(TOKEN_ID, is_active=True)
+    token_service.edit_token(PARENT_TOKEN_ID, is_active=True)
+
+def test_revoke_token_invalid_user(test_client):
+    """
+    Sample test to verify the revoke_token function with an invalid user.
+    """
+    result = token_service.revoke_token(TOKEN_ID, USER_ID + 1)
+    assert result is False, "Token revocation should have failed for an invalid user."
+    token, parent_token = token_service.get_pair_of_tokens_by_jti(TOKEN_JTI)
+    if token:
+        assert token.is_active, "The token should still be active after failed revocation attempt."
+    if parent_token:
+        assert parent_token.is_active, "The parent token should still be active after failed revocation attempt."
+    token_service.edit_token(TOKEN_ID, is_active=True)
+    token_service.edit_token(PARENT_TOKEN_ID, is_active=True)
 
 def test_revoke_all_tokens_for_user(test_client):
     """
@@ -154,6 +173,9 @@ def test_create_tokens(test_client):
     assert refresh_token is not None, "Refresh token was not created."
 
 def test_refresh_access_token_uses_jti_and_saves_record(test_client):
+    """
+    Sample test to verify the refresh_access_token function.
+    """
     _, refresh_token_str = token_service.create_tokens(USER_ID, TOKEN_DEVICE_INFO, TOKEN_LOCATION_INFO)
     decoded_refresh = decode_token(refresh_token_str)
     refresh_jti = decoded_refresh.get("jti")
@@ -211,7 +233,7 @@ def test_edit_token(test_client):
     if token_to_edit is None:
         pytest.skip("Token to edit does not exist.")
     new_device_info = 2*TOKEN_DEVICE_INFO
-    edited_token = token_service.edit_token(TOKEN_ID, device_info=new_device_info)
+    edited_token = token_service.edit_token(TOKEN_ID, device_info=new_device_info, id=TOKEN_ID + 1)
     assert edited_token.device_info == new_device_info, "Token device info was not updated."
     assert edited_token.id == TOKEN_ID, "Edited token ID does not match."
     assert edited_token.code == token_to_edit.code, "Edited token code should not have changed."
@@ -247,27 +269,141 @@ def test_delete_token(test_client):
     deleted_token = token_service.get_token_by_id(token_id)
     assert deleted_token is None, "Token was not deleted successfully."
 
-def get_location_by_ip(test_client):
+def test_get_location_by_ip(test_client):
     """
     Sample test to verify the get_location_by_ip function.
     """
+    non_location = token_service.get_location_by_ip(None)
+    assert non_location == "Unknown location", "Location for None IP should be 'Unknown location'."
+
     local_ip_address = "127.0.0.1"
     local_location = token_service.get_location_by_ip(local_ip_address)
-    assert local_location == "Localhost", "Location for localhost IP should be 'Localhost'."
+    assert local_location == "Local Network", "Location for localhost IP should be 'Local Network'."
 
-    public_ip_address = "8.8.8.8"
+    private_ip_address = "192.168.1.1"
+    private_location = token_service.get_location_by_ip(private_ip_address)
+    assert private_location == "Private Network", "Location for private IP should be 'Private Network'."
+
+    public_ip_address = "79.117.197.244"
     public_location = token_service.get_location_by_ip(public_ip_address)
-    assert public_location != "Localhost", "Location for public IP should not be 'Localhost'."
+    assert public_location == "Dos Hermanas, Spain", "Location for public IP should be 'Dos Hermanas, Spain'."
 
-def get_device_name_by_request(test_client):
+    error_ip_address = "999.999.999.999"
+    error_location = token_service.get_location_by_ip(error_ip_address)
+    assert error_location == "Unknown location", "Location for invalid IP should be 'Unknown location'."
+    
+def test_get_computer_name_by_request(test_client):
     """
     Sample test to verify the get_device_name_by_request function.
     """
-    class MockRequest:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
         }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "Windows" in device_name or "Chrome" in device_name, "Device name should contain OS or browser information."
 
-    mock_request = MockRequest()
-    device_name = token_service.get_device_name_by_request(mock_request)
-    assert "Windows" in device_name or "Chrome" in device_name, "Device name should contain OS or browser information."
+def test_get_mobile_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for mobile user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "iPhone" in device_name or "Mobile" in device_name, "Device name should contain mobile device information."
+
+def test_get_unknown_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for unknown user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': ''
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert device_name == "Unknown Device", "Device name should be 'Unknown Device' for empty user agent."
+
+def test_get_tablet_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for tablet user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 9; SM-T865) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.89 Safari/537.36'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "SM-T865" in device_name or "Tablet" in device_name, "Device name should contain tablet device information."
+
+def test_get_bot_name_by_request(test_client):
+    """
+    Sample test to verify the get_device_name_by_request function for bot user agents.
+    """
+    with test_client.application.test_request_context(
+        '/',
+        headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        }
+    ):
+        device_name = token_service.get_device_name_by_request(request)
+        assert "Googlebot" in device_name or "Bot" in device_name, "Device name should contain bot information."
+
+def test_get_token_sessions_route(test_client):
+    """
+    Sample test to verify the /token/sessions route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+
+    response = test_client.get('/token/sessions')
+    assert response.status_code == 302, "Failed to access the /token/sessions route."
+
+def test_revoke_token_route(test_client):
+    """
+    Sample test to verify the /token/revoke route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+
+    response = test_client.post('/token/revoke/'+str(TOKEN_ID))
+    assert response.status_code == 302, "Failed to access the /token/revoke route."
+
+def test_revoke_all_tokens_route(test_client):
+    """
+    Sample test to verify the /token/revoke_all route.
+    """
+    # Asegurarse de que el usuario existe
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=USER_EMAIL).first()
+        assert user is not None
+
+    # Simular login inyectando la sesión
+    with test_client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+        
+    response = test_client.post('/token/revoke_all')
+    assert response.status_code == 302, "Failed to access the /token/revoke_all route."

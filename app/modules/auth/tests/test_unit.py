@@ -1,13 +1,31 @@
 import base64
+import time
 
 import pyotp
 import pytest
 from flask import url_for
 from app import db
+from app import limiter
 
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
+
+
+@pytest.fixture
+def app_with_rate_limit(test_client):
+    """
+    Fixture to temporarily enable rate limiting for a test.
+    """
+    # Habilita el limitador para el test
+    limiter.enabled = True
+    # Reinicia el estado del limitador para asegurar un estado limpio
+    limiter.reset()
+    
+    yield test_client
+    
+    # Deshabilita el limitador después del test
+    limiter.enabled = False
 
 
 @pytest.fixture(scope="module")
@@ -53,9 +71,76 @@ def test_login_unsuccessful_bad_password(test_client):
     test_client.get("/logout", follow_redirects=True)
 
 
+def test_login_rate_limit(app_with_rate_limit):
+    """
+    Tests that the login route is rate-limited after 3 failed POST attempts.
+    """
+    # The first 3 attempts should be allowed (status 200, re-rendering the form)
+    for _ in range(3):
+        response = app_with_rate_limit.post(
+            "/login", data=dict(email="bad@example.com", password="badpassword")
+        )
+        assert response.status_code == 200
+        assert b"Invalid credentials" in response.data
+
+    # The 4th attempt should be rate-limited (status 429)
+    response = app_with_rate_limit.post(
+        "/login", data=dict(email="bad@example.com", password="badpassword")
+    )
+    assert response.status_code == 429
+    assert b"You have exceeded the login attempt limit" in response.data
+
+
+def test_login_rate_limit_resets_on_success(app_with_rate_limit):
+    """
+    Tests that the rate limit is reset after a successful login.
+    """
+    # Make 2 failed attempts
+    for _ in range(2):
+        response = app_with_rate_limit.post(
+            "/login", data=dict(email="test@example.com", password="wrongpassword")
+        )
+        assert response.status_code == 200
+
+    # Make a successful attempt
+    response = app_with_rate_limit.post(
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
+    )
+    assert response.request.path != url_for("auth.login"), "Successful login failed"
+
+    # Logout
+    app_with_rate_limit.get("/logout", follow_redirects=True)
+
+    # The rate limit should now be reset. We should have 3 new attempts.
+    for i in range(3):
+        response = app_with_rate_limit.post(
+            "/login", data=dict(email="test@example.com", password="wrongpassword")
+        )
+        assert response.status_code == 200, f"Attempt {i+1} should have been allowed"
+
+    # The 4th attempt should now be blocked
+    response = app_with_rate_limit.post(
+        "/login", data=dict(email="test@example.com", password="wrongpassword")
+    )
+    assert response.status_code == 429
+
+
+def test_login_get_requests_not_limited(app_with_rate_limit):
+    """
+    Tests that GET requests to the login page do not trigger the rate limit.
+    """
+    for _ in range(5):
+        response = app_with_rate_limit.get("/login")
+        assert response.status_code == 200
+    
+    # A subsequent POST should still be allowed
+    response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="bad"))
+    assert response.status_code == 200
+
+
 def test_signup_user_no_name(test_client):
     response = test_client.post(
-        "/signup", data=dict(surname="Foo", email="test@example.com", password="test1234"), follow_redirects=True
+        "/signup/", data=dict(surname="Foo", email="test@example.com", password="test1234"), follow_redirects=True
     )
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert b"This field is required" in response.data, response.data
@@ -64,7 +149,7 @@ def test_signup_user_no_name(test_client):
 def test_signup_user_unsuccessful(test_client):
     email = "test@example.com"
     response = test_client.post(
-        "/signup", data=dict(name="Test", surname="Foo", email=email, password="test1234"), follow_redirects=True
+        "/signup/", data=dict(name="Test", surname="Foo", email=email, password="test1234"), follow_redirects=True
     )
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert f"Email {email} in use".encode("utf-8") in response.data
@@ -72,7 +157,7 @@ def test_signup_user_unsuccessful(test_client):
 
 def test_signup_user_successful(test_client):
     response = test_client.post(
-        "/signup",
+        "/signup/",
         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
         follow_redirects=True,
     )

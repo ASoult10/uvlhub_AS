@@ -30,7 +30,6 @@ class AuthenticationService(BaseService):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
-
             user_id = int(user.id)
             device_info = TokenService.get_device_name_by_request(request) if request else None
             location_info = TokenService.get_location_by_ip(request.remote_addr) if request else None
@@ -135,17 +134,17 @@ class AuthenticationService(BaseService):
         mail.send(msg)
 
 
-    def send_password_reset_email(self, user: User):
-        reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)
-        msg = Message(
-            subject="Password Reset Request",
-            sender="noreply@astronomiahub.com",
-            recipients=[user.email],
-            body=f"Hello {user.username}, \n\n"
-                    f"We received a request to reset your password for your AstronomiaHub account.\n\n"
-                    f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
-                    f"If you did not request a password reset, you can safely ignore this email.\n\n"
-                    f"Best regards,\n"
-                    f"AstronomiaHub Team"
-        )
-        mail.send(msg)
+    # def send_password_reset_email(self, user: User):
+    #     reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)
+    #     msg = Message(
+    #         subject="Password Reset Request",
+    #         sender="noreply@astronomiahub.com",
+    #         recipients=[user.email],
+    #         body=f"Hello {user.username}, \n\n"
+    #                 f"We received a request to reset your password for your AstronomiaHub account.\n\n"
+    #                 f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
+    #                 f"If you did not request a password reset, you can safely ignore this email.\n\n"
+    #                 f"Best regards,\n"
+    #                 f"AstronomiaHub Team"
+    #     )
+    #     mail.send(msg)
