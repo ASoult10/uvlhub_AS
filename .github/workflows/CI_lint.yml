@@ -38,8 +38,8 @@ jobs:
         run: autoflake --check --remove-all-unused-imports --recursive app rosemary core
 
       - name: Check formatting with autopep8
-        run: autopep8 --check --aggressive --aggressive --recursive app rosemary core
-
+        run: autopep8 --diff --aggressive --aggressive --recursive app rosemary core
+        
       - name: Check import order with isort
         run: isort --check-only app rosemary core
 
