@@ -380,3 +380,69 @@ class TestApiRoutes:
     def test_api_blueprint_registered(self, app):
         """Test que el blueprint API está registrado"""
         assert "api" in [bp.name for bp in app.blueprints.values()]
+
+# ============================= TESTS PARA SEEDERS =============================
+
+class TestApiKeysSeeder:
+    
+    @patch.dict('os.environ', {'LOCUST_API_KEY': ''})
+    def test_seeder_skips_without_env_key(self, app, capsys):
+        """Test que el seeder se salta sin LOCUST_API_KEY"""
+        from app.modules.api.seeders import ApiKeysSeeder
+        
+        with app.app_context():
+            ApiKeysSeeder().run()
+            assert "Falta LOCUST_API_KEY" in capsys.readouterr().out
+    
+    @patch.dict('os.environ', {'LOCUST_API_KEY': 'test-key-123'})
+    def test_seeder_creates_user_and_keys(self, app):
+        """Test que crea usuario y keys correctamente"""
+        from app.modules.auth.models import User
+        from app.modules.api.seeders import ApiKeysSeeder
+        
+        with app.app_context():
+            ApiKeysSeeder().run()
+            
+            user = User.query.filter_by(email="locust@local").first()
+            assert user is not None
+            
+            api_key = ApiKey.query.filter_by(key='test-key-123').first()
+            assert api_key is not None
+            assert api_key.scopes == "read:datasets"
+            assert api_key.user_id == user.id
+    
+    @patch.dict('os.environ', {
+        'LOCUST_API_KEY': 'test-key-123',
+        'LOCUST_API_KEY_STATS': 'test-stats-key'
+    })
+    def test_seeder_creates_multiple_keys_with_different_scopes(self, app):
+        """Test que crea múltiples keys con diferentes scopes"""
+        from app.modules.api.seeders import ApiKeysSeeder
+        
+        with app.app_context():
+            ApiKeysSeeder().run()
+            
+            key1 = ApiKey.query.filter_by(key='test-key-123').first()
+            key2 = ApiKey.query.filter_by(key='test-stats-key').first()
+            
+            assert key1.scopes == "read:datasets"
+            assert key2.scopes == "read:datasets,read:stats"
+    
+    @patch.dict('os.environ', {'LOCUST_API_KEY': 'test-key-123'})
+    def test_seeder_is_idempotent(self, app):
+        """Test que el seeder es idempotente (no duplica)"""
+        from app.modules.api.seeders import ApiKeysSeeder
+        
+        with app.app_context():
+            seeder = ApiKeysSeeder()
+            seeder.run()
+            seeder.run()
+            
+            count = ApiKey.query.filter_by(key='test-key-123').count()
+            assert count == 1
+    
+    def test_seeder_priority(self):
+        """Test que el seeder tiene prioridad 100"""
+        from app.modules.api.seeders import ApiKeysSeeder
+        
+        assert ApiKeysSeeder().priority == 100
