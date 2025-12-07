@@ -117,7 +117,7 @@ class DatasetCommentsBehavior(TaskSet):
                 if comment_id:
                     self.last_comment_id = comment_id
             except Exception as e:
-                                print("[comments] Error parsing JSON when creating comment:", e)
+                print("[comments] Error parsing JSON when creating comment:", e)
                 print("[comments] Body:", response.text[:200])
 
     @task(1)
