@@ -50,7 +50,10 @@ class RecommendationBehavior(TaskSet):
         # First, load the explore page
         with self.client.get("/explore", catch_response=True, name="Explore Page Load") as response:
             if response.status_code != 200:
-                response.failure(f"Explore page load failed: {response.status_code}")
+                response.failure(
+                    f"Explore page load failed: {
+                        response.status_code}"
+                )
                 return
 
             csrf_token = get_csrf_token(response)
@@ -104,7 +107,8 @@ class RecommendationBehavior(TaskSet):
                 if b"Recommended Datasets" in response.content or b"recommendations" in response.content:
                     response.success()
                 else:
-                    # It's ok if there are no recommendations (no similar datasets)
+                    # It's ok if there are no recommendations (no similar
+                    # datasets)
                     response.success()
             elif response.status_code == 404:
                 # Dataset might not exist, that's ok in load testing
@@ -143,7 +147,12 @@ class RecommendationBehavior(TaskSet):
                 if response.status_code == 200:
                     response.success()
                 else:
-                    response.failure(f"Load {i+1} failed: {response.status_code}")
+                    response.failure(
+                        f"Load {
+                            i +
+                            1} failed: {
+                            response.status_code}"
+                    )
 
 
 class RecommendationUser(HttpUser):

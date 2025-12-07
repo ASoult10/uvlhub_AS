@@ -7,7 +7,8 @@ class ConfigManager:
         self.app = app
 
     def load_config(self, config_name="development"):
-        # If config_name is not provided, use the environment variable FLASK_ENV
+        # If config_name is not provided, use the environment variable
+        # FLASK_ENV
         if config_name is None:
             config_name = os.getenv("FLASK_ENV", "development")
 

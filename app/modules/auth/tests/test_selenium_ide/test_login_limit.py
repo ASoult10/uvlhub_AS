@@ -36,7 +36,7 @@ def test_login_rate_limit():
             # On the first 3 attempts, we expect an "Invalid credentials" error
             error_message = driver.find_element(By.XPATH, "//*[contains(text(), 'Invalid credentials')]")
             assert error_message.is_displayed()
-            print(f"Attempt {i+1} failed as expected.")
+            print(f"Attempt {i + 1} failed as expected.")
 
         # Perform the 4th attempt, which should be blocked
         email_field = driver.find_element(By.NAME, "email")

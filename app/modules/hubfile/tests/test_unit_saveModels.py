@@ -35,7 +35,8 @@ def sample_hubfile():
 
 class TestSavedByUser:
     def test_comprobar_archivo_guardado_verdadero(self, hubfile_service, mock_repository):
-        # Verifica que la función devuelve True cuando el archivo está guardado por el usuario
+        # Verifica que la función devuelve True cuando el archivo está guardado
+        # por el usuario
         mock_repository.is_saved_by_user.return_value = True
         hubfile_service.repository = mock_repository
 
@@ -45,7 +46,8 @@ class TestSavedByUser:
         mock_repository.is_saved_by_user.assert_called_once_with(1, 1)
 
     def test_comprobar_archivo_guardado_falso(self, hubfile_service, mock_repository):
-        # Verifica que la función devuelve False cuando el archivo no está guardado por el usuario
+        # Verifica que la función devuelve False cuando el archivo no está
+        # guardado por el usuario
         mock_repository.is_saved_by_user.return_value = False
         hubfile_service.repository = mock_repository
 
@@ -66,7 +68,8 @@ class TestSavedByUser:
 
 class TestAddToSaved:
     def test_guardar_archivo(self, hubfile_service, mock_repository):
-        # Verifica que se puede agregar un archivo a los guardados del usuario correctamente
+        # Verifica que se puede agregar un archivo a los guardados del usuario
+        # correctamente
         hubfile_service.repository = mock_repository
 
         hubfile_service.add_to_user_saved(hubfile_id=1, user_id=1)
@@ -74,7 +77,8 @@ class TestAddToSaved:
         mock_repository.add_to_user_saved.assert_called_once_with(1, 1)
 
     def test_guardar_archivo_guardado(self, hubfile_service, mock_repository):
-        # Verifica el comportamiento cuando se intenta agregar un archivo que ya está guardado
+        # Verifica el comportamiento cuando se intenta agregar un archivo que
+        # ya está guardado
         mock_repository.is_saved_by_user.return_value = True
         hubfile_service.repository = mock_repository
 
@@ -83,7 +87,8 @@ class TestAddToSaved:
         mock_repository.add_to_user_saved.assert_called_once_with(1, 1)
 
     def test_guardar_archivo_diferente_usuario(self, hubfile_service, mock_repository):
-        # Verifica que se puede agregar el mismo archivo para diferentes usuarios
+        # Verifica que se puede agregar el mismo archivo para diferentes
+        # usuarios
         hubfile_service.repository = mock_repository
 
         hubfile_service.add_to_user_saved(hubfile_id=1, user_id=2)
@@ -93,7 +98,8 @@ class TestAddToSaved:
 
 class TestRemoveFromSaved:
     def test_eliminar_archivo(self, hubfile_service, mock_repository):
-        # Verifica que se puede eliminar un archivo de los guardados del usuario correctamente
+        # Verifica que se puede eliminar un archivo de los guardados del
+        # usuario correctamente
         hubfile_service.repository = mock_repository
 
         hubfile_service.remove_from_user_saved(hubfile_id=1, user_id=1)
@@ -101,7 +107,8 @@ class TestRemoveFromSaved:
         mock_repository.remove_from_user_saved.assert_called_once_with(1, 1)
 
     def test_eliminar_archivo_no_guardado(self, hubfile_service, mock_repository):
-        # Verifica el comportamiento cuando se intenta eliminar un archivo que no está guardado
+        # Verifica el comportamiento cuando se intenta eliminar un archivo que
+        # no está guardado
         mock_repository.is_saved_by_user.return_value = False
         hubfile_service.repository = mock_repository
 
@@ -112,7 +119,8 @@ class TestRemoveFromSaved:
 
 class TestGetSavedFilesForUser:
     def test_get_archivos_guardados(self, hubfile_service, mock_repository):
-        # Verifica que se obtienen los archivos guardados del usuario correctamente
+        # Verifica que se obtienen los archivos guardados del usuario
+        # correctamente
         mock_files = [MagicMock(spec=Hubfile), MagicMock(spec=Hubfile)]
         mock_repository.get_saved_files_for_user.return_value = mock_files
         hubfile_service.repository = mock_repository
@@ -124,7 +132,8 @@ class TestGetSavedFilesForUser:
         mock_repository.get_saved_files_for_user.assert_called_once_with(1)
 
     def test_no_saved_files(self, hubfile_service, mock_repository):
-        # Verifica que se devuelve una lista vacía cuando el usuario no tiene archivos guardados
+        # Verifica que se devuelve una lista vacía cuando el usuario no tiene
+        # archivos guardados
         mock_repository.get_saved_files_for_user.return_value = []
         hubfile_service.repository = mock_repository
 
@@ -148,7 +157,8 @@ class TestRutaGuardarArchivo:
     @patch("app.modules.hubfile.routes.current_user")
     @patch("app.modules.hubfile.routes.HubfileService")
     def test_guardar_archivo_usuario_autenticado(self, mock_service, mock_user, hubfile_service):
-        # Verifica que un usuario autenticado puede guardar un archivo correctamente
+        # Verifica que un usuario autenticado puede guardar un archivo
+        # correctamente
         from app.modules.hubfile.routes import save_file
 
         mock_user.is_authenticated = True
@@ -181,7 +191,8 @@ class TestRutaEliminarArchivo:
     @patch("app.modules.hubfile.routes.current_user")
     @patch("app.modules.hubfile.routes.HubfileService")
     def test_eliminar_archivo_usuario_autenticado(self, mock_service, mock_user):
-        # Verifica que un usuario autenticado puede eliminar un archivo de sus guardados
+        # Verifica que un usuario autenticado puede eliminar un archivo de sus
+        # guardados
         from app.modules.hubfile.routes import unsave_file
 
         mock_user.is_authenticated = True
@@ -214,7 +225,8 @@ class TestRutaObtenerArchivosGuardados:
     @patch("app.modules.hubfile.routes.current_user")
     @patch("app.modules.hubfile.routes.HubfileService")
     def test_obtener_archivos_guardados_exitosamente(self, mock_service, mock_user):
-        # Verifica que se pueden obtener todos los archivos guardados del usuario
+        # Verifica que se pueden obtener todos los archivos guardados del
+        # usuario
         from app.modules.hubfile.routes import get_saved_files
 
         mock_user.id = 1
@@ -237,7 +249,8 @@ class TestRutaObtenerArchivosGuardados:
     @patch("app.modules.hubfile.routes.current_user")
     @patch("app.modules.hubfile.routes.HubfileService")
     def test_obtener_archivos_guardados_lista_vacia(self, mock_service, mock_user):
-        # Verifica que se devuelve una lista vacía cuando no hay archivos guardados
+        # Verifica que se devuelve una lista vacía cuando no hay archivos
+        # guardados
         from app.modules.hubfile.routes import get_saved_files
 
         mock_user.id = 1

@@ -82,7 +82,10 @@ class DatasetCommentsBehavior(TaskSet):
             catch_response=True,
         ) as response:
             if response.status_code != 200:
-                response.failure(f"Failed to list comments: {response.status_code}")
+                response.failure(
+                    f"Failed to list comments: {
+                        response.status_code}"
+                )
 
     @task(4)
     def create_comment(self):
@@ -105,7 +108,10 @@ class DatasetCommentsBehavior(TaskSet):
             if response.status_code not in (200, 201):
                 print("[comments] Failed to create comment, status:", response.status_code)
                 print("[comments] Body:", response.text[:200])
-                response.failure(f"Failed to create comment: {response.status_code}")
+                response.failure(
+                    f"Failed to create comment: {
+                        response.status_code}"
+                )
                 return
 
             try:
@@ -134,7 +140,10 @@ class DatasetCommentsBehavior(TaskSet):
         ) as response:
 
             if response.status_code not in (200, 403):
-                response.failure(f"Unexpected status moderating comment: {response.status_code}")
+                response.failure(
+                    f"Unexpected status moderating comment: {
+                        response.status_code}"
+                )
 
 
 class DatasetUser(HttpUser):

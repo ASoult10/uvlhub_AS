@@ -166,7 +166,10 @@ def stop():
         click.echo("Stopping Locust in local environment...")
         for proc in psutil.process_iter(["pid", "name"]):
             if proc.info["name"] == "locust":
-                click.echo(f"Stopping Locust process with PID {proc.info['pid']}...")
+                click.echo(
+                    f"Stopping Locust process with PID {
+                        proc.info['pid']}..."
+                )
                 os.kill(proc.info["pid"], signal.SIGTERM)
 
     def stop_docker_locust():

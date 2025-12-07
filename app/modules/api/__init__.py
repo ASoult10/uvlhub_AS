@@ -6,4 +6,3 @@ from flask import Blueprint
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 # Importa las rutas después de crear el blueprint
-from app.modules.api import routes

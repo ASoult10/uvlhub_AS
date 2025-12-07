@@ -1,5 +1,4 @@
 import base64
-import time
 
 import pyotp
 import pytest
@@ -34,7 +33,8 @@ def test_client(test_client):
     """
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+        # DO NOT FORGET to use db.session.add(<element>) and
+        # db.session.commit() to save the data.
         pass
 
     yield test_client
@@ -74,7 +74,8 @@ def test_login_rate_limit(app_with_rate_limit):
     """
     Tests that the login route is rate-limited after 3 failed POST attempts.
     """
-    # The first 3 attempts should be allowed (status 200, re-rendering the form)
+    # The first 3 attempts should be allowed (status 200, re-rendering the
+    # form)
     for _ in range(3):
         response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="badpassword"))
         assert response.status_code == 200
@@ -107,7 +108,10 @@ def test_login_rate_limit_resets_on_success(app_with_rate_limit):
     # The rate limit should now be reset. We should have 3 new attempts.
     for i in range(3):
         response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
-        assert response.status_code == 200, f"Attempt {i+1} should have been allowed"
+        assert (
+            response.status_code == 200
+        ), f"Attempt {
+            i + 1} should have been allowed"
 
     # The 4th attempt should now be blocked
     response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
@@ -189,7 +193,8 @@ def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
     qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
 
-    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    # Should be a base64 string that decodes to a PNG image (PNG signature
+    # starts with 0x89 0x50 0x4E 0x47)
     assert isinstance(qr_b64, str)
     img_bytes = base64.b64decode(qr_b64)
     assert img_bytes[:4] == b"\x89PNG"
@@ -199,7 +204,8 @@ def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
     qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
 
-    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    # Should be a base64 string that decodes to a PNG image (PNG signature
+    # starts with 0x89 0x50 0x4E 0x47)
     assert isinstance(qr_b64, str)
     img_bytes = base64.b64decode(qr_b64)
     assert img_bytes[:4] == b"\x89PNG"

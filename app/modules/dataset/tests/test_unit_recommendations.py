@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -350,7 +350,7 @@ class TestRecommendationSystemUnit:
         dataset_authors = {"john doe"}
 
         has_match = bool(tags_set & tags_set) or bool(current_authors & dataset_authors)
-        assert has_match == True
+        assert has_match
 
     def test_recommendation_case_insensitive_matching(self):
         """Test that tag and author matching is case-insensitive"""

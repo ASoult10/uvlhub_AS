@@ -55,7 +55,8 @@ def create_dataset():
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
-        # Server-side validation: observation essential fields are ALWAYS required
+        # Server-side validation: observation essential fields are ALWAYS
+        # required
         observation = form.get_observation()
 
         if not observation:
@@ -87,7 +88,8 @@ def create_dataset():
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
             # Return a consistent JSON structure with a 'message' key so the frontend
-            # can always read `data.message` and display a controlled error message.
+            # can always read `data.message` and display a controlled error
+            # message.
             return jsonify({"message": str(exc)}), 400
 
         data = {}
@@ -107,7 +109,8 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each hubfile (one hubfile = one request to Zenodo)
+                # iterate for each hubfile (one hubfile = one request to
+                # Zenodo)
                 for hubfile in dataset.hubfiles:
                     zenodo_service.upload_file(dataset, deposition_id, hubfile)
 
@@ -269,7 +272,8 @@ def subdomain_index(doi):
         # Redirect to the same path with the new DOI
         return redirect(url_for("dataset.subdomain_index", doi=new_doi), code=302)
 
-    # Try to search the dataset by the provided DOI (which should already be the new one)
+    # Try to search the dataset by the provided DOI (which should already be
+    # the new one)
     ds_meta_data = dsmetadata_service.filter_by_doi(doi)
 
     if not ds_meta_data:

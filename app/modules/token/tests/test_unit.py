@@ -15,10 +15,13 @@ PARENT_TOKEN_JTI = "parent-example-jti"  # Example parent JTI for testing
 PARENT_TOKEN_ID = 2  # Example parent token ID for testing
 PARENT_TOKEN_CODE = "parent-example-code"  # Example parent code for testing
 PARENT_TOKEN_IS_ACTIVE = True  # Example parent active status for testing
-PARENT_TOKEN_TYPE = TokenType.REFRESH_TOKEN  # Example parent token type for testing
+# Example parent token type for testing
+PARENT_TOKEN_TYPE = TokenType.REFRESH_TOKEN
 PARENT_TOKEN_EXPIRES_AT = datetime.fromisoformat("2025-12-31T23:59:59")  # Example parent expiration date for testing
-PARENT_TOKEN_DEVICE_INFO = "Parent Test Device"  # Example parent device info for testing
-PARENT_TOKEN_LOCATION_INFO = "Parent Test Location"  # Example parent location info for testing
+# Example parent device info for testing
+PARENT_TOKEN_DEVICE_INFO = "Parent Test Device"
+# Example parent location info for testing
+PARENT_TOKEN_LOCATION_INFO = "Parent Test Location"
 
 TOKEN_ID = 1  # Example token ID for testing
 TOKEN_JTI = "example-jti"  # Example JTI for testing

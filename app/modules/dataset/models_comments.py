@@ -90,4 +90,7 @@ class DSComment(db.Model):
 
     def __repr__(self) -> str:
         st = self.status.value if isinstance(self.status, CommentStatus) else self.status
-        return f"<DSComment id={self.id} ds={self.dataset_id} author={self.author_id} status={st}>"
+        return f"<DSComment id={
+            self.id} ds={
+            self.dataset_id} author={
+            self.author_id} status={st}>"

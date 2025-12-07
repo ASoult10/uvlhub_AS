@@ -41,7 +41,14 @@ class GenericResource(Resource):
 
         db.session.add(item)
         db.session.commit()
-        return {"message": f"{self.model.__name__} created successfully", "id": item.id}, 201
+        return (
+            {
+                "message": f"{
+                self.model.__name__} created successfully",
+                "id": item.id,
+            },
+            201,
+        )
 
     def put(self, id):
         item = self.model.query.get(id)
