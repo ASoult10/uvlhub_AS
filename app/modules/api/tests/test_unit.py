@@ -56,7 +56,7 @@ def user(app):
         return db.session.get(User, user_id)
 
 
-# ============================= TESTS PARA SERVICES =============================
+# ============================= TESTS PARA SERVICES ======================
 
 
 class TestRequireApiKeyDecorator:
@@ -369,7 +369,7 @@ class TestApiRoutes:
         assert "api" in [bp.name for bp in app.blueprints.values()]
 
 
-# ============================= TESTS PARA SEEDERS =============================
+# ============================= TESTS PARA SEEDERS =======================
 
 
 class TestApiKeysSeeder:

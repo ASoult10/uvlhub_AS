@@ -57,14 +57,17 @@ def make_module(name):
         "tests/test_selenium.py": "module_tests_test_selenium.py.j2",
     }
 
-    # Create the necessary directories, explicitly excluding 'tests' from the creation of subfolders.
+    # Create the necessary directories, explicitly excluding 'tests' from the
+    # creation of subfolders.
     for directory in directories:
         os.makedirs(os.path.join(module_path, directory, name), exist_ok=True)
 
-    # Create 'tests' directory directly under module_path, without additional subfolders.
+    # Create 'tests' directory directly under module_path, without additional
+    # subfolders.
     os.makedirs(os.path.join(module_path, "tests"), exist_ok=True)
 
-    # Create 'assets' directory directly under module_path, without additional subfolders.
+    # Create 'assets' directory directly under module_path, without additional
+    # subfolders.
     os.makedirs(os.path.join(module_path, "assets"), exist_ok=True)
 
     # Create empty __init__.py file directly in the 'tests' directory.
@@ -75,7 +78,8 @@ def make_module(name):
         if template_name:  # Check if there is a defined template.
             render_and_write_file(env, template_name, os.path.join(module_path, filename), {"module_name": name})
         else:
-            open(os.path.join(module_path, filename), "a").close()  # Create empty file if there is no template.
+            # Create empty file if there is no template.
+            open(os.path.join(module_path, filename), "a").close()
 
     click.echo(click.style(f"Module '{name}' created successfully.", fg="green"))
 
@@ -85,7 +89,8 @@ def make_module(name):
     # Change permissions to drwxrwxr-x (chmod 775)
     os.chmod(module_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
 
-    # Change the owner of all created files and directories to UID 1000 and GID 1000
+    # Change the owner of all created files and directories to UID 1000 and
+    # GID 1000
     uid = 1000
     gid = 1000
 

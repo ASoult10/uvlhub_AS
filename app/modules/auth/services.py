@@ -4,7 +4,7 @@ from io import BytesIO
 
 import pyotp
 import qrcode
-from flask import redirect, request, url_for
+from flask import redirect, request
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from flask_login import current_user, login_user
 from flask_mail import Message

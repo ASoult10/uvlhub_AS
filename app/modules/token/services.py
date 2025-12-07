@@ -164,18 +164,40 @@ class TokenService(BaseService):
         ua_string = request.user_agent.string
         ua = parse(ua_string)
 
-        os_info = f"{ua.os.family} {ua.os.version_string}".strip() if ua.os.family else ""
-        browser_info = f"{ua.browser.family} {ua.browser.version_string}".strip() if ua.browser.family else ""
+        os_info = (
+            f"{
+            ua.os.family} {
+            ua.os.version_string}".strip()
+            if ua.os.family
+            else ""
+        )
+        browser_info = (
+            f"{
+            ua.browser.family} {
+            ua.browser.version_string}".strip()
+            if ua.browser.family
+            else ""
+        )
 
         if ua.is_mobile:
             if os_info:
-                return f"{ua.device.brand or 'Mobile'} {' - ' + ua.device.model or ''} ({os_info})".strip()
-            return f"{ua.device.brand or 'Mobile'} {' - ' + ua.device.model or ''}".strip()
+                return f"{
+                    ua.device.brand or 'Mobile'} {
+                    ' - ' +
+                    ua.device.model or ''} ({os_info})".strip()
+            return f"{
+                ua.device.brand or 'Mobile'} {
+                ' - ' + ua.device.model or ''}".strip()
 
         if ua.is_tablet:
             if os_info:
-                return f"{ua.device.brand or 'Tablet'} { ' - ' + ua.device.model or ''} ({os_info})".strip()
-            return f"{ua.device.brand or 'Tablet'} {' - ' + ua.device.model or ''}".strip()
+                return f"{
+                    ua.device.brand or 'Tablet'} {
+                    ' - ' +
+                    ua.device.model or ''} ({os_info})".strip()
+            return f"{
+                ua.device.brand or 'Tablet'} {
+                ' - ' + ua.device.model or ''}".strip()
 
         if ua.is_pc:
             if os_info and browser_info:

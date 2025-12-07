@@ -32,7 +32,10 @@ class BaseSeeder:
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
-            raise Exception(f"Failed to insert data into `{model.__tablename__}` table. Error: {e}")
+            raise Exception(
+                f"Failed to insert data into `{
+                    model.__tablename__}` table. Error: {e}"
+            )
 
         # After committing, the `data` objects should have their IDs assigned.
         return data

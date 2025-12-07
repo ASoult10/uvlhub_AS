@@ -1,10 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pyotp
-from flask import current_app, flash, g, jsonify, redirect, render_template, request, session, url_for
+from flask import current_app, flash, redirect, render_template, request, session, url_for
 from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
-from flask_login import current_user, login_user, logout_user
-from werkzeug.exceptions import TooManyRequests
+from flask_login import current_user, logout_user
 
 from app import db, limiter
 from app.modules.auth import auth_bp
@@ -61,7 +60,8 @@ def login():
             user = authentication_service.repository.get_by_email(form.email.data)
 
             if user and user.check_password(form.password.data):
-                # En un login exitoso, reseteamos el contador de intentos para este usuario.
+                # En un login exitoso, reseteamos el contador de intentos para
+                # este usuario.
                 limiter.reset()
 
                 if user.has2FA:
@@ -119,7 +119,7 @@ def verify_2fa_login():
 
 @auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
-    if current_user.is_authenticated == False:
+    if not current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
     form = TwoFactorForm()

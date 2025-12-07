@@ -9,7 +9,8 @@ def test_client(test_client):
     """
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+        # DO NOT FORGET to use db.session.add(<element>) and
+        # db.session.commit() to save the data.
         pass
 
     yield test_client

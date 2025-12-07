@@ -5,14 +5,14 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
-# Importaciones de Flamapy y tempfile (asumimos que están disponibles en el entorno)
+# Importaciones de Flamapy y tempfile (asumimos que están disponibles en
+# el entorno)
 from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
 from flask import current_app, jsonify, make_response, render_template, request, send_file, send_from_directory
 from flask_login import current_user, login_required
 
 from app import db
-from app.modules.flamapy.routes import to_cnf, to_glencoe, to_splot
 from app.modules.hubfile import hubfile_bp
 from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
 from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
@@ -27,7 +27,8 @@ def download_file(file_id):
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
 
-    # Get the cookie from the request or generate a new one if it does not exist
+    # Get the cookie from the request or generate a new one if it does not
+    # exist
     user_cookie = request.cookies.get("file_download_cookie")
     if not user_cookie:
         user_cookie = str(uuid.uuid4())
@@ -169,9 +170,11 @@ def download_all_saved():
     if not saved_files:
         return "No saved files to download.", 404
 
-    # Asumimos que Flamapy está disponible; export_format controlará la conversión
+    # Asumimos que Flamapy está disponible; export_format controlará la
+    # conversión
 
-    # Cookie para registro de descargas (se usará la misma para todos los ficheros del ZIP)
+    # Cookie para registro de descargas (se usará la misma para todos los
+    # ficheros del ZIP)
     user_cookie = request.cookies.get("file_download_cookie")
     if not user_cookie:
         user_cookie = str(uuid.uuid4())
@@ -194,24 +197,32 @@ def download_all_saved():
                     else:
                         print(f"Warning: File not found {original_path}")
                 else:
-                    # Para los formatos que requieren conversión, utilizamos flamapy como en las rutas individuales
+                    # Para los formatos que requieren conversión, utilizamos
+                    # flamapy como en las rutas individuales
                     tmp = tempfile.NamedTemporaryFile(suffix=".tmp", delete=False)
                     tmp_name = tmp.name
                     tmp.close()
 
                     try:
-                        # Leemos el modelo UVL y aplicamos la transformación según el formato
+                        # Leemos el modelo UVL y aplicamos la transformación
+                        # según el formato
                         hubfile = HubfileService().get_or_404(file.id)
                         fm = UVLReader(hubfile.get_path()).transform()
 
                         if export_format == "glencoe":
-                            out_name = f"{os.path.splitext(file.name)[0]}_glencoe.txt"
+                            out_name = f"{
+                                os.path.splitext(
+                                    file.name)[0]}_glencoe.txt"
                             GlencoeWriter(tmp_name, fm).transform()
                         elif export_format == "splot":
-                            out_name = f"{os.path.splitext(file.name)[0]}_splot.txt"
+                            out_name = f"{
+                                os.path.splitext(
+                                    file.name)[0]}_splot.txt"
                             SPLOTWriter(tmp_name, fm).transform()
                         elif export_format in ("cnf", "dimacs"):
-                            out_name = f"{os.path.splitext(file.name)[0]}_cnf.txt"
+                            out_name = f"{
+                                os.path.splitext(
+                                    file.name)[0]}_cnf.txt"
                             sat = FmToPysat(fm).transform()
                             DimacsWriter(tmp_name, sat).transform()
                         else:
@@ -223,12 +234,16 @@ def download_all_saved():
                                 os.remove(tmp_name)
                                 continue
 
-                        # Si la transformación creó el tmp file, lo leemos y lo añadimos al ZIP
+                        # Si la transformación creó el tmp file, lo leemos y lo
+                        # añadimos al ZIP
                         if os.path.exists(tmp_name):
                             with open(tmp_name, "rb") as f:
                                 zipf.writestr(out_name, f.read())
                         else:
-                            print(f"Warning: Conversion output not found for file {file.id} (format={export_format})")
+                            print(
+                                f"Warning: Conversion output not found for file {
+                                    file.id} (format={export_format})"
+                            )
 
                     finally:
                         # Intentamos limpiar el temporal
