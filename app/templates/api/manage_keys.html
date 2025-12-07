@@ -34,8 +34,22 @@
 
                         <div class="mb-3">
                             {{ form.scopes.label(class="form-label") }}
-                            {{ form.scopes(class="form-select", size=3) }}
-                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple permissions</small>
+                            <div class="border rounded p-3 bg-light">
+                                {% for value, label in form.scopes.choices %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="scopes" value="{{ value }}" 
+                                               id="scope_{{ loop.index }}"
+                                               {% if value in form.scopes.data %}checked{% endif %}>
+                                        <label class="form-check-label" for="scope_{{ loop.index }}">
+                                            {{ label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <small class="form-text text-muted d-block mt-2">
+                                <i class="fas fa-info-circle"></i> Selecciona uno o más permisos
+                            </small>
                         </div>
 
                         <div class="mb-3">
@@ -117,8 +131,7 @@
                                 <td>
                                     {% if key.is_active %}
                                         <form method="POST" action="{{ url_for('api.revoke_key', key_id=key.id) }}" style="display:inline;">
-                                            {{ revoke_form.hidden_tag() }}
-                                            <button type="submit" class="btn btn-sm btn-warning" 
+                                            <button type="submit" class="btn btn-sm btn-warning w-100" 
                                                     onclick="return confirm('Are you sure?')">
                                                 <i class="fas fa-ban"></i> Revoke
                                             </button>
@@ -126,8 +139,7 @@
                                     {% endif %}
                                     
                                     <form method="POST" action="{{ url_for('api.delete_key', key_id=key.id) }}" style="display:inline;">
-                                        {{ revoke_form.hidden_tag() }}
-                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                        <button type="submit" class="btn btn-sm btn-danger w-100" 
                                                 onclick="return confirm('Delete permanently?')">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
@@ -137,6 +149,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    
                 </div>
             {% else %}
                 <div class="alert alert-info">
