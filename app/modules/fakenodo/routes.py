@@ -5,6 +5,10 @@ from flask import jsonify, request
 
 from app.modules.fakenodo import fakenodo_bp
 
+from flask import jsonify, request
+
+from app.modules.fakenodo import fakenodo_bp
+
 _STATE: Dict[str, object] = {
     "next_id": itertools.count(1),
     "records": {},
@@ -18,8 +22,7 @@ def test_connection_fakenodo():
     return jsonify(response)
 
 
-# Ruta para eliminar un depósito (DELETE
-# /fakenodo/api/deposit/depositions/<depositionId>)
+# Ruta para eliminar un depósito (DELETE /fakenodo/api/deposit/depositions/<depositionId>)
 @fakenodo_bp.route("/deposit/depositions/<depositionId>", methods=["DELETE"])
 def delete_deposition_fakenodo(depositionId):
     deposition_id_int = int(depositionId)
@@ -30,15 +33,13 @@ def delete_deposition_fakenodo(depositionId):
         return jsonify({"message": "Deposition not found"}), 404
 
 
-# Simulación de obtención de todos los depósitos (GET
-# /fakenodo/api/deposit/depositions)
+# Simulación de obtención de todos los depósitos (GET /fakenodo/api/deposit/depositions)
 @fakenodo_bp.route("/deposit/depositions", methods=["GET"])
 def get_all_depositions():
     return jsonify({"depositions": list(_STATE["records"].values())}), 200
 
 
-# Simulación de creación de un nuevo depósito (POST
-# /fakenodo/api/deposit/depositions)
+# Simulación de creación de un nuevo depósito (POST /fakenodo/api/deposit/depositions)
 @fakenodo_bp.route("/deposit/depositions", methods=["POST"])
 def create_new_deposition():
 
@@ -52,8 +53,7 @@ def create_new_deposition():
     return jsonify(record), 201
 
 
-# Simulación de subida de archivo (POST
-# /fakenodo/api/deposit/depositions/<deposition_id>/files)
+# Simulación de subida de archivo (POST /fakenodo/api/deposit/depositions/<deposition_id>/files)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>/files", methods=["POST"])
 def upload_file(deposition_id):
 
@@ -72,8 +72,7 @@ def upload_file(deposition_id):
     return jsonify({"filename": filename, "link": f"http://fakenodo.org/files/{deposition_id}/files/{filename}"}), 201
 
 
-# Simulación de publicación de depósito (POST
-# /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
+# Simulación de publicación de depósito (POST /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>/actions/publish", methods=["POST"])
 def publish_deposition(deposition_id):
     record = _STATE["records"].get(deposition_id)
@@ -87,8 +86,7 @@ def publish_deposition(deposition_id):
     return jsonify({"id": deposition_id, "doi": doi}), 202
 
 
-# Simulación de obtención de detalles del depósito (GET
-# /fakenodo/api/deposit/depositions/<deposition_id>)
+# Simulación de obtención de detalles del depósito (GET /fakenodo/api/deposit/depositions/<deposition_id>)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>", methods=["GET"])
 def get_deposition(deposition_id):
     record = _STATE["records"].get(deposition_id)

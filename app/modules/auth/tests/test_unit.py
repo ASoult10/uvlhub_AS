@@ -122,10 +122,7 @@ def test_login_rate_limit_resets_on_success(app_with_rate_limit):
     # The rate limit should now be reset. We should have 3 new attempts.
     for i in range(3):
         response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
-        assert (
-            response.status_code == 200
-        ), f"Attempt {
-            i + 1} should have been allowed"
+        assert response.status_code == 200, f"Attempt {i+1} should have been allowed"
 
     # The 4th attempt should now be blocked
     response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))

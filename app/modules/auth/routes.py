@@ -1,8 +1,9 @@
-from flask import current_app, jsonify, redirect, render_template, request, url_for, flash, g, session
+from datetime import datetime, timezone
+
+import pyotp
+from flask import current_app, flash, g, jsonify, redirect, render_template, request, session, url_for
 from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
 from flask_login import current_user, login_user, logout_user
-import pyotp
-from datetime import datetime, timezone
 from werkzeug.exceptions import TooManyRequests
 
 from app import db, limiter
@@ -24,7 +25,7 @@ def show_signup_form():
         return redirect(url_for("public.index"))
 
     # Resetea el contador de intentos de login al visitar la página de registro
-    session.pop('login_attempts', None)
+    session.pop("login_attempts", None)
 
     form = SignupForm()
     if form.validate_on_submit():
@@ -80,29 +81,6 @@ def login():
                     redirect_url = url_for("auth.login_with_two_factor")
                 else:
                     redirect_url = url_for("public.index")
-                
-                response = authentication_service.login(
-                    form.email.data,
-                    form.password.data,
-                    form.remember_me.data,
-                    redirect_url=redirect_url
-                )
-                
-                if response:
-                    return response
-            
-            error_message = "Invalid credentials"
-        else:
-            error_message = "Invalid form submission"
-
-    # Obtiene el valor actualizado para pasarlo a la plantilla
-    remaining_attempts = session.get('login_attempts', 3)
-    return render_template(
-        "auth/login_form.html", 
-        form=form, 
-        error=error_message, 
-        remaining_attempts=remaining_attempts
-    )
 
                 response = authentication_service.login(
                     form.email.data, form.password.data, form.remember_me.data, redirect_url=redirect_url

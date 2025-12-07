@@ -1,10 +1,11 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify, redirect, request, url_for
 from flask_jwt_extended import JWTManager, get_jwt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_login import logout_user
 from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -14,10 +15,6 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
-from flask_jwt_extended import JWTManager, get_jwt
-from flask_mail import Mail
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -46,8 +43,7 @@ def create_app(config_name="development"):
 
     # Configurar para usar cookies
     app.config["JWT_TOKEN_LOCATION"] = ["cookies", "headers"]
-    # If True, only send cookies over HTTPS
-    app.config["JWT_COOKIE_SECURE"] = False
+    app.config["JWT_COOKIE_SECURE"] = False  # If True, only send cookies over HTTPS
     app.config["JWT_COOKIE_CSRF_PROTECT"] = True  # Enable CSRF protection
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"  # 'Lax' or 'Strict' or 'None'
     app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
@@ -60,7 +56,7 @@ def create_app(config_name="development"):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
-    
+
     # Initialize Limiter
     limiter.init_app(app)
 
@@ -150,6 +146,7 @@ def create_app(config_name="development"):
         """Refresh expired access tokens using refresh tokens stored in cookies"""
         from flask import redirect, request, url_for
         from flask_jwt_extended import get_jwt_identity, set_access_cookies, unset_jwt_cookies, verify_jwt_in_request
+        from flask_jwt_extended.exceptions import JWTExtendedException
         from flask_login import logout_user
 
         from app.modules.token.services import TokenService
@@ -228,6 +225,21 @@ def create_app(config_name="development"):
                 return response
 
     return app
+
+
+def send_password_recovery_email(to_email, reset_link):
+    msg = Message(
+        subject="Password Reset Request",
+        sender="noreply@astronomiahub.com",
+        recipients=[to_email],
+        body=f"Hello, \n\n"
+        f"We received a request to reset your password for your AstronomiaHub account.\n\n"
+        f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
+        f"If you did not request a password reset, you can safely ignore this email.\n\n"
+        f"Best regards,\n"
+        f"AstronomiaHub Team",
+    )
+    mail.send(msg)
 
 
 app = create_app()

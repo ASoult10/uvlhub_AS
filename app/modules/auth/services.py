@@ -1,16 +1,14 @@
 import base64
 import os
 from io import BytesIO
-
+from app.modules.auth.models import User, Role
 import pyotp
 import qrcode
-from flask import redirect, request, g
+from flask import redirect, request, url_for, g
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from flask_login import current_user, login_user
 from flask_mail import Message
-
 from app import mail
-from app.modules.auth.models import User, Role
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
@@ -142,16 +140,15 @@ class AuthenticationService(BaseService):
             sender="noreply@astronomiahub.com",
             recipients=[to_email],
             body=(
-                    "Hello,\n\n"
-                    "We received a request to reset your password for your AstronomiaHub account.\n\n"
-                    f"If you made this request, please click the link below to reset your password:\n{reset_link}\n\n"
-                    "If you did not request a password reset, you can safely ignore this email.\n\n"
-                    "Best regards,\n"
-                    "AstronomiaHub Team"
-                )
-            )
+                "Hello,\n\n"
+                "We received a request to reset your password for your AstronomiaHub account.\n\n"
+                f"If you made this request, please click the link below to reset your password:\n{reset_link}\n\n"
+                "If you did not request a password reset, you can safely ignore this email.\n\n"
+                "Best regards,\n"
+                "AstronomiaHub Team"
+            ),
+        )
         mail.send(msg)
-
 
     # def send_password_reset_email(self, user: User):
     #     reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)
