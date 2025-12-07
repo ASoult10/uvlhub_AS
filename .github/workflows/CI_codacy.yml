@@ -15,6 +15,9 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
+          SECRET_KEY: "jw7ChMPij9C3TxwrBdBSVGQm/KRfY5t3tD/mxrA8HYVYSPaJedmDdx8vnKlmexyr"
+          FLASK_ENV: testing
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
           MYSQL_ROOT_PASSWORD: uvlhub_root_password
           MYSQL_DATABASE: uvlhubdb_test
           MYSQL_USER: uvlhub_user
