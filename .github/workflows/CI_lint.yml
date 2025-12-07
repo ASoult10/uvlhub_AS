@@ -8,6 +8,9 @@ on:
     branches:
       [main, trunk]
 
+permissions:
+  contents: write
+
 jobs:
   lint:
     runs-on: ubuntu-24.04
