@@ -15,15 +15,21 @@ jobs:
     env:
       SECRET_KEY: "jw7ChMPij9C3TxwrBdBSVGQm/KRfY5t3tD/mxrA8HYVYSPaJedmDdx8vnKlmexyr"
       FLASK_ENV: testing
+      MARIADB_HOSTNAME: 127.0.0.1
+      MARIADB_PORT: 3306
+      MARIADB_TEST_DATABASE: uvlhubdb_test
+      MARIADB_USER: uvlhub_user
+      MARIADB_PASSWORD: uvlhub_password
       CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-      MYSQL_ROOT_PASSWORD: uvlhub_root_password
-      MYSQL_DATABASE: uvlhubdb_test
-      MYSQL_USER: uvlhub_user
-      MYSQL_PASSWORD: uvlhub_password
       
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: uvlhub_root_password
+          MYSQL_DATABASE: uvlhubdb_test
+          MYSQL_USER: uvlhub_user
+          MYSQL_PASSWORD: uvlhub_password
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -48,11 +54,3 @@ jobs:
         coverage run -m pytest app/modules/ --ignore-glob='*selenium*'
         coverage xml 
         python-codacy-coverage -r coverage.xml
-      env:
-        FLASK_ENV: testing
-        MARIADB_HOSTNAME: 127.0.0.1
-        MARIADB_PORT: 3306
-        MARIADB_TEST_DATABASE: uvlhubdb_test
-        MARIADB_USER: uvlhub_user
-        MARIADB_PASSWORD: uvlhub_password
-        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
