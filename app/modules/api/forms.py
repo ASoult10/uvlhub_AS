@@ -1,37 +1,36 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectMultipleField, DateTimeLocalField, SubmitField
+from wtforms import DateTimeLocalField, SelectMultipleField, StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Optional
+
 
 class ApiKeyForm(FlaskForm):
     name = StringField(
-        'Name',
+        "Name",
         validators=[DataRequired(), Length(min=3, max=100)],
-        render_kw={"placeholder": "e.g., My Research Project"}
+        render_kw={"placeholder": "e.g., My Research Project"},
     )
-    
+
     scopes = SelectMultipleField(
-        'Permissions',
+        "Permissions",
         choices=[
-            ('read:datasets', 'Read Datasets'),
-            ('write:datasets', 'Write Datasets'),
-            ('delete:datasets', 'Delete Datasets'),
-            ('read:stats', 'Read Stats')
+            ("read:datasets", "Read Datasets"),
+            ("write:datasets", "Write Datasets"),
+            ("delete:datasets", "Delete Datasets"),
+            ("read:stats", "Read Stats"),
         ],
-        default=['read:datasets'],
-        validators=[DataRequired()]
+        default=["read:datasets"],
+        validators=[DataRequired()],
     )
-    
+
     expires_at = DateTimeLocalField(
-        'Expiration Date (Optional)',
+        "Expiration Date (Optional)",
         validators=[Optional()],
-        render_kw={
-            "class": "form-control"
-        },
-        format='%Y-%m-%dT%H:%M' 
+        render_kw={"class": "form-control"},
+        format="%Y-%m-%dT%H:%M",
     )
-    
-    submit = SubmitField('Generate API Key')
+
+    submit = SubmitField("Generate API Key")
 
 
 class RevokeApiKeyForm(FlaskForm):
-    submit = SubmitField('Revoke Key')
+    submit = SubmitField("Revoke Key")

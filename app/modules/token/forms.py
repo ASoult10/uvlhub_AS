@@ -3,4 +3,4 @@ from wtforms import SubmitField
 
 
 class TokenForm(FlaskForm):
-    submit = SubmitField('Save token')
+    submit = SubmitField("Save token")

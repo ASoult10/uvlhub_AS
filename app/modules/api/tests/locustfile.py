@@ -1,8 +1,9 @@
 import os
 import random
 import secrets
+
 from dotenv import load_dotenv
-from locust import HttpUser, task, between, LoadTestShape
+from locust import HttpUser, LoadTestShape, between, task
 
 load_dotenv()
 LOCUST_API_KEY = os.getenv("LOCUST_API_KEY")
@@ -22,15 +23,20 @@ class ApiUser(HttpUser):
     @task(3)
     def get_dataset_by_id(self):
         dataset_id = random.randint(1, 100)
-        with self.client.get(f"/api/datasets/id/{dataset_id}", headers=self.headers, catch_response=True,
-                             name="/api/datasets/id/[id]") as r:
+        with self.client.get(
+            f"/api/datasets/id/{dataset_id}", headers=self.headers, catch_response=True, name="/api/datasets/id/[id]"
+        ) as r:
             r.success() if r.status_code in (200, 404) else r.failure(f"{r.status_code}")
 
     @task(2)
     def get_dataset_by_title(self):
         title = random.choice(["sample-dataset", "test-data", "research-project", "my-dataset"])
-        with self.client.get(f"/api/datasets/title/{title}", headers=self.headers, catch_response=True,
-                             name="/api/datasets/title/[title]") as r:
+        with self.client.get(
+            f"/api/datasets/title/{title}",
+            headers=self.headers,
+            catch_response=True,
+            name="/api/datasets/title/[title]",
+        ) as r:
             r.success() if r.status_code in (200, 404) else r.failure(f"{r.status_code}")
 
     @task(5)
@@ -43,8 +49,12 @@ class ApiUser(HttpUser):
         query = random.choice(["feature", "model", "dataset", "test", "sample"])
         page = random.randint(1, 3)
         per_page = random.choice([5, 10, 20])
-        with self.client.get(f"/api/search?q={query}&page={page}&per_page={per_page}",
-                             headers=self.headers, catch_response=True, name="/api/search") as r:
+        with self.client.get(
+            f"/api/search?q={query}&page={page}&per_page={per_page}",
+            headers=self.headers,
+            catch_response=True,
+            name="/api/search",
+        ) as r:
             r.success() if r.status_code == 200 else r.failure(f"{r.status_code}")
 
     @task(1)
@@ -94,6 +104,7 @@ class StepLoadShape(LoadTestShape):
     step_load = 10
     spawn_rate = 2
     time_limit = 300
+
     def tick(self):
         t = self.get_run_time()
         if t > self.time_limit:
@@ -122,6 +133,7 @@ class ConstantLoadShape(LoadTestShape):
     user_count = 50
     spawn_rate = 5
     time_limit = 600
+
     def tick(self):
         t = self.get_run_time()
         return (self.user_count, self.spawn_rate) if t < self.time_limit else None

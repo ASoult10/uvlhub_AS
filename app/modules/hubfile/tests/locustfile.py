@@ -17,10 +17,7 @@ class HubfileBehavior(TaskSet):
 
 class SaveModelsBehavior(TaskSet):
     def on_start(self):
-        self.client.post("/login", data={
-            "email": "user1@example.com",
-            "password": "1234"
-        })
+        self.client.post("/login", data={"email": "user1@example.com", "password": "1234"})
 
     @task(3)
     def listar_archivos_guardados(self):

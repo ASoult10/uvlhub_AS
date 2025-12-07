@@ -7,6 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
+
 def test_login_rate_limit():
     """
     Tests that the login form shows a rate limit error after 3 failed attempts.
@@ -49,7 +50,9 @@ def test_login_rate_limit():
 
         # Now, we expect the rate limit error message
         try:
-            rate_limit_error = driver.find_element(By.XPATH, "//*[contains(text(), 'You have exceeded the login attempt limit')]")
+            rate_limit_error = driver.find_element(
+                By.XPATH, "//*[contains(text(), 'You have exceeded the login attempt limit')]"
+            )
             assert rate_limit_error.is_displayed()
             print("Test passed: Rate limit message was displayed on the 4th attempt.")
         except NoSuchElementException:
@@ -58,5 +61,3 @@ def test_login_rate_limit():
     finally:
         # Close the browser
         close_driver(driver)
-
-

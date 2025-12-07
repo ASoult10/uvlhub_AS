@@ -1,30 +1,28 @@
-import os
-import uuid
-from datetime import datetime, timezone
-
-from flask import current_app, jsonify, make_response, request, send_from_directory, render_template, send_file
-from flask_login import current_user, login_required
-
-from app import db
-from app.modules.hubfile import hubfile_bp
-from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
-from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
-from app.modules.flamapy.routes import to_glencoe, to_cnf, to_splot
-
-import zipfile
 import io
+import os
+import tempfile
+import uuid
+import zipfile
+from datetime import datetime, timezone
 
 # Importaciones de Flamapy y tempfile (asumimos que están disponibles en el entorno)
 from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
-import tempfile
+from flask import current_app, jsonify, make_response, render_template, request, send_file, send_from_directory
+from flask_login import current_user, login_required
+
+from app import db
+from app.modules.flamapy.routes import to_cnf, to_glencoe, to_splot
+from app.modules.hubfile import hubfile_bp
+from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
+from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
 
 
 @hubfile_bp.route("/file/download/<int:file_id>", methods=["GET"])
 def download_file(file_id):
     file = HubfileService().get_or_404(file_id)
     filename = file.name
-    dataset= file.get_dataset()
+    dataset = file.get_dataset()
     directory_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
@@ -185,9 +183,7 @@ def download_all_saved():
             try:
                 dataset = file.get_dataset()
                 # Construimos la ruta al archivo original
-                directory_path = (
-                    f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
-                )
+                directory_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
                 parent_directory_path = os.path.dirname(current_app.root_path)
                 original_path = os.path.join(parent_directory_path, directory_path, file.name)
 

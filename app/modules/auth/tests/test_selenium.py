@@ -46,4 +46,3 @@ def test_login_and_check_element():
 
         # Close the browser
         close_driver(driver)
-

@@ -30,9 +30,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
-from app.modules.zenodo.services import ZenodoService
-
 from app.modules.hubfile.services import HubfileService
+from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
 
@@ -58,24 +57,24 @@ def create_dataset():
 
         # Server-side validation: observation essential fields are ALWAYS required
         observation = form.get_observation()
-        
+
         if not observation:
             msg = "Observation data is required."
             return jsonify({"message": msg}), 400
-        
+
         # Check required fields
         if not observation.get("object_name") or not observation.get("object_name").strip():
             msg = "Object name is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("ra") or not observation.get("ra").strip():
             msg = "RA is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("dec") or not observation.get("dec").strip():
             msg = "DEC is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("observation_date"):
             msg = "Observation date is required."
             return jsonify({"message": msg}), 400
@@ -218,7 +217,7 @@ def download_dataset(dataset_id):
         for hubfile in dataset.hubfiles:
             file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
             full_path = os.path.join(file_path, hubfile.name)
-            
+
             if os.path.exists(full_path):
                 zipf.write(full_path, arcname=hubfile.name)
 

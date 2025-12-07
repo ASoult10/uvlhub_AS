@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, EqualTo
+from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 
 class SignupForm(FlaskForm):
@@ -17,14 +17,20 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField("Remember me")
     submit = SubmitField("Login")
 
+
 class RecoverPasswordForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     submit = SubmitField("Send email to recover my password")
 
+
 class ResetPasswordForm(FlaskForm):
     password = PasswordField("New Password", validators=[DataRequired()])
-    confirm_password = PasswordField("Confirm New Password", validators=[DataRequired(), EqualTo("password", message="Passwords must match")])
+    confirm_password = PasswordField(
+        "Confirm New Password", validators=[DataRequired(), EqualTo("password", message="Passwords must match")]
+    )
     submit = SubmitField("Reset Password")
+
+
 class TwoFactorForm(FlaskForm):
     code = StringField("Input Temporary Code", validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField("Check Code")

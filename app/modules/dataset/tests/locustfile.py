@@ -1,9 +1,11 @@
-from locust import HttpUser, TaskSet, task, between
+import random
+import re
+
+from locust import HttpUser, TaskSet, between, task
 
 from core.environment.host import get_host_for_locust_testing
 from core.locust.common import get_csrf_token
-import random
-import re
+
 
 class DatasetBehavior(TaskSet):
     def on_start(self):
@@ -14,11 +16,11 @@ class DatasetBehavior(TaskSet):
         response = self.client.get("/dataset/upload")
         get_csrf_token(response)
 
+
 class DatasetCommentsBehavior(TaskSet):
-    
 
     def on_start(self):
-        
+
         self.dataset_id = None
         self.last_comment_id = None
 
@@ -28,10 +30,8 @@ class DatasetCommentsBehavior(TaskSet):
         if not self.dataset_id:
             print("No dataset_id found; some tasks will be skipped.")
 
-    
-
     def login(self):
-        
+
         response = self.client.get("/login")
         if response.status_code != 200:
             print(f"[comments] GET /login failed: {response.status_code}")
@@ -51,11 +51,11 @@ class DatasetCommentsBehavior(TaskSet):
             print(f"[comments] Login failed: {response.status_code}")
 
     def get_dataset_id(self):
-        
+
         response = self.client.get("/dataset/list")
         if response.status_code != 200:
             print(f"[comments] Failed to load /dataset/list: {response.status_code}")
-            
+
             return 1
 
         match = re.search(r"/dataset/download/(\d+)", response.text)
@@ -66,8 +66,6 @@ class DatasetCommentsBehavior(TaskSet):
 
         print("[comments] Could not find dataset_id in /dataset/list HTML, using dataset_id=1 as fallback")
         return 1
-
- 
 
     @task(3)
     def list_comments(self):
@@ -103,14 +101,13 @@ class DatasetCommentsBehavior(TaskSet):
             name="Create Dataset Comment",
             catch_response=True,
         ) as response:
-            
+
             if response.status_code not in (200, 201):
                 print("[comments] Failed to create comment, status:", response.status_code)
                 print("[comments] Body:", response.text[:200])
                 response.failure(f"Failed to create comment: {response.status_code}")
                 return
 
-            
             try:
                 data = response.json()
                 comment_id = data.get("id")
@@ -122,9 +119,9 @@ class DatasetCommentsBehavior(TaskSet):
 
     @task(1)
     def moderate_comment(self):
-        
+
         if not self.dataset_id or not self.last_comment_id:
-            
+
             return
 
         action = random.choice(["hide", "show", "delete"])
@@ -135,7 +132,7 @@ class DatasetCommentsBehavior(TaskSet):
             name="Moderate Dataset Comment",
             catch_response=True,
         ) as response:
-            
+
             if response.status_code not in (200, 403):
                 response.failure(f"Unexpected status moderating comment: {response.status_code}")
 
@@ -146,9 +143,10 @@ class DatasetUser(HttpUser):
     max_wait = 9000
     host = get_host_for_locust_testing()
 
+
 class DatasetCommentsUser(HttpUser):
-    
+
     tasks = [DatasetCommentsBehavior]
-    wait_time = between(3, 7)  
-    
+    wait_time = between(3, 7)
+
     host = get_host_for_locust_testing()

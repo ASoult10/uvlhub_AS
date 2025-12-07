@@ -6,7 +6,6 @@ from app import db
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
 
-
 # Tabla de asociación para los archivos guardados por los usuarios
 user_saved_files = db.Table(
     "user_saved_files",
@@ -27,7 +26,6 @@ class Hubfile(db.Model):
 
     # Dataset al que está asociado el hubfile
     dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=True)
-
 
     def get_formatted_size(self):
         from app.modules.dataset.services import SizeService

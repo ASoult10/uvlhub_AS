@@ -35,7 +35,6 @@ class Config:
     UPLOAD_FOLDER = "uploads"
 
 
-
 class DevelopmentConfig(Config):
     DEBUG = True
 
