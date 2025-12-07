@@ -71,10 +71,12 @@ def test_create_api_key():
         try:
             name_field = driver.find_element(By.NAME, "name")
             name_field.send_keys("Test API Key Selenium")
-
-            scopes_select = Select(driver.find_element(By.NAME, "scopes"))
-            scopes_select.select_by_value("read:datasets")
-
+            
+            scopes_checkboxes = driver.find_elements(By.NAME, "scopes")
+            if scopes_checkboxes and not scopes_checkboxes[0].is_selected():
+                scopes_checkboxes[0].click()
+                time.sleep(0.5)
+            
             submit_button = driver.find_element(By.NAME, "submit")
             submit_button.click()
 
@@ -90,6 +92,7 @@ def test_create_api_key():
 
     finally:
         close_driver(driver)
+
 
 
 def test_create_api_key_multiple_scopes():
@@ -114,11 +117,17 @@ def test_create_api_key_multiple_scopes():
 
         try:
             driver.find_element(By.NAME, "name").send_keys("Multi Scope Key Selenium")
-
-            scopes_select = Select(driver.find_element(By.NAME, "scopes"))
-            scopes_select.select_by_value("read:datasets")
-            scopes_select.select_by_value("read:stats")
-
+            
+            scopes_to_select = ["read:datasets", "read:stats"]
+            
+            for scope_value in scopes_to_select:
+                checkbox = driver.find_element(By.CSS_SELECTOR, f"input[name='scopes'][value='{scope_value}']")
+                if not checkbox.is_selected():
+                    checkbox.click()
+                    time.sleep(0.5)
+            
+            time.sleep(1)
+            
             driver.find_element(By.NAME, "submit").click()
             time.sleep(3)
 
