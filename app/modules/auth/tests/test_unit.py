@@ -4,9 +4,8 @@ import time
 import pyotp
 import pytest
 from flask import url_for
-from app import db
-from app import limiter
 
+from app import db, limiter
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
@@ -21,9 +20,9 @@ def app_with_rate_limit(test_client):
     limiter.enabled = True
     # Reinicia el estado del limitador para asegurar un estado limpio
     limiter.reset()
-    
+
     yield test_client
-    
+
     # Deshabilita el limitador después del test
     limiter.enabled = False
 
@@ -77,16 +76,12 @@ def test_login_rate_limit(app_with_rate_limit):
     """
     # The first 3 attempts should be allowed (status 200, re-rendering the form)
     for _ in range(3):
-        response = app_with_rate_limit.post(
-            "/login", data=dict(email="bad@example.com", password="badpassword")
-        )
+        response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="badpassword"))
         assert response.status_code == 200
         assert b"Invalid credentials" in response.data
 
     # The 4th attempt should be rate-limited (status 429)
-    response = app_with_rate_limit.post(
-        "/login", data=dict(email="bad@example.com", password="badpassword")
-    )
+    response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="badpassword"))
     assert response.status_code == 429
     assert b"You have exceeded the login attempt limit" in response.data
 
@@ -97,9 +92,7 @@ def test_login_rate_limit_resets_on_success(app_with_rate_limit):
     """
     # Make 2 failed attempts
     for _ in range(2):
-        response = app_with_rate_limit.post(
-            "/login", data=dict(email="test@example.com", password="wrongpassword")
-        )
+        response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
         assert response.status_code == 200
 
     # Make a successful attempt
@@ -113,15 +106,11 @@ def test_login_rate_limit_resets_on_success(app_with_rate_limit):
 
     # The rate limit should now be reset. We should have 3 new attempts.
     for i in range(3):
-        response = app_with_rate_limit.post(
-            "/login", data=dict(email="test@example.com", password="wrongpassword")
-        )
+        response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
         assert response.status_code == 200, f"Attempt {i+1} should have been allowed"
 
     # The 4th attempt should now be blocked
-    response = app_with_rate_limit.post(
-        "/login", data=dict(email="test@example.com", password="wrongpassword")
-    )
+    response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
     assert response.status_code == 429
 
 
@@ -132,7 +121,7 @@ def test_login_get_requests_not_limited(app_with_rate_limit):
     for _ in range(5):
         response = app_with_rate_limit.get("/login")
         assert response.status_code == 200
-    
+
     # A subsequent POST should still be allowed
     response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="bad"))
     assert response.status_code == 200
@@ -193,7 +182,8 @@ def test_service_create_with_profile_fail_no_password(clean_database):
     assert UserProfileRepository().count() == 0
 
 
-#2FA
+# 2FA
+
 
 def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
@@ -203,6 +193,7 @@ def test_generate_qr_code_uri():
     assert isinstance(qr_b64, str)
     img_bytes = base64.b64decode(qr_b64)
     assert img_bytes[:4] == b"\x89PNG"
+
 
 def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
@@ -227,13 +218,15 @@ def test_check_temp_code_success():
 
     # Generate current TOTP code
     totp = pyotp.TOTP(secret).now()
-    
+
     # Test that the code validates when user is logged in
     # We simulate this by using the service with a mock current_user context
     from unittest.mock import patch
-    with patch('app.modules.auth.services.current_user', user):
+
+    with patch("app.modules.auth.services.current_user", user):
         assert AuthenticationService().check_temp_code(totp) is True
-        
+
+
 def test_2fa_verify_route_invalid_code(test_client, clean_database):
     # Create a user
     email = "2fa_test2@example.com"

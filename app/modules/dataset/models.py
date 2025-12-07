@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum): 
+class PublicationType(Enum):
     NONE = "NONE"
     OBSERVATION_DATA = "OBSERVATION_DATA"
     DATA_PAPER = "DATA_PAPER"
@@ -33,7 +33,7 @@ class Author(db.Model):
 class Observation(db.Model):  # es nueva
     id = db.Column(db.Integer, primary_key=True)
     object_name = db.Column(db.String(255), nullable=False)
-    ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
+    ra = db.Column(db.String(64), nullable=False)  # hh:mm:ss.sss
     dec = db.Column(db.String(64), nullable=False)  # +/-dd:mm:ss.sss
     magnitude = db.Column(db.Float, nullable=True)
     observation_date = db.Column(db.Date, nullable=False)
@@ -128,11 +128,7 @@ class DataSet(db.Model):
         return self.ds_meta_data.publication_type.name.replace("_", " ").title()
 
     def get_zenodo_url(self):
-        return (
-            f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}"
-            if self.ds_meta_data.dataset_doi
-            else None
-        )
+        return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
 
     # Contamos los hubfiles (ya no pasamos por feature_models)
     def get_files_count(self):

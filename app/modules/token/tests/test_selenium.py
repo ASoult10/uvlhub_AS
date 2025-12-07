@@ -1,8 +1,9 @@
-from selenium.common.exceptions import NoSuchElementException
 import time
 
+from selenium.common.exceptions import NoSuchElementException
+
 from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import initialize_driver, close_driver
+from core.selenium.common import close_driver, initialize_driver
 
 
 def test_token_index():
@@ -13,7 +14,7 @@ def test_token_index():
         host = get_host_for_selenium_testing()
 
         # Open the index page
-        driver.get(f'{host}/token')
+        driver.get(f"{host}/token")
 
         # Wait a little while to make sure the page has loaded completely
         time.sleep(4)
@@ -23,7 +24,7 @@ def test_token_index():
             pass
 
         except NoSuchElementException:
-            raise AssertionError('Test failed!')
+            raise AssertionError("Test failed!")
 
     finally:
 

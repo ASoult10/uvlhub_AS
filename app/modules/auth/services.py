@@ -1,23 +1,20 @@
-import os
-
-import pyotp, qrcode
 import base64
+import os
 from io import BytesIO
-from flask import request, redirect, g
-from flask_login import current_user, login_user
-from flask_jwt_extended import set_access_cookies, set_refresh_cookies
-
 from app.modules.auth.models import User, Role
+import pyotp
+import qrcode
+from flask import redirect, request, url_for, g
+from flask_jwt_extended import set_access_cookies, set_refresh_cookies
+from flask_login import current_user, login_user
+from flask_mail import Message
+from app import mail
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
+from app.modules.token.services import service as TokenService
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
-
-from flask import url_for
-from flask_mail import Message
-from app import mail
-from app.modules.token.services import service as TokenService
 
 
 def load_user_permissions(user):
@@ -33,7 +30,6 @@ class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
-        
 
     def login(self, email, password, remember=True, redirect_url="public.index"):
         user = self.repository.get_by_email(email)
@@ -117,7 +113,6 @@ class AuthenticationService(BaseService):
             return current_user.profile
         return None
 
-
     def check_temp_code(self, code: str) -> bool:
         user = current_user
         if not user or not user.user_secret:
@@ -125,12 +120,12 @@ class AuthenticationService(BaseService):
 
         totp = pyotp.TOTP(user.user_secret).now()
         return code == totp
-    
-    def generate_qr_code_uri(self,uri: str):
+
+    def generate_qr_code_uri(self, uri: str):
         qr = qrcode.QRCode(box_size=10, border=2)
         qr.add_data(uri)
         qr.make(fit=True)
-        img = qr.make_image(fill='black', back_color='white')
+        img = qr.make_image(fill="black", back_color="white")
         tempImg = BytesIO()
         img.save(tempImg, format="PNG")
         qr_b64 = base64.b64encode(tempImg.getvalue()).decode("utf-8")
@@ -145,16 +140,15 @@ class AuthenticationService(BaseService):
             sender="noreply@astronomiahub.com",
             recipients=[to_email],
             body=(
-                    "Hello,\n\n"
-                    "We received a request to reset your password for your AstronomiaHub account.\n\n"
-                    f"If you made this request, please click the link below to reset your password:\n{reset_link}\n\n"
-                    "If you did not request a password reset, you can safely ignore this email.\n\n"
-                    "Best regards,\n"
-                    "AstronomiaHub Team"
-                )
-            )
+                "Hello,\n\n"
+                "We received a request to reset your password for your AstronomiaHub account.\n\n"
+                f"If you made this request, please click the link below to reset your password:\n{reset_link}\n\n"
+                "If you did not request a password reset, you can safely ignore this email.\n\n"
+                "Best regards,\n"
+                "AstronomiaHub Team"
+            ),
+        )
         mail.send(msg)
-
 
     # def send_password_reset_email(self, user: User):
     #     reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)

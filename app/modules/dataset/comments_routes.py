@@ -1,6 +1,7 @@
 import logging
-from flask import request, jsonify
-from flask_login import login_required, current_user
+
+from flask import jsonify, request
+from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.services_comments import DSCommentService
