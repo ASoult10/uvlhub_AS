@@ -5,14 +5,14 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
-# Importaciones de Flamapy y tempfile (asumimos que están disponibles en el entorno)
+# Importaciones de Flamapy y tempfile (asumimos que están disponibles en
+# el entorno)
 from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
 from flask import current_app, jsonify, make_response, render_template, request, send_file, send_from_directory
 from flask_login import current_user, login_required
 
 from app import db
-from app.modules.flamapy.routes import to_cnf, to_glencoe, to_splot
 from app.modules.hubfile import hubfile_bp
 from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
 from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService

@@ -59,7 +59,6 @@ def user(app):
 # ============================= TESTS PARA SERVICES ======================
 
 
-
 class TestRequireApiKeyDecorator:
 
     def test_missing_api_key_returns_401(self, app):
@@ -370,7 +369,7 @@ class TestApiRoutes:
         assert "api" in [bp.name for bp in app.blueprints.values()]
 
 
-# ============================= TESTS PARA SEEDERS =============================
+# ============================= TESTS PARA SEEDERS =======================
 
 
 class TestApiKeysSeeder:

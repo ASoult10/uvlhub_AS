@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from app import create_app, db
+from app import db
 
 # TESTS UNITARIOS PARA FakenodoService
 

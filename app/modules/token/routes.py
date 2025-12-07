@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template
 from flask_jwt_extended import get_jwt
 from flask_login import current_user, login_required
 
