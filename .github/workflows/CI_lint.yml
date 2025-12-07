@@ -55,4 +55,4 @@ jobs:
           git push || true
 
       - name: Lint with flake8
-        run: flake8 app rosemary core --ignore=F821,F841,F811,E122,E501,F541,E712
+        run: flake8 app rosemary core --ignore=F821,F841,F811,E122,E501,F541,E712,W504
