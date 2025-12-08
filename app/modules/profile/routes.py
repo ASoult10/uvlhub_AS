@@ -63,22 +63,25 @@ def my_profile():
 
 @profile_bp.route("/profile/<int:user_id>")
 def author_profile(user_id):
-    
+
     user = User.query.filter(User.id == user_id).first()
-    
+
     if not user:
         logger.warning(f"Usuario con id {user_id} no encontrado.")
         abort(404)
-    
+
     datasets = db.session.query(DataSet).filter(DataSet.user_id == user.id).all()
     datasets_counter = len(datasets)
 
-    # TODO: Agregar contador de observaciones (observations)
+    downloads_counter = 0
+    for dataset in datasets:
+        downloads_counter += dataset.download_count
 
     return render_template(
         "profile/author_profile.html",
         user=user,
         profile=user.profile,
         datasets=datasets,
-        datasets_counter=datasets_counter
+        datasets_counter=datasets_counter,
+        downloads_counter=downloads_counter,
         )
