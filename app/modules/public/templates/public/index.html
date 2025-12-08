@@ -37,7 +37,7 @@
                                 </div>
 
                             </div>
-
+                            
                             <div class="row mb-2 mt-4">
 
                                 <div class="col-12">
@@ -54,7 +54,16 @@
                                 {% endfor %}
                             </div>
 
-
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <p class="p-0 m-0">
+                                        {% if dataset.creator %}
+                                            Updated by 
+                                            <a href="{{ url_for('profile.author_profile', user_id=dataset.user_id) }}">{{ dataset.creator.name }} {{ dataset.creator.surname }}</a>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row mb-2">
