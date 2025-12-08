@@ -30,10 +30,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
-from app.modules.zenodo.services import ZenodoService
-
 from app.modules.hubfile.services import HubfileService
-from flask_login import current_user
+from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
 
@@ -57,26 +55,27 @@ def create_dataset():
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
-        # Server-side validation: observation essential fields are ALWAYS required
+        # Server-side validation: observation essential fields are ALWAYS
+        # required
         observation = form.get_observation()
-        
+
         if not observation:
             msg = "Observation data is required."
             return jsonify({"message": msg}), 400
-        
+
         # Check required fields
         if not observation.get("object_name") or not observation.get("object_name").strip():
             msg = "Object name is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("ra") or not observation.get("ra").strip():
             msg = "RA is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("dec") or not observation.get("dec").strip():
             msg = "DEC is required."
             return jsonify({"message": msg}), 400
-        
+
         if not observation.get("observation_date"):
             msg = "Observation date is required."
             return jsonify({"message": msg}), 400
@@ -89,7 +88,8 @@ def create_dataset():
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
             # Return a consistent JSON structure with a 'message' key so the frontend
-            # can always read `data.message` and display a controlled error message.
+            # can always read `data.message` and display a controlled error
+            # message.
             return jsonify({"message": str(exc)}), 400
 
         data = {}
@@ -109,7 +109,8 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each hubfile (one hubfile = one request to Zenodo)
+                # iterate for each hubfile (one hubfile = one request to
+                # Zenodo)
                 for hubfile in dataset.hubfiles:
                     zenodo_service.upload_file(dataset, deposition_id, hubfile)
 
@@ -192,6 +193,15 @@ def delete():
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            return jsonify({"message": "File deleted", "filename": filename}), 200
+        else:
+            return jsonify({"message": "File not found"}), 404
+    except Exception as e:
+        logger.exception(f"Error deleting temp file: {e}")
+        return jsonify({"message": str(e)}), 500
 
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
@@ -210,7 +220,7 @@ def download_dataset(dataset_id):
         for hubfile in dataset.hubfiles:
             file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
             full_path = os.path.join(file_path, hubfile.name)
-            
+
             if os.path.exists(full_path):
                 zipf.write(full_path, arcname=hubfile.name)
 
@@ -252,6 +262,7 @@ def download_dataset(dataset_id):
 
     return resp
 
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
 
@@ -261,7 +272,8 @@ def subdomain_index(doi):
         # Redirect to the same path with the new DOI
         return redirect(url_for("dataset.subdomain_index", doi=new_doi), code=302)
 
-    # Try to search the dataset by the provided DOI (which should already be the new one)
+    # Try to search the dataset by the provided DOI (which should already be
+    # the new one)
     ds_meta_data = dsmetadata_service.filter_by_doi(doi)
 
     if not ds_meta_data:
@@ -281,7 +293,11 @@ def subdomain_index(doi):
 
     resp = make_response(
         render_template(
-            "dataset/view_dataset.html", dataset=dataset, hubfile_service=hubfile_service, current_user=current_user
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            hubfile_service=hubfile_service,
+            current_user=current_user,
+            recommendations=recommendations,
         )
     )
     resp.set_cookie("view_cookie", user_cookie)
@@ -311,5 +327,3 @@ def get_unsynchronized_dataset(dataset_id):
         hubfile_service=hubfile_service,
         current_user=current_user,
     )
-
-from . import comments_routes

@@ -29,7 +29,11 @@ def create_zip(uvus):
     pdf_files = list(project_root.glob("*.pdf"))
     if len(pdf_files) != 1:
         click.echo(
-            click.style(f"Error: Expected exactly one .pdf file in the project root. Found {len(pdf_files)}.", fg="red")
+            click.style(
+                f"Error: Expected exactly one .pdf file in the project root. Found {
+                    len(pdf_files)}.",
+                fg="red",
+            )
         )
         return
 
@@ -65,7 +69,13 @@ def create_zip(uvus):
                 try:
                     zf.write(item, item.relative_to(project_root))
                 except Exception as e:
-                    click.echo(click.style(f"Failed to add {item.name} to zip: {e}", fg="red"))
+                    click.echo(
+                        click.style(
+                            f"Failed to add {
+                                item.name} to zip: {e}",
+                            fg="red",
+                        )
+                    )
 
         # Ensure the .pdf is included only once
         if pdf_file.name not in zf.namelist():

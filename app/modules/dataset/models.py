@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum): 
+class PublicationType(Enum):
     NONE = "NONE"
     OBSERVATION_DATA = "OBSERVATION_DATA"
     DATA_PAPER = "DATA_PAPER"
@@ -33,7 +33,7 @@ class Author(db.Model):
 class Observation(db.Model):  # es nueva
     id = db.Column(db.Integer, primary_key=True)
     object_name = db.Column(db.String(255), nullable=False)
-    ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
+    ra = db.Column(db.String(64), nullable=False)  # hh:mm:ss.sss
     dec = db.Column(db.String(64), nullable=False)  # +/-dd:mm:ss.sss
     magnitude = db.Column(db.Float, nullable=True)
     observation_date = db.Column(db.Date, nullable=False)
@@ -61,7 +61,9 @@ class DSMetrics(db.Model):
     number_of_features = db.Column(db.String(120))
 
     def __repr__(self):
-        return f"DSMetrics<models={self.number_of_models}, features={self.number_of_features}>"
+        return f"DSMetrics<models={
+            self.number_of_models}, features={
+            self.number_of_features}>"
 
 
 class DSMetaData(db.Model):
@@ -129,7 +131,8 @@ class DataSet(db.Model):
 
     def get_zenodo_url(self):
         return (
-            f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}"
+            f"https://zenodo.org/record/{
+            self.ds_meta_data.deposition_id}"
             if self.ds_meta_data.dataset_doi
             else None
         )
@@ -202,7 +205,11 @@ class DSViewRecord(db.Model):
     view_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
 
     def __repr__(self):
-        return f"<View id={self.id} dataset_id={self.dataset_id} date={self.view_date} cookie={self.view_cookie}>"
+        return f"<View id={
+            self.id} dataset_id={
+            self.dataset_id} date={
+            self.view_date} cookie={
+                self.view_cookie}>"
 
 
 class DOIMapping(db.Model):

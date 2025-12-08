@@ -49,6 +49,7 @@ services:
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
+    hostname: mailhog
     ports:
       - "1025:1025" # SMTP port
       - "8025:8025" # Web UI port
@@ -60,3 +61,7 @@ volumes:
 
 networks:
   uvlhub_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24

@@ -31,14 +31,28 @@ def index():
     recommendations_map = {}
     try:
         for dataset in latest_datasets:
-            logger.info(f"Getting recommendations for dataset {dataset.id}: " f"{dataset.ds_meta_data.title}")
+            logger.info(
+                f"Getting recommendations for dataset {
+                    dataset.id}: "
+                f"{
+                    dataset.ds_meta_data.title}"
+            )
             recommendations = dataset_service.get_recommendations(dataset.id, limit=3)
-            logger.info(f"Found {len(recommendations)} recommendations for dataset {dataset.id}")
+            logger.info(
+                f"Found {
+                    len(recommendations)} recommendations for dataset {
+                    dataset.id}"
+            )
             recommendations_map[dataset.id] = recommendations
     except Exception as e:
         logger.error(f"Error getting recommendations: {e}", exc_info=True)
 
-    logger.info(f"Total datasets: {len(latest_datasets)}, " f"recommendations_map size: {len(recommendations_map)}")
+    logger.info(
+        f"Total datasets: {
+            len(latest_datasets)}, "
+        f"recommendations_map size: {
+            len(recommendations_map)}"
+    )
 
     for dataset in latest_datasets:
         try:

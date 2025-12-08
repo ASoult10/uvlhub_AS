@@ -1,4 +1,6 @@
-from flask import render_template
+from flask import flash, render_template
+
+from app.modules.auth.forms import LoginForm
 
 
 class ErrorHandlerManager:
@@ -25,3 +27,10 @@ class ErrorHandlerManager:
         def bad_request_error(e):
             self.app.logger.warning("Bad Request: %s", str(e))
             return render_template("400.html"), 400
+
+        @self.app.errorhandler(429)
+        def ratelimit_handler(e):
+            self.app.logger.warning("Rate limit exceeded: %s", str(e))
+            flash("You have exceeded the login attempt limit. Please try again later.", "error")
+            form = LoginForm()
+            return render_template("auth/login_form.html", form=form), 429

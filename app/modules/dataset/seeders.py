@@ -1,11 +1,18 @@
 import os
 import shutil
-import json
-import uuid;
-from datetime import datetime, timezone, date
+import uuid
+from datetime import date, datetime, timezone
 
 from app.modules.auth.models import User
-from app.modules.dataset.models import Author, DataSet, DSDownloadRecord, DSMetaData, DSMetrics, PublicationType, Observation
+from app.modules.dataset.models import (
+    Author,
+    DataSet,
+    DSDownloadRecord,
+    DSMetaData,
+    DSMetrics,
+    Observation,
+    PublicationType,
+)
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 from core.utils.utils import random_datetime
@@ -40,11 +47,11 @@ class DataSetSeeder(BaseSeeder):
         ds_meta_data_list = [
             DSMetaData(
                 deposition_id=1 + i,
-                title=f"Sample dataset {i+1}",
-                description=f"Description for dataset {i+1}",
+                title=f"Sample dataset {i + 1}",
+                description=f"Description for dataset {i + 1}",
                 publication_type=publication_types[i % len(publication_types)],
-                publication_doi=f"10.1234/dataset{i+1}",
-                dataset_doi=f"10.1234/dataset{i+1}",
+                publication_doi=f"10.1234/dataset{i + 1}",
+                dataset_doi=f"10.1234/dataset{i + 1}",
                 tags="tag1, tag2",
                 ds_metrics_id=seeded_ds_metrics.id,
             )
@@ -80,7 +87,8 @@ class DataSetSeeder(BaseSeeder):
             )
         )
 
-        # ID7: Different tag different author, recent, no downloads, shouldnt show.
+        # ID7: Different tag different author, recent, no downloads, shouldnt
+        # show.
         ds_meta_data_list.append(
             DSMetaData(
                 deposition_id=7,
@@ -175,8 +183,8 @@ class DataSetSeeder(BaseSeeder):
         # Create Author instances and associate with DSMetaData
         authors = [
             Author(
-                name=f"Author {i+1}",
-                affiliation=f"Affiliation {i+1}",
+                name=f"Author {i + 1}",
+                affiliation=f"Affiliation {i + 1}",
                 orcid=f"0000-0000-0000-000{i}",
                 ds_meta_data_id=seeded_ds_meta_data[i % 4].id,
             )
@@ -288,7 +296,8 @@ class DataSetSeeder(BaseSeeder):
 
         self.seed(download_records)
 
-        # Crear ficheros JSON y asociarlos DIRECTAMENTE al DataSet vía dataset_id
+        # Crear ficheros JSON y asociarlos DIRECTAMENTE al DataSet vía
+        # dataset_id
         load_dotenv()  # isort: skip
         working_dir = os.getenv("WORKING_DIR", "")
         src_folder = os.path.join(working_dir, "app", "modules", "dataset", "json_examples")
@@ -306,23 +315,30 @@ class DataSetSeeder(BaseSeeder):
 
         # Asignar al menos 1 JSON por dataset
         for i, dataset in enumerate(seeded_datasets):
-            # Seleccionar JSON correspondiente (ciclar si hay más datasets que JSONs)
+            # Seleccionar JSON correspondiente (ciclar si hay más datasets que
+            # JSONs)
             json_file = json_files[i % len(json_files)]
             user_id = dataset.user_id
 
-            dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
+            dest_folder = os.path.join(
+                working_dir,
+                "uploads",
+                f"user_{user_id}",
+                f"dataset_{
+                    dataset.id}",
+            )
             os.makedirs(dest_folder, exist_ok=True)
-            
+
             src_file = os.path.join(src_folder, json_file)
             dest_file = os.path.join(dest_folder, json_file)
-            
+
             # Copiar el archivo JSON
             shutil.copy(src_file, dest_file)
 
             # Crear registro en Hubfile
             hubfile = Hubfile(
                 name=json_file,
-                checksum=f"checksum{i+1}",
+                checksum=f"checksum{i + 1}",
                 size=os.path.getsize(dest_file),
                 dataset_id=dataset.id,
             )

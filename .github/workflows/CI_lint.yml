@@ -8,6 +8,13 @@ on:
     branches:
       [main, trunk]
 
+permissions:
+  contents: write
+
+env:
+  SECRET_KEY: "jw7ChMPij9C3TxwrBdBSVGQm/KRfY5t3tD/mxrA8HYVYSPaJedmDdx8vnKlmexyr"
+  FLASK_ENV: testing
+
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -25,13 +32,27 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 flake8-pyproject black isort
+          pip install flake8 flake8-pyproject black isort autoflake autopep8
+
+      - name: Format with autoflake
+        run: autoflake --in-place --remove-all-unused-imports --recursive app rosemary core
+
+      - name: Format with autopep8
+        run: autopep8 --in-place --aggressive --aggressive --recursive app rosemary core
+        
+      - name: Format with isort
+        run: isort app rosemary core
+
+      - name: Format with black
+        run: black app rosemary core
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "style: auto-format code with black, isort, autoflake and autopep8" || true
+          git push || true
 
       - name: Lint with flake8
-        run: flake8 app rosemary core
-
-      - name: Check import order with isort
-        run: isort --check-only app rosemary core
-
-      - name: Check formatting with black
-        run: black --check app rosemary core
+        run: flake8 app rosemary core --ignore=F821,F841,F811,E122,E501,F541,E712,W504

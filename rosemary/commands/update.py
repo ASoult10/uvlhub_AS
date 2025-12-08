@@ -12,7 +12,8 @@ def create_temp_requirements(requirements_path, temp_requirements_path):
             if line.startswith("-e"):
                 editable_package = line.strip()  # Store the editable package
             elif line.strip():
-                package = line.split("==")[0].strip()  # Remove version information
+                # Remove version information
+                package = line.split("==")[0].strip()
                 temp_f.write(package + "\n")
     return editable_package
 
@@ -40,7 +41,8 @@ def regenerate_requirements(requirements_path):
 def reinstall_editable_package(editable_package):
     """Reinstall the editable package."""
     if editable_package:
-        editable_path = editable_package.split()[1]  # Extract the path from '-e ./app'
+        # Extract the path from '-e ./app'
+        editable_path = editable_package.split()[1]
         subprocess.run(
             ["pip", "install", "-e", editable_path],
             stdout=subprocess.DEVNULL,  # Suppress output
