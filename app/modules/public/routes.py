@@ -3,6 +3,7 @@ import logging
 from flask import render_template
 
 from app.modules.dataset.services import DataSetService
+from app.modules.profile.models import UserProfile
 from app.modules.public import public_bp
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,12 @@ def index():
         logger.error(f"Error getting recommendations: {e}", exc_info=True)
 
     logger.info(f"Total datasets: {len(latest_datasets)}, " f"recommendations_map size: {len(recommendations_map)}")
+
+    for dataset in latest_datasets:
+        try:
+            dataset.creator = UserProfile.query.filter_by(user_id=dataset.user_id).first()
+        except Exception as e:
+            logger.error(f"Error getting creator for dataset {dataset.id}: {e}", exc_info=True)
 
     return render_template(
         "public/index.html",
