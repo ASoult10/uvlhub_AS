@@ -1,18 +1,11 @@
 import time
-import pytest
-import json
 
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
 
 def test_hubfile_index():
 
@@ -39,6 +32,7 @@ def test_hubfile_index():
         # Close the browser
         close_driver(driver)
 
+
 def test_verListaDeSavedModels():
     driver = initialize_driver()
     try:
@@ -53,6 +47,7 @@ def test_verListaDeSavedModels():
         raise AssertionError("Test failed!")
     finally:
         close_driver(driver)
+
 
 def test_saveAndUnsaveModel():
     driver = initialize_driver()
@@ -107,6 +102,7 @@ def test_descargarMultiplesModelos():
         raise AssertionError("Test failed!")
     finally:
         close_driver(driver)
+
 
 # Call the test function
 test_hubfile_index()

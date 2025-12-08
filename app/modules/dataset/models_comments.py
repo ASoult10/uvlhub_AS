@@ -66,9 +66,7 @@ class DSComment(db.Model):
         backref=db.backref("dataset_comments", cascade="all, delete-orphan"),
     )
 
-    __table_args__ = (
-        Index("ix_ds_comment_dataset_id_created_at", "dataset_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_ds_comment_dataset_id_created_at", "dataset_id", "created_at"),)
 
     @staticmethod
     def _to_epoch(dt):
@@ -79,9 +77,7 @@ class DSComment(db.Model):
         return int(dt.timestamp())
 
     def to_dict(self):
-        status_str = (
-            self.status.value if isinstance(self.status, CommentStatus) else str(self.status)
-        )
+        status_str = self.status.value if isinstance(self.status, CommentStatus) else str(self.status)
         return {
             "id": self.id,
             "dataset_id": self.dataset_id,
@@ -94,4 +90,7 @@ class DSComment(db.Model):
 
     def __repr__(self) -> str:
         st = self.status.value if isinstance(self.status, CommentStatus) else self.status
-        return f"<DSComment id={self.id} ds={self.dataset_id} author={self.author_id} status={st}>"
+        return f"<DSComment id={
+            self.id} ds={
+            self.dataset_id} author={
+            self.author_id} status={st}>"

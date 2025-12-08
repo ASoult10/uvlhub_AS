@@ -29,7 +29,10 @@ class LoginBehavior(TaskSet):
     def ensure_logged_out(self):
         response = self.client.get("/logout")
         if response.status_code != 200:
-            print(f"Logout failed or no active session: {response.status_code}")
+            print(
+                f"Logout failed or no active session: {
+                    response.status_code}"
+            )
 
     @task
     def login(self):

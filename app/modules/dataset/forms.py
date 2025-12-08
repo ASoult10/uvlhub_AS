@@ -1,6 +1,7 @@
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
+import re
 
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     DateField,
     FieldList,
@@ -12,7 +13,6 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.validators import URL, DataRequired, Optional
-import re
 
 from app.modules.dataset.models import PublicationType
 
@@ -36,6 +36,7 @@ class AuthorForm(FlaskForm):
 
 class ObservationForm(FlaskForm):
     """Formulario para una observación asociada a un dataset."""
+
     object_name = StringField("Object name", validators=[Optional()])
     ra = StringField("RA (hh:mm:ss.sss)", validators=[Optional()])
     dec = StringField("DEC (+/-dd:mm:ss.sss)", validators=[Optional()])
@@ -45,19 +46,19 @@ class ObservationForm(FlaskForm):
     notes = TextAreaField("Notes", validators=[Optional()])
 
     class Meta:
-        csrf = False 
+        csrf = False
 
     def is_empty(self):
         """Devuelve True si todos los campos están vacíos."""
         return not (
-            (self.object_name.data and self.object_name.data.strip()) or
-            (self.ra.data and self.ra.data.strip()) or
-            (self.dec.data and self.dec.data.strip()) or
-            self.observation_date.data or
-            self.magnitude.data is not None or
-            (self.filter_used.data and self.filter_used.data.strip()) or
-            (self.notes.data and self.notes.data.strip())
-        )    
+            (self.object_name.data and self.object_name.data.strip())
+            or (self.ra.data and self.ra.data.strip())
+            or (self.dec.data and self.dec.data.strip())
+            or self.observation_date.data
+            or self.magnitude.data is not None
+            or (self.filter_used.data and self.filter_used.data.strip())
+            or (self.notes.data and self.notes.data.strip())
+        )
 
     def get_observation(self):
         """Devuelve un dict con los datos de la observación."""
@@ -105,7 +106,7 @@ class ObservationForm(FlaskForm):
             self.dec.errors.append("Invalid DEC format. Expected [+/-]dd:mm:ss(.sss) with valid ranges.")
             has_error = True
 
-        return (rv and not has_error)
+        return rv and not has_error
 
 
 class DataSetForm(FlaskForm):
@@ -121,10 +122,12 @@ class DataSetForm(FlaskForm):
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
     observation = FormField(ObservationForm)
-    #Archivos JSON asociados al dataset
-    json_files = FileField("JSON Files",validators=[Optional(), FileAllowed(['json'], "Only JSON files allowed")],render_kw={"multiple": True}
-)
-
+    # Archivos JSON asociados al dataset
+    json_files = FileField(
+        "JSON Files",
+        validators=[Optional(), FileAllowed(["json"], "Only JSON files allowed")],
+        render_kw={"multiple": True},
+    )
 
     submit = SubmitField("Submit")
 

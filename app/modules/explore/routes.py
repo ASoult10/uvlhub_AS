@@ -16,7 +16,7 @@ def index():
         tags = set()
         for (tag_string,) in tag_strings:
             if tag_string:
-                tags.update(tag.strip() for tag in tag_string.split(','))
+                tags.update(tag.strip() for tag in tag_string.split(","))
         tags = sorted(list(tags))
         form = ExploreForm()
         return render_template("explore/index.html", form=form, query=query, authors=authors, tags=tags)

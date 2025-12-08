@@ -12,8 +12,17 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", date_after=None, date_before=None, author="any", sorting="newest",
-               publication_type="any", tags=[], **kwargs):
+    def filter(
+        self,
+        query="",
+        date_after=None,
+        date_before=None,
+        author="any",
+        sorting="newest",
+        publication_type="any",
+        tags=[],
+        **kwargs,
+    ):
 
         normalized_query = unidecode.unidecode(query).lower()
         cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
@@ -28,8 +37,7 @@ class ExploreRepository(BaseRepository):
             filters.append(DSMetaData.tags.ilike(f"%{word}%"))
 
         datasets = (
-            self.model.query
-            .join(DataSet.ds_meta_data)
+            self.model.query.join(DataSet.ds_meta_data)
             .join(DSMetaData.authors)
             .filter(or_(*filters))
             .filter(DSMetaData.dataset_doi.isnot(None))
@@ -46,9 +54,7 @@ class ExploreRepository(BaseRepository):
         if author != "any":
             author = author.strip().replace(" ", "").lower()
             formatted_name = func.lower(func.replace(func.trim(Author.name), " ", ""))
-            datasets = datasets.filter(
-                DSMetaData.authors.any(formatted_name.like(f"%{author}%"))
-            )
+            datasets = datasets.filter(DSMetaData.authors.any(formatted_name.like(f"%{author}%")))
 
         if len(tags) > 0:
             tag_conditions = [DSMetaData.tags.ilike(f"%{tag}%") for tag in tags]

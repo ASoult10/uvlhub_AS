@@ -58,11 +58,17 @@ class WebhookService(BaseService):
     def execute_container_command(self, container, command, workdir="/app"):
         exit_code, output = container.exec_run(command, workdir=workdir)
         if exit_code != 0:
-            abort(500, description=f"Container command failed: {output.decode('utf-8')}")
+            abort(
+                500,
+                description=f"Container command failed: {
+                    output.decode('utf-8')}",
+            )
         return output.decode("utf-8")
 
     def log_deployment(self, container):
-        log_entry = f"Deployment successful at {datetime.now(timezone.utc).isoformat()}\n"
+        log_entry = f"Deployment successful at {
+            datetime.now(
+                timezone.utc).isoformat()}\n"
         log_file_path = "/app/deployments.log"
         self.execute_container_command(container, f"sh -c 'echo \"{log_entry}\" >> {log_file_path}'")
 

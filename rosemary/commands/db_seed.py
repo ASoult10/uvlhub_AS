@@ -17,7 +17,8 @@ def get_module_seeders(module_path, specific_module=None):
             module_name = relative_path.replace(os.path.sep, ".")
             full_module_name = f"app.modules.{module_name}.seeders"
 
-            # If a module was specified and does not match the current one, continue with the next one
+            # If a module was specified and does not match the current one,
+            # continue with the next one
             if specific_module and specific_module != module_name.split(".")[0]:
                 continue
 
@@ -72,10 +73,18 @@ def db_seed(reset, yes, module):
             seeder.run()
             click.echo(click.style(f"{seeder.__class__.__name__} performed.", fg="blue"))
         except Exception as e:
-            click.echo(click.style(f"Error running seeder {seeder.__class__.__name__}: {e}", fg="red"))
             click.echo(
                 click.style(
-                    f"Rolled back the transaction of {seeder.__class__.__name__} to keep the session " f"clean.",
+                    f"Error running seeder {
+                        seeder.__class__.__name__}: {e}",
+                    fg="red",
+                )
+            )
+            click.echo(
+                click.style(
+                    f"Rolled back the transaction of {
+                        seeder.__class__.__name__} to keep the session "
+                    f"clean.",
                     fg="yellow",
                 )
             )

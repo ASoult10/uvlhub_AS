@@ -1,4 +1,5 @@
 import os
+
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
 from app.modules.hubfile.models import Hubfile
@@ -28,7 +29,13 @@ class HubfileService(BaseService):
         working_dir = os.getenv("WORKING_DIR")
 
         path = os.path.join(
-            working_dir, "uploads", f"user_{hubfile_user.id}", f"dataset_{hubfile_dataset.id}", hubfile.name
+            working_dir,
+            "uploads",
+            f"user_{
+                hubfile_user.id}",
+            f"dataset_{
+                hubfile_dataset.id}",
+            hubfile.name,
         )
         return path
 

@@ -1,5 +1,6 @@
-from locust import HttpUser, TaskSet, task, between
 import random
+
+from locust import HttpUser, TaskSet, between, task
 
 from core.environment.host import get_host_for_locust_testing
 from core.locust.common import get_csrf_token
@@ -30,11 +31,7 @@ class RecommendationBehavior(TaskSet):
         Test loading homepage with recommendations (5x weight - most common)
         This endpoint shows 3 recommendations per latest dataset
         """
-        with self.client.get(
-            "/",
-            catch_response=True,
-            name="Homepage with Recommendations"
-        ) as response:
+        with self.client.get("/", catch_response=True, name="Homepage with Recommendations") as response:
             if response.status_code == 200:
                 # Check if recommendations are in the response
                 if b"Similar Datasets" in response.content or b"recommendations_map" in response.content:
@@ -51,35 +48,25 @@ class RecommendationBehavior(TaskSet):
         This endpoint shows 3 recommendations per search result
         """
         # First, load the explore page
-        with self.client.get(
-            "/explore",
-            catch_response=True,
-            name="Explore Page Load"
-        ) as response:
+        with self.client.get("/explore", catch_response=True, name="Explore Page Load") as response:
             if response.status_code != 200:
-                response.failure(f"Explore page load failed: {response.status_code}")
+                response.failure(
+                    f"Explore page load failed: {
+                        response.status_code}"
+                )
                 return
-            
+
             csrf_token = get_csrf_token(response)
 
         # Then, perform a search (which triggers recommendations)
-        search_criteria = {
-            "query": "",
-            "title": "",
-            "description": "",
-            "tags": "",
-            "authors": ""
-        }
+        search_criteria = {"query": "", "title": "", "description": "", "tags": "", "authors": ""}
 
         with self.client.post(
             "/explore",
             json=search_criteria,
-            headers={
-                "X-CSRFToken": csrf_token,
-                "Content-Type": "application/json"
-            },
+            headers={"X-CSRFToken": csrf_token, "Content-Type": "application/json"},
             catch_response=True,
-            name="Explore Search with Recommendations"
+            name="Explore Search with Recommendations",
         ) as response:
             if response.status_code == 200:
                 try:
@@ -111,20 +98,17 @@ class RecommendationBehavior(TaskSet):
             "10.1234/dataset3",
             "10.1234/dataset4",
         ]
-        
+
         doi = random.choice(dataset_dois)
-        
-        with self.client.get(
-            f"/doi/{doi}/",
-            catch_response=True,
-            name="Dataset View with Recommendations"
-        ) as response:
+
+        with self.client.get(f"/doi/{doi}/", catch_response=True, name="Dataset View with Recommendations") as response:
             if response.status_code == 200:
                 # Check if recommendations section exists
                 if b"Recommended Datasets" in response.content or b"recommendations" in response.content:
                     response.success()
                 else:
-                    # It's ok if there are no recommendations (no similar datasets)
+                    # It's ok if there are no recommendations (no similar
+                    # datasets)
                     response.success()
             elif response.status_code == 404:
                 # Dataset might not exist, that's ok in load testing
@@ -139,11 +123,11 @@ class RecommendationBehavior(TaskSet):
         """
         # Try dataset IDs 1-10
         dataset_id = random.randint(1, 10)
-        
+
         with self.client.get(
             f"/dataset/unsynchronized/{dataset_id}/",
             catch_response=True,
-            name="Unsynchronized Dataset with Recommendations"
+            name="Unsynchronized Dataset with Recommendations",
         ) as response:
             if response.status_code == 200:
                 response.success()
@@ -159,29 +143,31 @@ class RecommendationBehavior(TaskSet):
         Stress test: Load homepage multiple times rapidly to test recommendation caching/performance
         """
         for i in range(3):
-            with self.client.get(
-                "/",
-                catch_response=True,
-                name="Rapid Homepage Loads"
-            ) as response:
+            with self.client.get("/", catch_response=True, name="Rapid Homepage Loads") as response:
                 if response.status_code == 200:
                     response.success()
                 else:
-                    response.failure(f"Load {i+1} failed: {response.status_code}")
+                    response.failure(
+                        f"Load {
+                            i +
+                            1} failed: {
+                            response.status_code}"
+                    )
 
 
 class RecommendationUser(HttpUser):
     """
     Simulated user for testing recommendation system performance.
-    
+
     Usage:
         locust -f app/modules/dataset/tests/locustfile_recommendations.py --headless -u 50 -r 10 -t 60s
-        
+
     Parameters:
         -u 50: 50 concurrent users
         -r 10: spawn 10 users per second
         -t 60s: run for 60 seconds
     """
+
     tasks = [RecommendationBehavior]
     wait_time = between(1, 3)  # Wait 1-3 seconds between tasks
     host = get_host_for_locust_testing()
@@ -191,10 +177,11 @@ class LightRecommendationUser(HttpUser):
     """
     Light load testing - fewer users, longer wait times
     Good for initial testing and verification
-    
+
     Usage:
         locust -f app/modules/dataset/tests/locustfile_recommendations.py --headless -u 10 -r 2 -t 30s LightRecommendationUser
     """
+
     tasks = [RecommendationBehavior]
     wait_time = between(3, 7)  # Wait 3-7 seconds between tasks
     host = get_host_for_locust_testing()
@@ -204,10 +191,11 @@ class HeavyRecommendationUser(HttpUser):
     """
     Heavy load testing - many users, short wait times
     Simulates high traffic scenarios
-    
+
     Usage:
         locust -f app/modules/dataset/tests/locustfile_recommendations.py --headless -u 100 -r 20 -t 120s HeavyRecommendationUser
     """
+
     tasks = [RecommendationBehavior]
     wait_time = between(0.5, 2)  # Wait 0.5-2 seconds between tasks
     host = get_host_for_locust_testing()

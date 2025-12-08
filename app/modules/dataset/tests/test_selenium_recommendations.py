@@ -3,7 +3,6 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
@@ -48,29 +47,40 @@ def test_recommendations_on_homepage():
         time.sleep(3)
 
         # Check if recommendation sections exist (with flexible text matching)
-        recommendation_sections = driver.find_elements(By.XPATH, "//*[contains(text(), 'Similar') or contains(text(), 'Recommend')]")
-        
-        print(f"Found {len(recommendation_sections)} recommendation sections on homepage")
-        
+        recommendation_sections = driver.find_elements(
+            By.XPATH, "//*[contains(text(), 'Similar') or contains(text(), 'Recommend')]"
+        )
+
+        print(
+            f"Found {
+                len(recommendation_sections)} recommendation sections on homepage"
+        )
+
         # Check if recommendation cards are displayed
         recommendation_cards = driver.find_elements(By.CLASS_NAME, "recommendation-card")
-        print(f"Found {len(recommendation_cards)} recommendation cards on homepage")
-        
+        print(
+            f"Found {
+                len(recommendation_cards)} recommendation cards on homepage"
+        )
+
         # If no recommendations found, check if there are datasets at all
         if len(recommendation_cards) == 0:
             datasets = driver.find_elements(By.XPATH, "//h5[contains(@class, 'card-title')]")
             if len(datasets) == 0:
                 print("⚠ No datasets on homepage - seeder may not have run")
             else:
-                print(f"⚠ Found {len(datasets)} datasets but no recommendations (may need similar datasets)")
+                print(
+                    f"⚠ Found {
+                        len(datasets)} datasets but no recommendations (may need similar datasets)"
+                )
             # Don't fail - this is acceptable if there are no similar datasets
             print("✓ Homepage test completed (no recommendations available)")
             return
-        
+
         # If we have recommendations, verify structure
         first_card = recommendation_cards[0]
         assert first_card.is_displayed(), "First recommendation card is not visible"
-        
+
         # Check that the card has a link
         card_link = first_card.find_element(By.XPATH, ".//ancestor::a")
         assert card_link.get_attribute("href"), "Recommendation card has no link"
@@ -102,9 +112,9 @@ def test_recommendations_on_dataset_view():
         try:
             first_dataset_link = driver.find_element(By.XPATH, "//table//tbody//tr[1]//a[contains(@href, '/doi/')]")
             dataset_url = first_dataset_link.get_attribute("href")
-            
+
             print(f"Opening dataset: {dataset_url}")
-            
+
             # Click on the dataset
             driver.get(dataset_url)
             wait_for_page_to_load(driver)
@@ -118,18 +128,21 @@ def test_recommendations_on_dataset_view():
 
                 # Check for recommendation cards
                 recommendation_cards = driver.find_elements(By.CLASS_NAME, "recommendation-card")
-                print(f"Found {len(recommendation_cards)} recommendations for this dataset")
-                
+                print(
+                    f"Found {
+                        len(recommendation_cards)} recommendations for this dataset"
+                )
+
                 if len(recommendation_cards) > 0:
                     # Verify first recommendation has proper structure
                     first_rec = recommendation_cards[0]
                     assert first_rec.is_displayed(), "First recommendation not visible"
-                    
+
                     # Check for title
                     rec_title = first_rec.find_element(By.TAG_NAME, "strong")
                     assert rec_title.text, "Recommendation has no title"
                     print(f"First recommendation: {rec_title.text[:50]}...")
-                    
+
                     print("✓ Dataset view recommendations test passed")
                 else:
                     print("⚠ No recommendations found (dataset may have no similar datasets)")
@@ -166,12 +179,14 @@ def test_recommendations_on_explore_page():
             search_button = None
             try:
                 search_button = driver.find_element(By.ID, "search")
-            except:
+            except BaseException:
                 try:
-                    search_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Search') or contains(@class, 'search')]")
-                except:
+                    search_button = driver.find_element(
+                        By.XPATH, "//button[contains(text(), 'Search') or contains(@class, 'search')]"
+                    )
+                except BaseException:
                     search_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            
+
             if search_button:
                 search_button.click()
                 # Wait for results to load
@@ -179,7 +194,10 @@ def test_recommendations_on_explore_page():
 
                 # Check for recommendation cards in results
                 recommendation_cards = driver.find_elements(By.CLASS_NAME, "recommendation-card")
-                print(f"Found {len(recommendation_cards)} recommendation cards in explore results")
+                print(
+                    f"Found {
+                        len(recommendation_cards)} recommendation cards in explore results"
+                )
 
                 if len(recommendation_cards) > 0:
                     print("✓ Explore page recommendations test passed")
@@ -212,15 +230,16 @@ def test_recommendation_link_works():
 
         # Find first recommendation card
         recommendation_cards = driver.find_elements(By.CLASS_NAME, "recommendation-card")
-        
+
         if len(recommendation_cards) > 0:
             # Get the link URL before clicking
             first_card_link = recommendation_cards[0].find_element(By.XPATH, ".//ancestor::a")
             target_url = first_card_link.get_attribute("href")
-            
+
             print(f"Testing recommendation link: {target_url}")
-            
-            # Instead of clicking (which can have scroll issues), navigate directly
+
+            # Instead of clicking (which can have scroll issues), navigate
+            # directly
             driver.get(target_url)
             wait_for_page_to_load(driver)
             time.sleep(2)
@@ -228,7 +247,7 @@ def test_recommendation_link_works():
             # Verify we navigated to the correct page
             current_url = driver.current_url
             assert "/doi/" in current_url, "Did not navigate to a dataset page"
-            
+
             # Check that we're on a dataset view page
             try:
                 # Look for dataset indicators
@@ -272,20 +291,23 @@ def test_recommendation_scoring():
 
             # Get recommendation cards
             recommendation_cards = driver.find_elements(By.CLASS_NAME, "recommendation-card")
-            
+
             if len(recommendation_cards) >= 2:
-                print(f"Found {len(recommendation_cards)} recommendations to check ordering")
-                
+                print(
+                    f"Found {
+                        len(recommendation_cards)} recommendations to check ordering"
+                )
+
                 # Get titles of recommendations
                 rec_titles = []
                 for card in recommendation_cards[:3]:  # Check first 3
                     title_elem = card.find_element(By.TAG_NAME, "strong")
                     rec_titles.append(title_elem.text)
-                
+
                 print("Recommendation order:")
                 for i, title in enumerate(rec_titles, 1):
                     print(f"  {i}. {title[:60]}...")
-                
+
                 print("✓ Recommendations are ordered (scoring system working)")
             else:
                 print("⚠ Not enough recommendations to test ordering")
@@ -299,9 +321,9 @@ def test_recommendation_scoring():
 
 # Main test runner
 if __name__ == "__main__":
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("RUNNING SELENIUM TESTS FOR DATASET RECOMMENDATIONS")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     try:
         print("\n1. Testing recommendations on homepage...")
@@ -343,6 +365,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"✗ Scoring test error: {e}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TESTS COMPLETED")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
