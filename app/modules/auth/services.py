@@ -117,7 +117,7 @@ class AuthenticationService(BaseService):
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
 
-    def send_password_recovery_email(to_email, reset_link):
+    def send_password_recovery_email(self, to_email, reset_link):
         msg = Message(
             subject="Password Reset Request",
             sender="noreply@astronomiahub.com",
@@ -134,17 +134,3 @@ class AuthenticationService(BaseService):
         mail.send(msg)
 
 
-    # def send_password_reset_email(self, user: User):
-    #     reset_link = url_for('auth.reset_password', token=user.reset_token, _external=True)
-    #     msg = Message(
-    #         subject="Password Reset Request",
-    #         sender="noreply@astronomiahub.com",
-    #         recipients=[user.email],
-    #         body=f"Hello {user.username}, \n\n"
-    #                 f"We received a request to reset your password for your AstronomiaHub account.\n\n"
-    #                 f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
-    #                 f"If you did not request a password reset, you can safely ignore this email.\n\n"
-    #                 f"Best regards,\n"
-    #                 f"AstronomiaHub Team"
-    #     )
-    #     mail.send(msg)
