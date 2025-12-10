@@ -1,4 +1,5 @@
 import base64
+from unittest.mock import patch
 
 import pyotp
 import pytest
@@ -8,7 +9,6 @@ from app import db, limiter
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
-from unittest.mock import patch
 
 
 @pytest.fixture
@@ -39,6 +39,7 @@ def test_client(test_client):
         pass
 
     yield test_client
+
 
 @pytest.fixture(scope="function")
 def test_isolated_client(test_isolated_client):
@@ -281,29 +282,21 @@ def test_2fa_verify_route_invalid_code(test_client, clean_database):
     assert resp.request.path == url_for("auth.two_factor_setup")
     assert b"Invalid verification code" in resp.data
 
+
 # Password recovery tests
+
 
 def test_recover_password_route_success(test_isolated_client):
     email = "recover_password_test@example.com"
     password = "test1234"
 
-    AuthenticationService().create_with_profile(
-        name="Recover",
-        surname="Password",
-        email=email,
-        password=password
-    )
+    AuthenticationService().create_with_profile(name="Recover", surname="Password", email=email, password=password)
     db.session.commit()
 
     with patch("app.modules.auth.routes.authentication_service.send_password_recovery_email") as mock_send_email:
 
         resp = test_isolated_client.post(
-            "/recover-password/",
-            data={
-                "email": email,
-                "submit": True
-            },
-            follow_redirects=True
+            "/recover-password/", data={"email": email, "submit": True}, follow_redirects=True
         )
 
         mock_send_email.assert_called_once()
@@ -316,13 +309,8 @@ def test_recover_password_nonexistent_email(test_isolated_client):
 
     with patch("app.modules.auth.routes.authentication_service.send_password_recovery_email") as mock_send_email:
         resp = test_isolated_client.post(
-                "/recover-password/",
-                data={
-                    "email": email,
-                    "submit": True
-                },
-                follow_redirects=True
-            )
+            "/recover-password/", data={"email": email, "submit": True}, follow_redirects=True
+        )
 
         mock_send_email.assert_not_called()
 
@@ -333,40 +321,30 @@ def test_reset_password_get_valid_token(test_isolated_client):
     service = AuthenticationService()
 
     user = service.create_with_profile(
-        name="Recover",
-        surname="Password",
-        email="recovermypassword@example.com",
-        password="1234"
+        name="Recover", surname="Password", email="recovermypassword@example.com", password="1234"
     )
     db.session.commit()
     token = user.generate_reset_token()
     db.session.commit()
 
     resp = test_isolated_client.get(f"/reset-password/{token}")
-    
+
     assert resp.status_code == 200
     assert b"Reset Password" in resp.data
+
 
 def test_reset_password_post_valid_token(test_isolated_client):
     service = AuthenticationService()
 
     user = service.create_with_profile(
-        name="Recover",
-        surname="Password",
-        email="recovermypassword@example.com",
-        password="1234"
+        name="Recover", surname="Password", email="recovermypassword@example.com", password="1234"
     )
     db.session.commit()
     token = user.generate_reset_token()
     db.session.commit()
 
     resp = test_isolated_client.post(
-        f"/reset-password/{token}",
-        data={
-            "password": "newpass",
-            "confirm_password": "newpass"
-        },
-        follow_redirects=True
+        f"/reset-password/{token}", data={"password": "newpass", "confirm_password": "newpass"}, follow_redirects=True
     )
 
     user = UserRepository().get_by_id(user.id)
