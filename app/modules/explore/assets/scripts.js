@@ -118,6 +118,25 @@ function filterChangeHandler(e) {
 
                                         <div class="col-md-4 col-12">
                                             <span class=" text-secondary">
+                                                Updated by
+                                            </span>
+                                        </div>
+                                        <div class="col-md-8 col-12">
+                                            ${dataset.creator ? `
+                                                <p class="p-0 m-0">
+                                                    <a href="${dataset.creator.profile_url}" class="text-decoration-none">
+                                                        ${dataset.creator.name} ${dataset.creator.surname}
+                                                    </a>
+                                                </p>
+                                            ` : '<p class="p-0 m-0 text-muted">Unknown</p>'}
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row mb-2">
+
+                                        <div class="col-md-4 col-12">
+                                            <span class=" text-secondary">
                                                 Tags
                                             </span>
                                         </div>

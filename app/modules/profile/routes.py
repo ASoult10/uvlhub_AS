@@ -1,12 +1,17 @@
-from flask import redirect, render_template, request, url_for
+import logging
+
+from flask import abort, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
+from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import DataSet
 from app.modules.profile import profile_bp
 from app.modules.profile.forms import UserProfileForm
 from app.modules.profile.services import UserProfileService
+
+logger = logging.getLogger(__name__)
 
 
 @profile_bp.route("/profile/edit", methods=["GET", "POST"])
@@ -52,4 +57,30 @@ def my_profile():
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count,
+    )
+
+
+@profile_bp.route("/profile/<int:user_id>")
+def author_profile(user_id):
+
+    user = User.query.filter(User.id == user_id).first()
+
+    if not user:
+        logger.warning(f"Usuario con id {user_id} no encontrado.")
+        abort(404)
+
+    datasets = db.session.query(DataSet).filter(DataSet.user_id == user.id).all()
+    datasets_counter = len(datasets)
+
+    downloads_counter = 0
+    for dataset in datasets:
+        downloads_counter += dataset.download_count
+
+    return render_template(
+        "profile/author_profile.html",
+        user=user,
+        profile=user.profile,
+        datasets=datasets,
+        datasets_counter=datasets_counter,
+        downloads_counter=downloads_counter,
     )

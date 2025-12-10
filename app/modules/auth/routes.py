@@ -204,7 +204,7 @@ def recover_password():
         if user:
             token = user.generate_reset_token()
             reset_link = url_for("auth.reset_password", token=token, _external=True)
-            AuthenticationService.send_password_recovery_email(email, reset_link)
+            authentication_service.send_password_recovery_email(email, reset_link)
             flash("A password recovery email has been sent.", "info")
 
         return redirect(url_for("auth.recover_password"))

@@ -174,9 +174,10 @@ def create_app(config_name="development"):
             "flamapy.check_uvl",
             "flamapy.valid",
             "static",
+            "profile.author_profile",
         ]
 
-        excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload"]
+        excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload", "/recover-password/"]
 
         if request.endpoint in excluded_endpoints:
             return
@@ -205,7 +206,8 @@ def create_app(config_name="development"):
                 parent_jti = get_jwt()["jti"]
 
                 device_info = token_service.get_device_name_by_request(request) if request else None
-                location_info = token_service.get_location_by_ip(request.remote_addr) if request else None
+                ip_address = TokenService.get_real_ip(request) if request else None
+                location_info = TokenService.get_location_by_ip(ip_address) if ip_address else None
 
                 new_access_token = token_service.refresh_access_token(user_id, device_info, location_info, parent_jti)
 
@@ -221,21 +223,6 @@ def create_app(config_name="development"):
                 return response
 
     return app
-
-
-def send_password_recovery_email(to_email, reset_link):
-    msg = Message(
-        subject="Password Reset Request",
-        sender="noreply@astronomiahub.com",
-        recipients=[to_email],
-        body=f"Hello, \n\n"
-        f"We received a request to reset your password for your AstronomiaHub account.\n\n"
-        f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
-        f"If you did not request a password reset, you can safely ignore this email.\n\n"
-        f"Best regards,\n"
-        f"AstronomiaHub Team",
-    )
-    mail.send(msg)
 
 
 app = create_app()
