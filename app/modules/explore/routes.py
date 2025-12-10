@@ -46,11 +46,15 @@ def index():
 
             # Add creator info for each dataset
             dataset_creator = UserProfile.query.filter_by(user_id=dataset.user_id).first()
-            dataset_dict["creator"] = {
-                "name": dataset_creator.name,
-                "surname": dataset_creator.surname,
-                "profile_url": url_for('profile.author_profile', user_id=dataset.user_id)
-            } if dataset_creator else None
+            dataset_dict["creator"] = (
+                {
+                    "name": dataset_creator.name,
+                    "surname": dataset_creator.surname,
+                    "profile_url": url_for("profile.author_profile", user_id=dataset.user_id),
+                }
+                if dataset_creator
+                else None
+            )
 
             result.append(dataset_dict)
 
