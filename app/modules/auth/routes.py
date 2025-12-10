@@ -62,13 +62,6 @@ def login():
     error_message = None
 
     if request.method == "POST":
-        # Si ya no quedan intentos, lanza la excepción que activa el error 429
-        if remaining_attempts <= 0:
-            raise TooManyRequests()
-
-        # Decrementa el contador en la sesión con cada intento POST
-        session['login_attempts'] = remaining_attempts - 1
-        
         if form.validate_on_submit():
             user = authentication_service.repository.get_by_email(form.email.data)
 

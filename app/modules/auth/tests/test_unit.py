@@ -54,19 +54,6 @@ def test_isolated_client(test_isolated_client):
     yield test_isolated_client
 
 
-@pytest.fixture(scope="function")
-def test_isolated_client(test_isolated_client):
-    """
-    Extends the test_isolated_client fixture to add additional specific data for module testing.
-    """
-    with test_isolated_client.application.app_context():
-        # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
-        pass
-
-    yield test_isolated_client
-
-
 def test_login_success(test_client):
     response = test_client.post(
         "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
