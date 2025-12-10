@@ -14,7 +14,7 @@ class Token(db.Model):
     code = db.Column(db.String(512), unique=False, nullable=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    parent_jti = db.Column(db.String(128), db.ForeignKey("token.jti"), nullable=True)
+    parent_jti = db.Column(db.String(128), db.ForeignKey("token.jti", ondelete="CASCADE"), nullable=True)
     user = db.relationship("User", back_populates="tokens")
     type = db.Column(
         SQLEnum(TokenType, name="token_type", native_enum=False),

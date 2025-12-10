@@ -10,6 +10,18 @@ class AdminService:
     def get_user(self, user_id: int):
         return User.query.filter_by(id=user_id).one_or_none()
 
+    def delete_user(self, user_id: int):
+        user = self.get_user(user_id)
+        if not user:
+            return False
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            return True
+        except Exception as exc:
+            db.session.rollback()
+            raise exc
+
     def create_user(self, email: str, password: str, role_names=None, **profile_data):
 
         if not email or not password:

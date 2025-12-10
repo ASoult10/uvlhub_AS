@@ -62,8 +62,8 @@ def upgrade():
     op.create_table('user_roles',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['role_id'], ['roles.id']),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id']),
     sa.PrimaryKeyConstraint('user_id', 'role_id')
     )
     op.create_table('zenodo',
@@ -132,7 +132,7 @@ def upgrade():
         sa.Column('dataset_id', sa.Integer(), nullable=True),
         sa.Column('download_date', sa.DateTime(), nullable=False),
         sa.Column('download_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id']),
+        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -142,7 +142,7 @@ def upgrade():
         sa.Column('dataset_id', sa.Integer(), nullable=True),
         sa.Column('view_date', sa.DateTime(), nullable=False),
         sa.Column('view_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id']),
+        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -198,7 +198,7 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('device_info', sa.String(length=256), nullable=False),
         sa.Column('location_info', sa.String(length=256), nullable=False),
-        sa.ForeignKeyConstraint(['parent_jti'], ['token.jti']),
+        sa.ForeignKeyConstraint(['parent_jti'], ['token.jti'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('jti')

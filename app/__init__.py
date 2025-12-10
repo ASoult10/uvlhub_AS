@@ -152,7 +152,8 @@ def create_app(config_name="development"):
             'hubfile.save_file',
             'flamapy.check_uvl',
             'flamapy.valid',
-            'static'
+            'static',
+            'admin.delete_user',
         ]
 
         excluded_paths = ['/dataset/file/upload', '/dataset/file/delete', '/dataset/upload']
