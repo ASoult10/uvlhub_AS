@@ -14,10 +14,6 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
-from flask_jwt_extended import JWTManager, get_jwt
-from flask_mail import Mail, Message
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -226,5 +222,5 @@ def create_app(config_name="development"):
 
     return app
 
-app = create_app()
 
+app = create_app()
