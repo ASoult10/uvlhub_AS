@@ -1,0 +1,175 @@
+{% extends "base_template.html" %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        font-family: 'Poppins', sans-serif;
+        color: #f5f5f5;
+    }
+
+    .section-title {
+        margin: 20px 0;
+        color: #000;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    /* Card estilo moderno */
+    .profile-card {
+        background: #1e1e2f;
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: scale(1.02);
+    }
+
+    .profile-card h5 {
+        font-size: 1.2rem;
+        color: #fff;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .profile-line {
+        font-size: 1rem;
+        padding: 8px 0;
+        border-bottom: 1px solid #ffffff;
+    }
+
+    .profile-line strong {
+        color: #6a11cb;
+    }
+
+    .btn-sessions:hover {
+        transform: translateY(-3px);
+        opacity: 0.9;
+    }
+
+    /* Datasets table */
+    .dataset-table {
+        width: 100%;
+        background: #1e1e2f;
+        border-collapse: collapse;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 25px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .dataset-table th {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        padding: 12px;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .dataset-table td {
+        padding: 12px 20px;
+    }
+
+    .dataset-table tr:nth-child(even) {
+        background: #2b2b3f;
+    }
+
+    .dataset-table tr:hover {
+        background: #3a3a55;
+        transform: scale(1.01);
+    }
+
+    .alert-info {
+        background: #2b2b3f;
+        border: 1px solid #6a11cb;
+        color: #fff;
+    }
+
+    p span.role-badge {
+        background: #ff79c6;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+        margin-right: 5px;
+    }
+
+    p .no-role {
+        font-style: italic;
+        color: #999;
+    }
+</style>
+
+<div class="profile-container">
+
+    <h2 class="section-title">User Profile: {{ user.profile.name }}</h2>
+
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="profile-card">
+                <h5>Profile Information</h5>
+
+                <p class="profile-line"><strong>Name:</strong> {{ user.profile.name }}</p>
+                <p class="profile-line"><strong>Surname:</strong> {{ user.profile.surname }}</p>
+                <p class="profile-line"><strong>Affiliation:</strong> {{ user.profile.affiliation }}</p>
+                <p class="profile-line"><strong>Orcid:</strong> {{ user.profile.orcid }}</p>
+                <p class="profile-line"><strong>Email:</strong> {{ user.email }}</p>
+                <p class="profile-line"><strong>Uploaded datasets:</strong> {{ total_datasets }}</p>
+                <p class="profile-line"><strong>Roles:</strong>
+                    {% if user.roles %}
+                        {% for role in user.roles %}
+                            <span class="role-badge">{{ role.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="no-role">No roles assigned</span>
+                    {% endif %}
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <h2 class="section-title">User datasets</h2>
+
+    {% if datasets %}
+        <table class="dataset-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Publication Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dataset in datasets %}
+                    <tr>
+                        <td>
+                            {% if dataset.ds_meta_data.dataset_doi %}
+                                <a href="{{ dataset.get_uvlhub_doi() }}" style="color: #9abaff;">
+                                    {{ dataset.ds_meta_data.title }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=dataset.id) }}" style="color: #9abaff;">
+                                    {{ dataset.ds_meta_data.title }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>{{ dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info mt-3">
+            No datasets found.
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

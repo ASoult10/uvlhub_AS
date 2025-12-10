@@ -175,6 +175,7 @@ def create_app(config_name="development"):
             "flamapy.valid",
             "static",
             "profile.author_profile",
+            'admin.delete_user',
         ]
 
         excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload"]

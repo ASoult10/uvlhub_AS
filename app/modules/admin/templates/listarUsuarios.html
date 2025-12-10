@@ -43,8 +43,8 @@
     }
 
     td:last-child {
-        font-weight: bold;
-        color: #ffb86c;
+        display: flex;
+        gap: 10px;
     }
 
     td span.role-badge {
@@ -56,14 +56,43 @@
         margin-right: 5px;
     }
 
-    /* Mensaje si no hay roles */
     td .no-role {
         font-style: italic;
         color: #999;
     }
+
+    /* Botones estilos bonitos */
+    .btn {
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85em;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+
+    .btn-edit {
+        background: #6a11cb;
+        color: white;
+    }
+    .btn-edit:hover {
+        background: #7e33e0;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: #ff4b5c;
+        color: white;
+    }
+    .btn-delete:hover {
+        background: #ff6b7d;
+        transform: translateY(-2px);
+    }
+
 </style>
 
-<h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; color: #000;">Users Dashboard</h2>
+<h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; color: #fff;">Users Dashboard</h2>
 
 <table>
     <thead>
@@ -78,7 +107,7 @@
     </thead>
     <tbody>
         {% for user in users %}
-        <tr>
+        <tr onclick="window.location.href='/users/{{ user.id }}'">
             <td>{{ user.id }}</td>
             <td>{{ user.profile.name or "N/A" }}</td>
             <td>{{ user.profile.surname or "N/A" }}</td>
@@ -92,12 +121,24 @@
                     <span class="no-role">No roles assigned</span>
                 {% endif %}
             </td>
-            <td>
-                <a href="/admin/users" class="btn btn-sm btn-primary">Edit</a>
-                <a href="/admin/users" class="btn btn-sm btn-danger">Delete</a>
+            <td onclick="event.stopPropagation();">
+                <a href="/users/{{ user.id }}/edit" class="btn btn-edit">Edit</a>
+                <button type="button" class="btn btn-delete" onclick="confirmDelete('{{ user.id }}')">Delete</button>
+                <form id="delete-form-{{ user.id }}" action="/users/{{ user.id }}/delete" method="POST" style="display:none;">
+                    {{ users_forms[user.id].hidden_tag() }}
+                </form>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+<script>
+    function confirmDelete(userId) {
+        if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+            document.getElementById('delete-form-' + userId).submit();
+        }
+    }
+</script>
 {% endblock %}
+
+

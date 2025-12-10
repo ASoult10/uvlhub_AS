@@ -10,9 +10,9 @@ from app import db
 
 # Tabla asociativa many-to-many entre usuarios y roles
 user_roles = db.Table(
-    "user_roles",
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    db.Column("role_id", db.Integer, db.ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+    'user_roles',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True),
 )
 
 
@@ -58,8 +58,8 @@ class User(db.Model, UserMixin):
     has2FA = db.Column(db.Boolean, nullable=False, default=False)  # Indicates if 2FA is enabled
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
-    data_sets = db.relationship("DataSet", backref="user", lazy=True)
-    profile = db.relationship("UserProfile", backref="user", uselist=False)
+    data_sets = db.relationship("DataSet", backref="user", lazy=True, cascade="all, delete-orphan")
+    profile = db.relationship("UserProfile", backref="user", uselist=False, cascade="all, delete-orphan")
     reset_token = db.Column(db.String(256), nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)
 
