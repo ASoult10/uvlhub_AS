@@ -3,7 +3,6 @@ import pytest
 from app import create_app, db
 from app.modules.auth.models import User
 
-
 @pytest.fixture(scope="session")
 def test_app():
     """Create and configure a new app instance for each test session."""
@@ -13,6 +12,25 @@ def test_app():
         # Imprimir los blueprints registrados
         print("TESTING SUITE (1): Blueprints registrados:", test_app.blueprints)
         yield test_app
+
+@pytest.fixture(scope="function")
+def test_isolated_client(test_app):
+    # Estado limpio de BD antes del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+    with test_app.test_client() as client:
+        # Reset sesión 
+        client.get("/logout", follow_redirects=True)
+        yield client
+
+    # Limpieza después del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
 
 
 @pytest.fixture(scope="module")
