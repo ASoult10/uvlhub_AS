@@ -151,32 +151,32 @@ def create_app(config_name="development"):
         from app.modules.token.services import TokenService
 
         excluded_endpoints = [
-            'auth.login',
-            'auth.logout',
-            'auth.signup',
-            'auth.show_signup_form',
-            'auth.recover_password',
-            'auth.reset_password',
-            'auth.login_with_two_factor',
-            'auth.two_factor_setup',
-            'auth.verify_2fa',
-            'auth.verify_2fa_login',
-            'auth.scripts',
-            'public.index',
-            'public.scripts',
-            'explore.index',
-            'team.index',
-            'dataset.subdomain_index',
-            'dataset.list_dataset_comments',
-            'hubfile.view_file',
-            'hubfile.download_file',
-            'hubfile.unsave_file',
-            'hubfile.save_file',
-            'flamapy.check_uvl',
-            'flamapy.valid',
-            'static',
-            'admin.delete_user',
-            'profile.author_profile'
+            "auth.login",
+            "auth.logout",
+            "auth.signup",
+            "auth.show_signup_form",
+            "auth.recover_password",
+            "auth.reset_password",
+            "auth.login_with_two_factor",
+            "auth.two_factor_setup",
+            "auth.verify_2fa",
+            "auth.verify_2fa_login",
+            "auth.scripts",
+            "public.index",
+            "public.scripts",
+            "explore.index",
+            "team.index",
+            "dataset.subdomain_index",
+            "dataset.list_dataset_comments",
+            "hubfile.view_file",
+            "hubfile.download_file",
+            "hubfile.unsave_file",
+            "hubfile.save_file",
+            "flamapy.check_uvl",
+            "flamapy.valid",
+            "static",
+            "admin.delete_user",
+            "profile.author_profile",
         ]
 
         excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload", "/recover-password/"]
@@ -225,5 +225,6 @@ def create_app(config_name="development"):
                 return response
 
     return app
+
 
 app = create_app()

@@ -1,15 +1,16 @@
-from flask import render_template, request, redirect, url_for, flash, current_app
-from flask_login import current_user, login_user, logout_user, login_required
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.modules.auth import require_permission
-from app.modules.admin.services import AdminService
-from app.modules.auth.models import User, Role
+from flask import current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
+from app import db
 from app.modules.admin import admin_bp
 from app.modules.admin.forms import DeleteUserForm
-from app import db
-from app.modules.dataset.models import DataSet  
+from app.modules.admin.services import AdminService
+from app.modules.auth import require_permission
+from app.modules.auth.models import User
+from app.modules.dataset.models import DataSet
 
 admin_service = AdminService()
+
 
 @admin_bp.route("/users")
 @login_required
@@ -20,6 +21,7 @@ def list_users():
     for user in users:
         users_forms[user.id] = DeleteUserForm()
     return render_template("listarUsuarios.html", users=users, users_forms=users_forms)
+
 
 @admin_bp.route("/users/<int:user_id>")
 @login_required
@@ -39,7 +41,10 @@ def view_user(user_id):
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("admin.list_users"))
-    return render_template("verUsuario.html", user=user, total_datasets=total_datasets_count, datasets=user_datasets_pagination.items)
+    return render_template(
+        "verUsuario.html", user=user, total_datasets=total_datasets_count, datasets=user_datasets_pagination.items
+    )
+
 
 @admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
 @require_permission("manage_users")
@@ -55,9 +60,7 @@ def delete_user(user_id):
         return redirect(url_for("admin.list_users"))
 
     admin_user = User.query.get(admin_user_id)
-    current_app.logger.info(
-        f"Attempting to delete user with id={user_id} by admin id={admin_user.id}"
-    )
+    current_app.logger.info(f"Attempting to delete user with id={user_id} by admin id={admin_user.id}")
 
     try:
         success = admin_service.delete_user(user_id)

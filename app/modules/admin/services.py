@@ -2,10 +2,10 @@ from app import db
 from app.modules.auth.models import Role, User
 from app.modules.profile.models import UserProfile
 
+
 class AdminService:
     def list_users(self):
         return User.query.order_by(User.id.desc()).all()
-
 
     def get_user(self, user_id: int):
         return User.query.filter_by(id=user_id).one_or_none()
@@ -46,7 +46,7 @@ class AdminService:
                 for key, value in profile_data.items():
                     if hasattr(user, key):
                         setattr(user, key, value)
-                
+
             user.roles = roles_to_assign
 
             db.session.commit()

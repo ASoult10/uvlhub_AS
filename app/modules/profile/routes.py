@@ -47,7 +47,7 @@ def my_profile():
     )
 
     total_datasets_count = db.session.query(DataSet).filter(DataSet.user_id == current_user.id).count()
-    roles_name = [r.name for r in current_user.roles] if current_user.roles else 'NNone'
+    roles_name = [r.name for r in current_user.roles] if current_user.roles else "NNone"
 
     print(user_datasets_pagination.items)
 

@@ -1,15 +1,16 @@
 import base64
 import os
 from io import BytesIO
-from app.modules.auth.models import User, Role
+
 import pyotp
 import qrcode
-from flask import redirect, request, url_for, g
+from flask import g, redirect, request
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from flask_login import current_user, login_user
 from flask_mail import Message
+
 from app import mail
-from app.modules.auth.models import User, Role
+from app.modules.auth.models import Role, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
@@ -50,7 +51,6 @@ class AuthenticationService(BaseService):
             return response
 
         return False
-
 
     def is_email_available(self, email: str) -> bool:
         return self.repository.get_by_email(email) is None

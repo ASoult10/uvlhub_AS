@@ -53,11 +53,11 @@ def login():
         return redirect(url_for("public.index"))
 
     # Inicializa el contador en la sesión si no existe
-    if 'login_attempts' not in session:
-        session['login_attempts'] = 4
+    if "login_attempts" not in session:
+        session["login_attempts"] = 4
 
-    remaining_attempts = session.get('login_attempts', 4)
-    
+    remaining_attempts = session.get("login_attempts", 4)
+
     form = LoginForm()
     error_message = None
 
