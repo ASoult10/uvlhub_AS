@@ -149,4 +149,3 @@ class AuthenticationService(BaseService):
             ),
         )
         mail.send(msg)
-
