@@ -136,20 +136,20 @@ class TokenService(BaseService):
     def delete_token(self, token_id):
         token_to_delete = self.get_token_by_id(token_id)
         self.repository.delete_token(token_to_delete)
-    
+
     def get_real_ip(self, request):
         if not request:
             return None
 
-        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        x_forwarded_for = request.headers.get("X-Forwarded-For")
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
+            ip = x_forwarded_for.split(",")[0].strip()
             return ip
-        
-        x_real_ip = request.headers.get('X-Real-IP')
+
+        x_real_ip = request.headers.get("X-Real-IP")
         if x_real_ip:
             return x_real_ip
-        
+
         return request.remote_addr
 
     def get_location_by_ip(self, ip_address):
