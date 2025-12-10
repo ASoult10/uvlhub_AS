@@ -292,6 +292,17 @@ def test_delete_token(test_client):
     assert deleted_token is None, "Token was not deleted successfully."
 
 
+def test_get_real_ip(test_client):
+    """
+    Sample test to verify the get_real_ip function.
+    """
+    with test_client.application.test_request_context(
+        "/", headers={"X-Forwarded-For": "203.0.113.195, 70.41.3.18, 150.172.238.178"}
+    ):
+        real_ip = token_service.get_real_ip(request)
+        assert real_ip == "203.0.113.195", "Real IP should be the first IP in X-Forwarded-For header."
+
+
 def test_get_location_by_ip(test_client):
     """
     Sample test to verify the get_location_by_ip function.

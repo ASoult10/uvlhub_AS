@@ -179,7 +179,7 @@ def create_app(config_name="development"):
             'profile.author_profile'
         ]
 
-        excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload"]
+        excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload", "/recover-password/"]
 
         if request.endpoint in excluded_endpoints:
             return
@@ -208,7 +208,8 @@ def create_app(config_name="development"):
                 parent_jti = get_jwt()["jti"]
 
                 device_info = token_service.get_device_name_by_request(request) if request else None
-                location_info = token_service.get_location_by_ip(request.remote_addr) if request else None
+                ip_address = TokenService.get_real_ip(request) if request else None
+                location_info = TokenService.get_location_by_ip(ip_address) if ip_address else None
 
                 new_access_token = token_service.refresh_access_token(user_id, device_info, location_info, parent_jti)
 
