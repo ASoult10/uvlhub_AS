@@ -14,6 +14,10 @@ from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
 from core.managers.logging_manager import LoggingManager
 from core.managers.module_manager import ModuleManager
+from flask_jwt_extended import JWTManager, get_jwt
+from flask_mail import Mail, Message
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load environment variables
 load_dotenv()
@@ -222,20 +226,5 @@ def create_app(config_name="development"):
 
     return app
 
-
-def send_password_recovery_email(to_email, reset_link):
-    msg = Message(
-        subject="Password Reset Request",
-        sender="noreply@astronomiahub.com",
-        recipients=[to_email],
-        body=f"Hello, \n\n"
-        f"We received a request to reset your password for your AstronomiaHub account.\n\n"
-        f"If you made this request, please click the link bellow to reset your password: {reset_link}\n\n"
-        f"If you did not request a password reset, you can safely ignore this email.\n\n"
-        f"Best regards,\n"
-        f"AstronomiaHub Team",
-    )
-    mail.send(msg)
-
-
 app = create_app()
+
