@@ -133,4 +133,7 @@ class AuthenticationService(BaseService):
             )
         mail.send(msg)
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes

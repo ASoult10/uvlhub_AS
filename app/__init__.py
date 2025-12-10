@@ -222,5 +222,9 @@ def create_app(config_name="development"):
     return app
 
 
+<<<<<<< Updated upstream
 
 app = create_app()
+=======
+app = create_app()
+>>>>>>> Stashed changes
