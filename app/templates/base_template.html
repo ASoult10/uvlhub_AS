@@ -105,6 +105,13 @@ chico sundermann">
                         </a>
                     </li>
 
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.import_model_page' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('dataset.import_model_page') }}">
+                            <i class="align-middle" data-feather="download"></i>
+                            <span class="align-middle">Import dataset</span>
+                        </a>
+                    </li>
+
                     <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.list_dataset' else '' }}">
                         <a class="sidebar-link" href="{{ url_for('dataset.list_dataset') }}">
                             <i class="align-middle" data-feather="list"></i> <span
@@ -118,6 +125,21 @@ chico sundermann">
                             <span class="align-middle">Saved models</span>
                         </a>
                     </li>
+
+                    {% if current_user.has_role('admin') %}
+
+                        <li class="sidebar-header">
+                            Admin
+                        </li>
+
+                        <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.two_factor_setup' else '' }}">
+                            <a class="sidebar-link" href="{{ url_for('admin.list_users') }}">
+                                <i class="align-middle" data-feather="lock"></i> <span
+                                    class="align-middle">Users</span>
+                            </a>
+                        </li>
+
+                    {% endif %}
 
 
                     <li class="sidebar-header">
@@ -165,8 +187,18 @@ chico sundermann">
                                 class="align-middle">Log out</span>
                         </a>
                     </li>
+                    
 
                 {% endif %}
+                    <li class="sidebar-header">
+                        Fakenodo
+                    </li>
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'fakenodo.fakenodo_index' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('fakenodo.fakenodo_index') }}">
+                            <i class="align-middle" data-feather="database"></i>
+                            <span class="align-middle">Fakenodo Playground</span>
+                        </a>
+                    </li>
 
             </ul>
 

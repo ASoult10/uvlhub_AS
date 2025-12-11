@@ -45,11 +45,25 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.create_table('permissions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('description', sa.String(length=255), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
+    op.create_table('role_permissions',
+    sa.Column('role_id', sa.Integer(), nullable=False),
+    sa.Column('permission_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['permission_id'], ['permissions.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('role_id', 'permission_id')
+    )
     op.create_table('user_roles',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['role_id'], ['roles.id']),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id']),
     sa.PrimaryKeyConstraint('user_id', 'role_id')
     )
     op.create_table('zenodo',
@@ -118,7 +132,7 @@ def upgrade():
         sa.Column('dataset_id', sa.Integer(), nullable=True),
         sa.Column('download_date', sa.DateTime(), nullable=False),
         sa.Column('download_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id']),
+        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -128,7 +142,7 @@ def upgrade():
         sa.Column('dataset_id', sa.Integer(), nullable=True),
         sa.Column('view_date', sa.DateTime(), nullable=False),
         sa.Column('view_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id']),
+        sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -147,7 +161,7 @@ def upgrade():
         sa.Column('file_id', sa.Integer(), nullable=True),
         sa.Column('download_date', sa.DateTime(), nullable=False),
         sa.Column('download_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['file_id'], ['file.id']),
+        sa.ForeignKeyConstraint(['file_id'], ['file.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -157,7 +171,7 @@ def upgrade():
         sa.Column('file_id', sa.Integer(), nullable=False),
         sa.Column('view_date', sa.DateTime(), nullable=True),
         sa.Column('view_cookie', sa.String(length=36), nullable=True),
-        sa.ForeignKeyConstraint(['file_id'], ['file.id']),
+        sa.ForeignKeyConstraint(['file_id'], ['file.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -184,7 +198,7 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('device_info', sa.String(length=256), nullable=False),
         sa.Column('location_info', sa.String(length=256), nullable=False),
-        sa.ForeignKeyConstraint(['parent_jti'], ['token.jti']),
+        sa.ForeignKeyConstraint(['parent_jti'], ['token.jti'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('jti')
@@ -236,6 +250,8 @@ def downgrade():
     op.drop_table('fakenodo')
     op.drop_table('zenodo')
     op.drop_table('user_roles')
+    op.drop_table('role_permissions')
+    op.drop_table('permissions')
     op.drop_table('roles')
     op.drop_table('user')
     op.drop_table('ds_metrics')

@@ -4,19 +4,28 @@ from io import BytesIO
 
 import pyotp
 import qrcode
-from flask import redirect, request
+from flask import g, redirect, request
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from flask_login import current_user, login_user
 from flask_mail import Message
 
 from app import mail
-from app.modules.auth.models import User
+from app.modules.auth.models import Role, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from app.modules.token.services import service as TokenService
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+
+
+def load_user_permissions(user):
+    permissions = set()
+    for role in user.roles:
+        for perm in role.permissions:
+            permissions.add(perm.name)
+    g.current_user_permissions = permissions
+    g.current_user = user
 
 
 class AuthenticationService(BaseService):
@@ -38,6 +47,7 @@ class AuthenticationService(BaseService):
             response = redirect(redirect_url)
             set_access_cookies(response, access_token)
             set_refresh_cookies(response, refresh_token)
+            load_user_permissions(user)
             return response
 
         return False
@@ -71,6 +81,17 @@ class AuthenticationService(BaseService):
             user = self.create(commit=False, **user_data)
             profile_data["user_id"] = user.id
             self.user_profile_repository.create(**profile_data)
+
+            session = self.repository.session
+            role_user = session.query(Role).filter_by(name="user").first()
+            if not role_user:
+                role_user = Role(name="user")
+            session.add(role_user)
+            session.flush()
+
+            if role_user not in user.roles:
+                user.roles.append(role_user)
+
             self.repository.session.commit()
         except Exception as exc:
             self.repository.session.rollback()
@@ -118,7 +139,7 @@ class AuthenticationService(BaseService):
     def send_password_recovery_email(self, to_email, reset_link):
         msg = Message(
             subject="Password Reset Request",
-            sender="noreply@astronomiahub.com",
+            sender="astronomiahub@gmail.com",
             recipients=[to_email],
             body=(
                 "Hello,\n\n"

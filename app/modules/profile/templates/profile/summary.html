@@ -22,6 +22,13 @@
                 <p class="card-text h5"><i class="fa fa-id-card"></i> <strong>Orcid:</strong> {{user_profile.orcid}}</p>
                 <p class="card-text h5"><i class="fa fa-envelope"></i> <strong>Email:</strong> {{user.email}}</p>
                 <p class="card-text h5"><i class="fa fa-database"></i> <strong>Uploaded datasets:</strong> {{ total_datasets }} datasets</p>
+                <p class="card-text h5"><i class="fa fa-calendar"></i> <strong>Roles: </strong>
+                {% for role in roles_name %}
+                    {{ role }}{% if not loop.last %}, {% endif %}
+                {% else %}
+                    No roles assigned
+                {% endfor %}
+                </p>
             </div>
             
         </div>

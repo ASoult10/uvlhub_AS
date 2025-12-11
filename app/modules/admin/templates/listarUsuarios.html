@@ -1,0 +1,172 @@
+{% extends "base_template.html" %}
+
+{% block title %}List Users{% endblock %}
+
+{% block content %}
+<style>
+    /* Contenedor de la tabla */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Poppins', sans-serif;
+        background: #1e1e2f;
+        color: #f5f5f5;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    thead {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    th, td {
+        padding: 12px 20px;
+        text-align: left;
+    }
+
+    tbody tr {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #2b2b3f;
+    }
+
+    tbody tr:hover {
+        background: #3a3a55;
+        transform: scale(1.02);
+    }
+
+    td:last-child {
+        display: flex;
+        gap: 10px;
+    }
+
+    td span.role-badge {
+        background: #ff79c6;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+        margin-right: 5px;
+    }
+
+    td .no-role {
+        font-style: italic;
+        color: #999;
+    }
+
+    /* Botones estilos bonitos */
+    .btn {
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85em;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background: #6a11cb;
+        color: white;
+    }
+    .btn-edit:hover {
+        background: #7e33e0;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: #ff4b5c;
+        color: white;
+    }
+    .btn-delete:hover {
+        background: #ff6b7d;
+        transform: translateY(-2px);
+    }
+
+    /* Estilo para el botón de Crear Usuario */
+    .btn-create {
+        background: linear-gradient(90deg, #7f28a7, #702188);
+        color: white;
+        font-size: 1em; /* Un poco más grande */
+        padding: 10px 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .btn-create:hover {
+        background: #fd68f6;
+        transform: translateY(-2px);
+        color: white;
+        box-shadow: 0 6px 15px rgba(250, 88, 209);
+    }
+
+    /* Contenedor para alinear Título y Botón */
+    .header-container {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="header-container">
+    <h2 style="margin: 0; font-family: 'Poppins', sans-serif; color: #000000;">Users Dashboard</h2>
+    <a href="{{ url_for('admin.create_user') }}" class="btn btn-create">
+        + Create New User
+    </a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr onclick="window.location.href='/users/{{ user.id }}'">
+            <td>{{ user.id }}</td>
+            <td>{{ user.profile.name or "N/A" }}</td>
+            <td>{{ user.profile.surname or "N/A" }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+                {% if user.roles %}
+                    {% for role in user.roles %}
+                        <span class="role-badge">{{ role.name }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="no-role">No roles assigned</span>
+                {% endif %}
+            </td>
+            <td onclick="event.stopPropagation();">
+                <a href="/users/{{ user.id }}/edit" class="btn btn-edit">Edit</a>
+                <button type="button" class="btn btn-delete" onclick="confirmDelete('{{ user.id }}')">Delete</button>
+                <form id="delete-form-{{ user.id }}" action="/users/{{ user.id }}/delete" method="POST" style="display:none;">
+                    {{ users_forms[user.id].hidden_tag() }}
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function confirmDelete(userId) {
+        if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+            document.getElementById('delete-form-' + userId).submit();
+        }
+    }
+</script>
+{% endblock %}

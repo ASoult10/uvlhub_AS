@@ -44,7 +44,7 @@ class GenericResource(Resource):
         return (
             {
                 "message": f"{
-                self.model.__name__} created successfully",
+                    self.model.__name__} created successfully",
                 "id": item.id,
             },
             201,

@@ -1,3 +1,5 @@
+import sys
+
 from app.modules.profile.repositories import UserProfileRepository
 from core.services.BaseService import BaseService
 
@@ -8,6 +10,8 @@ class UserProfileService(BaseService):
 
     def update_profile(self, user_profile_id, form):
         if form.validate():
+            print("Data from form: {form.data}", file=sys.stderr, flush=True)
+
             updated_instance = self.update(user_profile_id, **form.data)
             return updated_instance, None
 

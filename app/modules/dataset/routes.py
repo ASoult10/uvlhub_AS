@@ -327,3 +327,9 @@ def get_unsynchronized_dataset(dataset_id):
         hubfile_service=hubfile_service,
         current_user=current_user,
     )
+
+
+@dataset_bp.route("/datasets/import", methods=["GET"])
+@login_required
+def import_model_page():
+    return render_template("dataset/import_model.html")

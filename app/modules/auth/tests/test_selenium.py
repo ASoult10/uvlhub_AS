@@ -4,6 +4,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+from app import create_app
+from app.modules.auth.services import AuthenticationService
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
@@ -46,3 +48,86 @@ def test_login_and_check_element():
 
         # Close the browser
         close_driver(driver)
+
+
+# RECOVER MY PASSWORD TESTS
+
+
+def test_recover_password_existing_email():
+
+    driver = initialize_driver()
+
+    try:
+
+        driver.get(f"http://127.0.0.1:5000/")
+
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-link > .feather-log-in").click()
+        driver.find_element(By.LINK_TEXT, "Forgot your password?").click()
+
+        email_field = driver.find_element(By.ID, "email")
+        email_field.send_keys("user1@example.com")
+
+        driver.find_element(By.ID, "submit").click()
+
+        print("Recover password with existing email PASSED")
+
+    finally:
+        close_driver(driver)
+
+
+def test_recover_password_nonexistent_email():
+
+    driver = initialize_driver()
+
+    try:
+        driver.get(f"http://127.0.0.1:5000/")
+
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-nav").click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(6) .align-middle:nth-child(2)").click()
+        driver.find_element(By.LINK_TEXT, "Forgot your password?").click()
+
+        email_field = driver.find_element(By.ID, "email")
+        email_field.send_keys("noexist@gmail.com")
+
+        driver.find_element(By.ID, "submit").click()
+
+        print("Recover password with NON-existing email PASSED")
+
+    finally:
+        close_driver(driver)
+
+
+def test_reset_password_valid_token():
+
+    driver = initialize_driver()
+
+    try:
+        app = create_app("development")
+        with app.app_context():
+            service = AuthenticationService()
+
+            user = service.repository.get_by_email("user1@example.com")
+            if not user:
+                user = service.create_with_profile(
+                    name="Test", surname="User", email="user1@example.com", password="1234"
+                )
+
+            token = user.generate_reset_token()
+
+        driver.get(f"http://127.0.0.1:5000/reset-password/{token}")
+
+        driver.find_element(By.ID, "password").send_keys("1234")
+        driver.find_element(By.ID, "confirm_password").send_keys("1234")
+        driver.find_element(By.ID, "submit").click()
+
+        print("Reset password using valid token → OK")
+
+    finally:
+        close_driver(driver)
+
+
+if __name__ == "__main__":
+    test_login_and_check_element()
+    test_recover_password_existing_email()
+    test_recover_password_nonexistent_email()
+    test_reset_password_valid_token()

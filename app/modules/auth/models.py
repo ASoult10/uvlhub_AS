@@ -11,8 +11,8 @@ from app import db
 # Tabla asociativa many-to-many entre usuarios y roles
 user_roles = db.Table(
     "user_roles",
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    db.Column("role_id", db.Integer, db.ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
+    db.Column("role_id", db.Integer, db.ForeignKey("roles.id"), primary_key=True),
 )
 
 
@@ -23,8 +23,29 @@ class Role(db.Model):
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    # Relación: roles del usuario
+    permissions = db.relationship(
+        "Permission", secondary="role_permissions", backref=db.backref("roles", lazy="dynamic"), lazy="dynamic"
+    )
+
     def __repr__(self):
         return f"<Role {self.name}>"
+
+
+class Permission(db.Model):
+    __tablename__ = "permissions"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+
+    def __repr__(self):
+        return f"<Permission {self.name}>"
+
+
+class role_permissions(db.Model):
+    __tablename__ = "role_permissions"
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+    permission_id = db.Column(db.Integer, db.ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
 
 
 class User(db.Model, UserMixin):
@@ -36,8 +57,8 @@ class User(db.Model, UserMixin):
     has2FA = db.Column(db.Boolean, nullable=False, default=False)  # Indicates if 2FA is enabled
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
-    data_sets = db.relationship("DataSet", backref="user", lazy=True)
-    profile = db.relationship("UserProfile", backref="user", uselist=False)
+    data_sets = db.relationship("DataSet", backref="user", lazy=True, cascade="all, delete-orphan")
+    profile = db.relationship("UserProfile", backref="user", uselist=False, cascade="all, delete-orphan")
     reset_token = db.Column(db.String(256), nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)
 
@@ -116,3 +137,13 @@ class User(db.Model, UserMixin):
             role_obj = role
         if role_obj and self.has_role(role_obj.name):
             self.roles.remove(role_obj)
+
+    def has_permission(self, permission_name: str) -> bool:
+        for role in self.roles:
+            for p in role.permissions.all():
+                if p.name == permission_name:
+                    return True
+        return False
+
+    def role_names(self):
+        return [role.name for role in self.roles.all()]

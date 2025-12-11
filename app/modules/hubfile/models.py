@@ -65,7 +65,7 @@ class HubfileViewRecord(db.Model):
     __tablename__ = "file_view_record"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    file_id = db.Column(db.Integer, db.ForeignKey("file.id"), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="CASCADE"), nullable=False)
     view_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     view_cookie = db.Column(db.String(36))
 
@@ -77,7 +77,7 @@ class HubfileDownloadRecord(db.Model):
     __tablename__ = "file_download_record"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    file_id = db.Column(db.Integer, db.ForeignKey("file.id"))
+    file_id = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="CASCADE"))
     download_date = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     download_cookie = db.Column(db.String(36), nullable=False)
 
