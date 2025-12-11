@@ -1,9 +1,7 @@
 import pytest
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
@@ -27,7 +25,8 @@ def wait_for_js_variable(driver, var_name, timeout=10):
         return None
 
 
-#Pruebas de API
+# Pruebas de API
+
 
 def test_01_render_main_page(driver):
     host = get_host_for_selenium_testing()
@@ -197,7 +196,8 @@ def test_11_delete_nonexistent_deposition(driver):
     assert error_delete_status == 404
 
 
-#Pruebas de interfaz gráfica
+# Pruebas de interfaz gráfica
+
 
 def test_ui_create_deposition(driver):
     host = get_host_for_selenium_testing()
@@ -225,7 +225,7 @@ def test_ui_get_deposition_detail(driver):
     ul = driver.find_element("id", "depositions-list")
     items = ul.find_elements("tag name", "li")
     # Tomar el primer ID de la lista
-    first_id = items[0].text.split(',')[0].split(':')[1].strip()
+    first_id = items[0].text.split(",")[0].split(":")[1].strip()
     input_id = driver.find_element("id", "dep-id")
     input_id.clear()
     input_id.send_keys(first_id)
