@@ -1,7 +1,8 @@
-from locust import HttpUser, TaskSet, task
+import random
+
+from locust import HttpUser, task
 
 from core.environment.host import get_host_for_locust_testing
-import random
 
 
 class FakenodoUser(HttpUser):
@@ -13,7 +14,9 @@ class FakenodoUser(HttpUser):
     """
 
     host = get_host_for_locust_testing()
-    wait_time = lambda self: random.uniform(5, 9)   # Sustituye min_wait/max_wait
+
+    def wait_time(self):
+        return random.uniform(5, 9)  # Sustituye min_wait/max_wait
 
     # -------------------------------------------------------
     # Inicio: comportamientos equivalentes a tu antiguo TaskSet
@@ -21,7 +24,7 @@ class FakenodoUser(HttpUser):
 
     def on_start(self):
         self.created_ids = []
-        self.index()   # Igual que antes
+        self.index()  # Igual que antes
 
     # ---------------------- TAREAS -------------------------
 
@@ -41,7 +44,7 @@ class FakenodoUser(HttpUser):
 
     @task(3)
     def create_deposition(self):
-        meta = {"title": f"Test {random.randint(1,10000)}"}
+        meta = {"title": f"Test {random.randint(1, 10000)}"}
         response = self.client.post("/fakenodo/api/deposit/depositions", json={"metadata": meta})
         if response.status_code == 201:
             dep = response.json()
@@ -57,18 +60,13 @@ class FakenodoUser(HttpUser):
     def upload_file(self):
         if self.created_ids:
             dep_id = random.choice(self.created_ids)
-            self.client.post(
-                f"/fakenodo/api/deposit/depositions/{dep_id}/files",
-                data={"filename": "file.txt"}
-            )
+            self.client.post(f"/fakenodo/api/deposit/depositions/{dep_id}/files", data={"filename": "file.txt"})
 
     @task(2)
     def publish_deposition(self):
         if self.created_ids:
             dep_id = random.choice(self.created_ids)
-            self.client.post(
-                f"/fakenodo/api/deposit/depositions/{dep_id}/actions/publish"
-            )
+            self.client.post(f"/fakenodo/api/deposit/depositions/{dep_id}/actions/publish")
 
     @task(1)
     def delete_deposition(self):
@@ -78,19 +76,15 @@ class FakenodoUser(HttpUser):
             if response.status_code in [200, 404]:
                 response.success()
             else:
-                response.failure(f"Unexpected status code: {response.status_code}")
-
-
+                response.failure(
+                    f"Unexpected status code: {
+                        response.status_code}"
+                )
 
     @task(1)
     def error_cases(self):
         bad_id = 999999
         self.client.get(f"/fakenodo/api/deposit/depositions/{bad_id}")
-        self.client.post(
-            f"/fakenodo/api/deposit/depositions/{bad_id}/files",
-            data={"filename": "file.txt"}
-        )
-        self.client.post(
-            f"/fakenodo/api/deposit/depositions/{bad_id}/actions/publish"
-        )
+        self.client.post(f"/fakenodo/api/deposit/depositions/{bad_id}/files", data={"filename": "file.txt"})
+        self.client.post(f"/fakenodo/api/deposit/depositions/{bad_id}/actions/publish")
         self.client.delete(f"/fakenodo/api/deposit/depositions/{bad_id}")
