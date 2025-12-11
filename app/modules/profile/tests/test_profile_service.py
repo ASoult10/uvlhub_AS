@@ -1,12 +1,12 @@
 # tests/test_profile_service.py
-from flask import Flask
 import pytest
+from flask import Flask
+from werkzeug.datastructures import MultiDict
+
 from app import db
 from app.modules.profile.forms import UserProfileForm
 from app.modules.profile.models import UserProfile
 from app.modules.profile.services import UserProfileService
-from werkzeug.datastructures import MultiDict
-
 
 
 @pytest.fixture
@@ -23,6 +23,7 @@ def app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     from app import db  # your SQLAlchemy instance
+
     db.init_app(app)
 
     with app.app_context():
@@ -39,18 +40,11 @@ def app_context(app):
 
 
 def test_update_profile_valid(service, app_context):
-    user = UserProfile(id=1, user_id= 1, name="Old", surname="User", orcid="", affiliation="Old Uni")
+    user = UserProfile(id=1, user_id=1, name="Old", surname="User", orcid="", affiliation="Old Uni")
     db.session.add(user)
     db.session.commit()
 
-    form = UserProfileForm(
-        data={
-            "name": "John",
-            "surname": "Doe",
-            "orcid": "",
-            "affiliation": "Uni"
-        }
-    )
+    form = UserProfileForm(data={"name": "John", "surname": "Doe", "orcid": "", "affiliation": "Uni"})
 
     updated, error = service.update_profile(1, form)
 
@@ -62,14 +56,7 @@ def test_update_profile_valid(service, app_context):
 
 def test_update_profile_invalid(service, app_context):
 
-    form = UserProfileForm(
-        data={
-            "name": "",
-            "surname": "",
-            "orcid": "",
-            "affiliation": "Uni"
-        }
-    )
+    form = UserProfileForm(data={"name": "", "surname": "", "orcid": "", "affiliation": "Uni"})
 
     updated, error = service.update_profile(1, form)
 
@@ -80,23 +67,17 @@ def test_update_profile_invalid(service, app_context):
 
 
 def test_update_profile_with_invalid_orcid(service, app_context):
-    user = UserProfile(id=1, user_id= 1, name="Old", surname="User", orcid="", affiliation="Old Uni")
+    user = UserProfile(id=1, user_id=1, name="Old", surname="User", orcid="", affiliation="Old Uni")
     db.session.add(user)
     db.session.commit()
 
-
     form = UserProfileForm(
-    formdata=MultiDict({
-        "name": "John",
-        "surname": "Doe",
-        "orcid": "1234-5678-999",  # invalid
-        "affiliation": "Uni"
-    })
+        formdata=MultiDict(
+            {"name": "John", "surname": "Doe", "orcid": "1234-5678-999", "affiliation": "Uni"}  # invalid
+        )
     )
-
 
     updated, error = service.update_profile(1, form)
     assert updated is None
     assert error is not None
     assert "orcid" in error
-

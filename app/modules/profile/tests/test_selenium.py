@@ -1,11 +1,9 @@
-import time
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 
 from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import initialize_driver, close_driver
+from core.selenium.common import close_driver, initialize_driver
+
 
 def test_edit_profile_page():
     """Test que permite editar el perfil de un usuario"""
@@ -49,6 +47,7 @@ def test_edit_profile_page():
 
     finally:
         close_driver(driver)
+
 
 if __name__ == "__main__":
     test_edit_profile_page()

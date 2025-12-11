@@ -8,8 +8,7 @@ class UserProfileForm(FlaskForm):
     surname = StringField("Surname", validators=[DataRequired(), Length(max=100)])
     orcid = StringField(
         "ORCID",
-        filters=[lambda x: x.strip() if x else x],  
-
+        filters=[lambda x: x.strip() if x else x],
         validators=[
             Optional(),
             Regexp(r"^\d{4}-\d{4}-\d{4}-\d{4}$", message="Invalid ORCID format"),

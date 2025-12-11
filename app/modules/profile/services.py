@@ -1,5 +1,5 @@
 import sys
-from flask import current_app
+
 from app.modules.profile.repositories import UserProfileRepository
 from core.services.BaseService import BaseService
 
