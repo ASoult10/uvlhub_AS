@@ -1,11 +1,135 @@
 {% extends "base_template.html" %}
 
-{% block title %}View fakenodo{% endblock %}
+{% block title %}Fakenodo API Playground{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    <h1 class="h2 mb-3"><b>Fakenodo API Playground</b></h1>
 
-{% endblock %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Crear depósito</h3>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-8">
+                    <input type="text" id="dep-title" class="form-control" placeholder="Título del depósito">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" onclick="createDeposition()">
+                        <i data-feather="plus"></i> Crear depósito
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% block scripts %}
-    <script src="{{ url_for('fakenodo.scripts') }}"></script>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Depósitos existentes</h3>
+            <button class="btn btn-outline-primary mb-3" onclick="listDepositions()">
+                <i data-feather="refresh-cw"></i> Actualizar lista
+            </button>
+            <ul id="depositions-list" class="list-group"></ul>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Acciones sobre depósito</h3>
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <input type="number" id="dep-id" class="form-control" placeholder="ID del depósito">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="getDeposition()">
+                        <i data-feather="search"></i> Ver detalles
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="file-name" class="form-control" placeholder="Nombre de archivo">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-success w-100 mb-2" onclick="uploadFile()">
+                        <i data-feather="upload"></i> Subir archivo
+                    </button>
+                    <button class="btn btn-outline-warning w-100 mb-2" onclick="publishDeposition()">
+                        <i data-feather="check"></i> Publicar
+                    </button>
+                    <button class="btn btn-outline-danger w-100" onclick="deleteDeposition()">
+                        <i data-feather="trash-2"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+            <pre id="deposition-detail" class="bg-light p-3 rounded" style="min-height: 80px"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+function createDeposition() {
+    const title = document.getElementById('dep-title').value;
+    fetch('/fakenodo/api/deposit/depositions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({metadata: {title}})
+    })
+    .then(r => r.json())
+    .then(dep => {
+        alert('Depósito creado ID: ' + dep.id);
+        listDepositions();
+    });
+}
+
+function listDepositions() {
+    fetch('/fakenodo/api/deposit/depositions')
+    .then(r => r.json())
+    .then(data => {
+        const ul = document.getElementById('depositions-list');
+        ul.innerHTML = '';
+        data.depositions.forEach(dep => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = `ID: ${dep.id}, Título: ${dep.metadata.title || 'N/A'}`;
+            ul.appendChild(li);
+        });
+    });
+}
+
+function getDeposition() {
+    const id = document.getElementById('dep-id').value;
+    fetch(`/fakenodo/api/deposit/depositions/${id}`)
+    .then(r => r.json())
+    .then(dep => {
+        document.getElementById('deposition-detail').textContent = JSON.stringify(dep, null, 2);
+    });
+}
+
+function uploadFile() {
+    const id = document.getElementById('dep-id').value;
+    const filename = document.getElementById('file-name').value || 'test.txt';
+    const fd = new FormData();
+    fd.append('filename', filename);
+    fetch(`/fakenodo/api/deposit/depositions/${id}/files`, {method:'POST', body: fd})
+    .then(r => r.json())
+    .then(res => alert('Archivo subido: ' + res.filename));
+}
+
+function publishDeposition() {
+    const id = document.getElementById('dep-id').value;
+    fetch(`/fakenodo/api/deposit/depositions/${id}/actions/publish`, {method:'POST'})
+    .then(r => r.json())
+    .then(res => alert('Publicado. DOI: ' + (res.doi || res.message)));
+}
+
+function deleteDeposition() {
+    const id = document.getElementById('dep-id').value;
+    fetch(`/fakenodo/api/deposit/depositions/${id}`, {method:'DELETE'})
+    .then(r => r.json())
+    .then(res => alert(res.message));
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    feather.replace();
+    listDepositions();
+});
+</script>
 {% endblock %}
