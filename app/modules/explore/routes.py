@@ -1,10 +1,11 @@
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template, request, url_for
 
 from app.modules.dataset.models import Author, DSMetaData
 from app.modules.dataset.services import DataSetService
 from app.modules.explore import explore_bp
 from app.modules.explore.forms import ExploreForm
 from app.modules.explore.services import ExploreService
+from app.modules.profile.models import UserProfile
 
 
 @explore_bp.route("/explore", methods=["GET", "POST"])
@@ -16,7 +17,7 @@ def index():
         tags = set()
         for (tag_string,) in tag_strings:
             if tag_string:
-                tags.update(tag.strip() for tag in tag_string.split(','))
+                tags.update(tag.strip() for tag in tag_string.split(","))
         tags = sorted(list(tags))
         form = ExploreForm()
         return render_template("explore/index.html", form=form, query=query, authors=authors, tags=tags)
@@ -25,11 +26,12 @@ def index():
         criteria = request.get_json()
         datasets = ExploreService().filter(**criteria)
 
-        # Add recommendations for each dataset
         dataset_service = DataSetService()
         result = []
         for dataset in datasets:
             dataset_dict = dataset.to_dict()
+
+            # Add recommendations for each dataset
             recommendations = dataset_service.get_recommendations(dataset.id, limit=3)
             dataset_dict["recommendations"] = [
                 {
@@ -41,6 +43,19 @@ def index():
                 }
                 for rec in recommendations
             ]
+
+            # Add creator info for each dataset
+            dataset_creator = UserProfile.query.filter_by(user_id=dataset.user_id).first()
+            dataset_dict["creator"] = (
+                {
+                    "name": dataset_creator.name,
+                    "surname": dataset_creator.surname,
+                    "profile_url": url_for("profile.author_profile", user_id=dataset.user_id),
+                }
+                if dataset_creator
+                else None
+            )
+
             result.append(dataset_dict)
 
         return jsonify(result)

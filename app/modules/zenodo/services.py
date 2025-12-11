@@ -87,7 +87,8 @@ class ZenodoService(BaseService):
             return jsonify(
                 {
                     "success": False,
-                    "messages": f"Failed to create test deposition on Zenodo. Response code: {response.status_code}",
+                    "messages": f"Failed to create test deposition on Zenodo. Response code: {
+                        response.status_code}",
                 }
             )
 
@@ -108,7 +109,10 @@ class ZenodoService(BaseService):
         logger.info(f"Response Content: {response.content}")
 
         if response.status_code != 201:
-            messages.append(f"Failed to upload test file to Zenodo. Response code: {response.status_code}")
+            messages.append(
+                f"Failed to upload test file to Zenodo. Response code: {
+                    response.status_code}"
+            )
             success = False
 
         # Step 3: Delete the deposition
@@ -143,7 +147,10 @@ class ZenodoService(BaseService):
         """
 
         logger.info("Dataset sending to Zenodo...")
-        logger.info(f"Publication type...{dataset.ds_meta_data.publication_type.value}")
+        logger.info(
+            f"Publication type...{
+                dataset.ds_meta_data.publication_type.value}"
+        )
 
         metadata = {
             "title": dataset.ds_meta_data.title,
@@ -173,7 +180,8 @@ class ZenodoService(BaseService):
 
         response = requests.post(self.ZENODO_API_URL, params=self.params, json=data, headers=self.headers)
         if response.status_code != 201:
-            error_message = f"Failed to create deposition. Error details: {response.json()}"
+            error_message = f"Failed to create deposition. Error details: {
+                response.json()}"
             raise Exception(error_message)
         return response.json()
 
@@ -193,14 +201,22 @@ class ZenodoService(BaseService):
         filename = hubfile.name
         data = {"name": filename}
         user_id = current_user.id if user is None else user.id
-        file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}", filename)
+        file_path = os.path.join(
+            uploads_folder_name(),
+            f"user_{
+                str(user_id)}",
+            f"dataset_{
+                dataset.id}",
+            filename,
+        )
         files = {"file": open(file_path, "rb")}
 
         publish_url = f"{self.ZENODO_API_URL}/{deposition_id}/files"
         response = requests.post(publish_url, params=self.params, data=data, files=files)
         files["file"].close()
         if response.status_code != 201:
-            error_message = f"Failed to upload files. Error details: {response.json()}"
+            error_message = f"Failed to upload files. Error details: {
+                response.json()}"
             raise Exception(error_message)
         return response.json()
 

@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy import asc, desc
 
 from app import db
-from app.modules.dataset.models_comments import DSComment, CommentStatus
+from app.modules.dataset.models_comments import CommentStatus, DSComment
 from core.repositories.BaseRepository import BaseRepository
 
 logger = logging.getLogger(__name__)

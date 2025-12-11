@@ -1,13 +1,30 @@
 import base64
+from unittest.mock import patch
 
 import pyotp
 import pytest
 from flask import url_for
-from app import db
 
+from app import db, limiter
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
+
+
+@pytest.fixture
+def app_with_rate_limit(test_client):
+    """
+    Fixture to temporarily enable rate limiting for a test.
+    """
+    # Habilita el limitador para el test
+    limiter.enabled = True
+    # Reinicia el estado del limitador para asegurar un estado limpio
+    limiter.reset()
+
+    yield test_client
+
+    # Deshabilita el limitador después del test
+    limiter.enabled = False
 
 
 @pytest.fixture(scope="module")
@@ -17,10 +34,24 @@ def test_client(test_client):
     """
     with test_client.application.app_context():
         # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+        # DO NOT FORGET to use db.session.add(<element>) and
+        # db.session.commit() to save the data.
         pass
 
     yield test_client
+
+
+@pytest.fixture(scope="function")
+def test_isolated_client(test_isolated_client):
+    """
+    Extends the test_isolated_client fixture to add additional specific data for module testing.
+    """
+    with test_isolated_client.application.app_context():
+        # Add HERE new elements to the database that you want to exist in the test context.
+        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
+        pass
+
+    yield test_isolated_client
 
 
 def test_login_success(test_client):
@@ -53,9 +84,70 @@ def test_login_unsuccessful_bad_password(test_client):
     test_client.get("/logout", follow_redirects=True)
 
 
+def test_login_rate_limit(app_with_rate_limit):
+    """
+    Tests that the login route is rate-limited after 3 failed POST attempts.
+    """
+    # The first 3 attempts should be allowed (status 200, re-rendering the
+    # form)
+    for _ in range(3):
+        response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="badpassword"))
+        assert response.status_code == 200
+        assert b"Invalid credentials" in response.data
+
+    # The 4th attempt should be rate-limited (status 429)
+    response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="badpassword"))
+    assert response.status_code == 429
+    assert b"You have exceeded the login attempt limit" in response.data
+
+
+def test_login_rate_limit_resets_on_success(app_with_rate_limit):
+    """
+    Tests that the rate limit is reset after a successful login.
+    """
+    # Make 2 failed attempts
+    for _ in range(2):
+        response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
+        assert response.status_code == 200
+
+    # Make a successful attempt
+    response = app_with_rate_limit.post(
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
+    )
+    assert response.request.path != url_for("auth.login"), "Successful login failed"
+
+    # Logout
+    app_with_rate_limit.get("/logout", follow_redirects=True)
+
+    # The rate limit should now be reset. We should have 3 new attempts.
+    for i in range(3):
+        response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
+        assert (
+            response.status_code == 200
+        ), f"Attempt {
+            i + 1} should have been allowed"
+
+    # The 4th attempt should now be blocked
+    response = app_with_rate_limit.post("/login", data=dict(email="test@example.com", password="wrongpassword"))
+    assert response.status_code == 429
+
+
+def test_login_get_requests_not_limited(app_with_rate_limit):
+    """
+    Tests that GET requests to the login page do not trigger the rate limit.
+    """
+    for _ in range(5):
+        response = app_with_rate_limit.get("/login")
+        assert response.status_code == 200
+
+    # A subsequent POST should still be allowed
+    response = app_with_rate_limit.post("/login", data=dict(email="bad@example.com", password="bad"))
+    assert response.status_code == 200
+
+
 def test_signup_user_no_name(test_client):
     response = test_client.post(
-        "/signup", data=dict(surname="Foo", email="test@example.com", password="test1234"), follow_redirects=True
+        "/signup/", data=dict(surname="Foo", email="test@example.com", password="test1234"), follow_redirects=True
     )
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert b"This field is required" in response.data, response.data
@@ -64,7 +156,7 @@ def test_signup_user_no_name(test_client):
 def test_signup_user_unsuccessful(test_client):
     email = "test@example.com"
     response = test_client.post(
-        "/signup", data=dict(name="Test", surname="Foo", email=email, password="test1234"), follow_redirects=True
+        "/signup/", data=dict(name="Test", surname="Foo", email=email, password="test1234"), follow_redirects=True
     )
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert f"Email {email} in use".encode("utf-8") in response.data
@@ -72,7 +164,7 @@ def test_signup_user_unsuccessful(test_client):
 
 def test_signup_user_successful(test_client):
     response = test_client.post(
-        "/signup",
+        "/signup/",
         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
         follow_redirects=True,
     )
@@ -108,22 +200,26 @@ def test_service_create_with_profile_fail_no_password(clean_database):
     assert UserProfileRepository().count() == 0
 
 
-#2FA
+# 2FA
+
 
 def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
     qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
 
-    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    # Should be a base64 string that decodes to a PNG image (PNG signature
+    # starts with 0x89 0x50 0x4E 0x47)
     assert isinstance(qr_b64, str)
     img_bytes = base64.b64decode(qr_b64)
     assert img_bytes[:4] == b"\x89PNG"
 
+
 def test_generate_qr_code_uri():
     uri = "otpauth://totp/test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Test"
     qr_b64 = AuthenticationService().generate_qr_code_uri(uri)
 
-    # Should be a base64 string that decodes to a PNG image (PNG signature starts with 0x89 0x50 0x4E 0x47)
+    # Should be a base64 string that decodes to a PNG image (PNG signature
+    # starts with 0x89 0x50 0x4E 0x47)
     assert isinstance(qr_b64, str)
     img_bytes = base64.b64decode(qr_b64)
     assert img_bytes[:4] == b"\x89PNG"
@@ -142,13 +238,15 @@ def test_check_temp_code_success():
 
     # Generate current TOTP code
     totp = pyotp.TOTP(secret).now()
-    
+
     # Test that the code validates when user is logged in
     # We simulate this by using the service with a mock current_user context
     from unittest.mock import patch
-    with patch('app.modules.auth.services.current_user', user):
+
+    with patch("app.modules.auth.services.current_user", user):
         assert AuthenticationService().check_temp_code(totp) is True
-        
+
+
 def test_2fa_verify_route_invalid_code(test_client, clean_database):
     # Create a user
     email = "2fa_test2@example.com"
@@ -170,3 +268,75 @@ def test_2fa_verify_route_invalid_code(test_client, clean_database):
     resp = test_client.post("/2fa-setup/verify", data=dict(code="000000"), follow_redirects=True)
     assert resp.request.path == url_for("auth.two_factor_setup")
     assert b"Invalid verification code" in resp.data
+
+
+# Password recovery tests
+
+
+def test_recover_password_route_success(test_isolated_client):
+    email = "recover_password_test@example.com"
+    password = "test1234"
+
+    AuthenticationService().create_with_profile(name="Recover", surname="Password", email=email, password=password)
+    db.session.commit()
+
+    with patch("app.modules.auth.routes.authentication_service.send_password_recovery_email") as mock_send_email:
+
+        resp = test_isolated_client.post(
+            "/recover-password/", data={"email": email, "submit": True}, follow_redirects=True
+        )
+
+        mock_send_email.assert_called_once()
+
+        assert b"A password recovery email has been sent" in resp.data
+
+
+def test_recover_password_nonexistent_email(test_isolated_client):
+    email = "fake@example.com"
+
+    with patch("app.modules.auth.routes.authentication_service.send_password_recovery_email") as mock_send_email:
+        resp = test_isolated_client.post(
+            "/recover-password/", data={"email": email, "submit": True}, follow_redirects=True
+        )
+
+        mock_send_email.assert_not_called()
+
+        assert b"The email address is not registered in our system." in resp.data
+
+
+def test_reset_password_get_valid_token(test_isolated_client):
+    service = AuthenticationService()
+
+    user = service.create_with_profile(
+        name="Recover", surname="Password", email="recovermypassword@example.com", password="1234"
+    )
+    db.session.commit()
+    token = user.generate_reset_token()
+    db.session.commit()
+
+    resp = test_isolated_client.get(f"/reset-password/{token}")
+
+    assert resp.status_code == 200
+    assert b"Reset Password" in resp.data
+
+
+def test_reset_password_post_valid_token(test_isolated_client):
+    service = AuthenticationService()
+
+    user = service.create_with_profile(
+        name="Recover", surname="Password", email="recovermypassword@example.com", password="1234"
+    )
+    db.session.commit()
+    token = user.generate_reset_token()
+    db.session.commit()
+
+    resp = test_isolated_client.post(
+        f"/reset-password/{token}", data={"password": "newpass", "confirm_password": "newpass"}, follow_redirects=True
+    )
+
+    user = UserRepository().get_by_id(user.id)
+
+    assert user.check_password("newpass")
+    assert user.reset_token is None
+    assert user.reset_token_expiration is None
+    assert b"password has been reset successfully" in resp.data

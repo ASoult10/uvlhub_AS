@@ -7,16 +7,16 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from app import db
 
 
-class PublicationType(Enum):  # se cambia al tipo de publicación en astronomía
-    NONE = "none"
-    OBSERVATION_DATA = "observation_data"
-    DATA_PAPER = "data_paper"
-    JOURNAL_ARTICLE = "journal_article"
-    PREPRINT = "preprint"
-    TECHNICAL_REPORT = "technical_report"
-    THESIS = "thesis"
-    SOFTWARE = "software"
-    OTHER = "other"
+class PublicationType(Enum):
+    NONE = "NONE"
+    OBSERVATION_DATA = "OBSERVATION_DATA"
+    DATA_PAPER = "DATA_PAPER"
+    JOURNAL_ARTICLE = "JOURNAL_ARTICLE"
+    PREPRINT = "PREPRINT"
+    TECHNICAL_REPORT = "TECHNICAL_REPORT"
+    THESIS = "THESIS"
+    SOFTWARE = "SOFTWARE"
+    OTHER = "OTHER"
 
 
 class Author(db.Model):
@@ -33,7 +33,7 @@ class Author(db.Model):
 class Observation(db.Model):  # es nueva
     id = db.Column(db.Integer, primary_key=True)
     object_name = db.Column(db.String(255), nullable=False)
-    ra = db.Column(db.String(64), nullable=False)   # hh:mm:ss.sss
+    ra = db.Column(db.String(64), nullable=False)  # hh:mm:ss.sss
     dec = db.Column(db.String(64), nullable=False)  # +/-dd:mm:ss.sss
     magnitude = db.Column(db.Float, nullable=True)
     observation_date = db.Column(db.Date, nullable=False)
@@ -61,7 +61,9 @@ class DSMetrics(db.Model):
     number_of_features = db.Column(db.String(120))
 
     def __repr__(self):
-        return f"DSMetrics<models={self.number_of_models}, features={self.number_of_features}>"
+        return f"DSMetrics<models={
+            self.number_of_models}, features={
+            self.number_of_features}>"
 
 
 class DSMetaData(db.Model):
@@ -101,6 +103,7 @@ class DataSet(db.Model):
 
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    download_count = db.Column(db.Integer, default=0, nullable=False)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
 
@@ -128,7 +131,8 @@ class DataSet(db.Model):
 
     def get_zenodo_url(self):
         return (
-            f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}"
+            f"https://zenodo.org/record/{
+            self.ds_meta_data.deposition_id}"
             if self.ds_meta_data.dataset_doi
             else None
         )
@@ -180,7 +184,7 @@ class DataSet(db.Model):
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id", ondelete="CASCADE"))
     download_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     download_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
 
@@ -196,12 +200,16 @@ class DSDownloadRecord(db.Model):
 class DSViewRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id", ondelete="CASCADE"))
     view_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     view_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
 
     def __repr__(self):
-        return f"<View id={self.id} dataset_id={self.dataset_id} date={self.view_date} cookie={self.view_cookie}>"
+        return f"<View id={
+            self.id} dataset_id={
+            self.dataset_id} date={
+            self.view_date} cookie={
+                self.view_cookie}>"
 
 
 class DOIMapping(db.Model):

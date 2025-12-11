@@ -15,6 +15,46 @@ def test_app():
         yield test_app
 
 
+@pytest.fixture(scope="function")
+def test_isolated_client(test_app):
+    # Estado limpio de BD antes del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+    with test_app.test_client() as client:
+        # Reset sesión
+        client.get("/logout", follow_redirects=True)
+        yield client
+
+    # Limpieza después del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+
+@pytest.fixture(scope="function")
+def test_isolated_client(test_app):
+    # Estado limpio de BD antes del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+    with test_app.test_client() as client:
+        # Reset sesión
+        client.get("/logout", follow_redirects=True)
+        yield client
+
+    # Limpieza después del test
+    db.session.remove()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+
 @pytest.fixture(scope="module")
 def test_client(test_app):
 

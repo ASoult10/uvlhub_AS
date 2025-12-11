@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
-from app.modules.dataset.models_comments import DSComment, CommentStatus
+from app.modules.dataset.models_comments import CommentStatus, DSComment
 from app.modules.dataset.repositories import DataSetRepository
 from app.modules.dataset.repositories_comments import DSCommentRepository
 from core.services.BaseService import BaseService
@@ -20,7 +20,7 @@ class DSCommentService(BaseService):
                 return bool(getattr(user, "is_admin"))
             except Exception:
                 pass
-        admin_emails = (os.getenv("ADMIN_EMAILS", "") or "")
+        admin_emails = os.getenv("ADMIN_EMAILS", "") or ""
         admin_list = [e.strip().lower() for e in admin_emails.split(",") if e.strip()]
         return bool(user and user.email.lower() in admin_list)
 
@@ -51,7 +51,9 @@ class DSCommentService(BaseService):
             dataset_id, include_hidden=False, include_pending=False, newest_first=True
         )
 
-    def list_all_for_moderation(self, dataset_id: int, requester: User) -> Tuple[Optional[List[DSComment]], Optional[str]]:
+    def list_all_for_moderation(
+        self, dataset_id: int, requester: User
+    ) -> Tuple[Optional[List[DSComment]], Optional[str]]:
         dataset = self.dataset_repository.get_by_id(dataset_id)
         if not dataset:
             return None, "Dataset not found"

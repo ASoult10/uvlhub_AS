@@ -39,11 +39,17 @@ def selenium(module):
             # ejecutamos todos los módulos uno tras otro
             for module_name in module_names:
                 test_command = ["python", "-m", module_name]
-                click.echo(f"Running Selenium tests with command: {' '.join(test_command)}")
+                click.echo(
+                    f"Running Selenium tests with command: {
+                        ' '.join(test_command)}"
+                )
                 subprocess.run(test_command, check=True)
             return  # importante: no seguimos con el bloque común
 
-        click.echo(f"Running Selenium tests with command: {' '.join(test_command)}")
+        click.echo(
+            f"Running Selenium tests with command: {
+                ' '.join(test_command)}"
+        )
         subprocess.run(test_command, check=True)
 
     # Validate module if provided

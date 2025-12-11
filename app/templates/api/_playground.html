@@ -11,17 +11,33 @@
       <div class="col-md-6">
         <label class="form-label">Endpoint</label>
         <select id="ap_endpoint" class="form-select">
-          <option value="datasets">GET /api/datasets/{id}</option>
+          <option value="datasets">GET /api/datasets (list all)</option>
+          <option value="datasets_id">GET /api/datasets/id/{id}</option>
+          <option value="datasets_title">GET /api/datasets/title/{title}</option>
           <option value="search">GET /api/search?q=...</option>
-          <option value="stats">GET /api/stats </option>
+          <option value="stats">GET /api/stats</option>
         </select>
       </div>
 
       <div id="ap_params_datasets" class="col-12">
+        <small class="text-muted">Este endpoint devuelve todos los datasets (sin paginación)</small>
+      </div>
+
+      <div id="ap_params_datasets_id" class="col-12 d-none">
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label">Dataset ID</label>
             <input id="ap_ds_id" type="number" class="form-control" value="1">
+          </div>
+        </div>
+      </div>
+
+      <div id="ap_params_datasets_title" class="col-12 d-none">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Dataset Title</label>
+            <input id="ap_ds_title" type="text" class="form-control" placeholder="Mi-Dataset">
+            <small class="text-muted">Usa guiones en vez de espacios</small>
           </div>
         </div>
       </div>
@@ -71,6 +87,8 @@
 (function(){
   const endpointSel = document.getElementById('ap_endpoint');
   const paramsDatasets = document.getElementById('ap_params_datasets');
+  const paramsId = document.getElementById('ap_params_datasets_id');
+  const paramsTitle = document.getElementById('ap_params_datasets_title');
   const paramsSearch = document.getElementById('ap_params_search');
   const btn = document.getElementById('ap_send');
   const keyInput = document.getElementById('ap_key');
@@ -78,6 +96,8 @@
   function toggleParams(){
     const value = endpointSel.value;
     paramsDatasets.classList.toggle('d-none', value !== 'datasets');
+    paramsId.classList.toggle('d-none', value !== 'datasets_id');
+    paramsTitle.classList.toggle('d-none', value !== 'datasets_title');
     paramsSearch.classList.toggle('d-none', value !== 'search');
   }
   endpointSel.addEventListener('change', toggleParams);
@@ -92,8 +112,13 @@
     const key = keyInput.value.trim();
 
     if (endpoint === 'datasets') {
+      url = `${base}/api/datasets`;
+    } else if (endpoint === 'datasets_id') {
       const id = document.getElementById('ap_ds_id').value || '1';
-      url = `${base}/api/datasets/${id}`;
+      url = `${base}/api/datasets/id/${id}`;
+    } else if (endpoint === 'datasets_title') {
+      const title = document.getElementById('ap_ds_title').value || 'Mi-Dataset';
+      url = `${base}/api/datasets/title/${encodeURIComponent(title)}`;
     } else if (endpoint === 'search') {
       const q = encodeURIComponent(document.getElementById('ap_q').value || 'feature');
       const page = encodeURIComponent(document.getElementById('ap_page').value || '1');
@@ -103,7 +128,7 @@
       url = `${base}/api/stats`;
     }
 
-    if ( key) {
+    if (key) {
       headers['X-API-Key'] = key;
       curl = `curl -i -H "X-API-Key: ${key}" "${url}"`;
     } else {
