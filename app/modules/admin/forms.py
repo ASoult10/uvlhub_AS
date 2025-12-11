@@ -27,6 +27,7 @@ class EditUserForm(FlaskForm):
 
     submit = SubmitField("Save Changes")
 
+
 class CreateUserForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     name = StringField("Name", validators=[DataRequired(), Length(max=100)])
