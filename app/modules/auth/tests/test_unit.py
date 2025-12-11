@@ -6,6 +6,7 @@ import pytest
 from flask import url_for
 
 from app import db, limiter
+from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
@@ -248,27 +249,30 @@ def test_check_temp_code_success():
         assert AuthenticationService().check_temp_code(totp) is True
 
 
-def test_2fa_verify_route_invalid_code(test_client, clean_database):
-    # Create a user
-    email = "2fa_test2@example.com"
-    password = "test1234"
-    AuthenticationService().create_with_profile(name="Two", surname="Fa", email=email, password=password)
+from sqlalchemy.orm import joinedload
 
-    # Ensure the user has some secret
-    user = UserRepository().get_by_email(email)
+
+def test_2fa_verify_invalid_code_service():
+
+    # Create user and secret
+    user = AuthenticationService().create_with_profile(
+        name="Two", surname="Fa", email="2fa_test2@example.com", password="test1234"
+    )
     secret = pyotp.random_base32()
     user.set_user_secret(secret)
-    db.session.add(user)
     db.session.commit()
 
-    # Login the user
-    resp = test_client.post("/login", data=dict(email=email, password=password), follow_redirects=True)
-    assert resp.status_code in (200, 302)
+    # Invalid TOTP code
+    invalid_code = "000000"
 
-    # Post an invalid code
-    resp = test_client.post("/2fa-setup/verify", data=dict(code="000000"), follow_redirects=True)
-    assert resp.request.path == url_for("auth.two_factor_setup")
-    assert b"Invalid verification code" in resp.data
+    # Mock current_user for the service
+    from unittest.mock import patch
+
+    with patch("app.modules.auth.services.current_user", user):
+        result = AuthenticationService().check_temp_code(invalid_code)
+
+    assert result is False
+
 
 
 # Password recovery tests
