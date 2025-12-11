@@ -1,7 +1,8 @@
 import itertools
 from typing import Dict
 
-from flask import jsonify, request ,render_template
+from flask import jsonify, render_template, request
+
 from app.modules.fakenodo import fakenodo_bp
 
 _STATE: Dict[str, object] = {
@@ -96,8 +97,10 @@ def get_deposition(deposition_id):
     else:
         return jsonify(record), 200
 
-#Renderizar la vista de Fakenodo
-@fakenodo_bp.route('/view', methods=['GET'])
-def fakenodo_index():
-    return render_template('fakenodo/index.html')
 
+# Renderizar la vista de Fakenodo
+
+
+@fakenodo_bp.route("/view", methods=["GET"])
+def fakenodo_index():
+    return render_template("fakenodo/index.html")
