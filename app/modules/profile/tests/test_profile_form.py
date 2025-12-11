@@ -7,7 +7,7 @@ from app.modules.profile.forms import UserProfileForm
 def app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "test"
-    app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for unit tests
+    app.config["WTF_CSRF_ENABLED"] = False  
     return app
 
 def test_orcid_is_optional(app):
