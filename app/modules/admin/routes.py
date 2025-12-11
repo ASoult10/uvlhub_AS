@@ -60,7 +60,10 @@ def delete_user(user_id):
         return redirect(url_for("admin.list_users"))
 
     admin_user = User.query.get(admin_user_id)
-    current_app.logger.info(f"Attempting to delete user with id={user_id} by admin id={admin_user.id}")
+    current_app.logger.info(
+        f"Attempting to delete user with id={user_id} by admin id={
+            admin_user.id}"
+    )
 
     try:
         success = admin_service.delete_user(user_id)
