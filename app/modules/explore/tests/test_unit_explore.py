@@ -31,7 +31,6 @@ def create_dataset(
     )
 
     for a in authors:
-        session.add(a)
         meta.authors.append(a)
 
     session.add(meta)
@@ -53,11 +52,16 @@ def db_session():
     Session = scoped_session(sessionmaker(bind=engine))
     session = Session()
 
-    author_oppenheimer = Author(name="J. Robert Oppenheimer",
+    author_oppenheimer = Author(id=1, name="J. Robert Oppenheimer",
                                 affiliation="Caltech", orcid="0000-0000-0000-0002")
-    author_hans_landa = Author(name="Hans Landa", affiliation="Uni Vienna", orcid="0000-0000-0000-0003")
-    author_mr_pink = Author(name="Mr. Pink", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0004")
-    author_jules = Author(name="Jules", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0005")
+    author_hans_landa = Author(id=2, name="Hans Landa", affiliation="Uni Vienna", orcid="0000-0000-0000-0003")
+    author_mr_pink = Author(id=3, name="Mr Pink", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0004")
+    author_jules = Author(id=4, name="Jules", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0005")
+    session.add(author_oppenheimer)
+    session.add(author_hans_landa)
+    session.add(author_mr_pink)
+    session.add(author_jules)
+    session.commit()
 
     # Crear datasets con user_id único para cada uno
     create_dataset(session)
@@ -69,26 +73,20 @@ def db_session():
     create_dataset(session, title="Gamma dataset",
                    description="Meridian rocks",
                    tags="geo",
-                   authors=[
-                       author_jules,
-                       author_mr_pink
-                   ],
+                   authors=[author_jules],
                    created_at="2024-02-27",
                    user_id=3)
     create_dataset(session, title="Epsilon dataset",
                    description="Nombre del cuarto de libra con queso en Paris",
                    tags="medicine,geo",
-                   authors=[
-                       author_hans_landa,
-                       author_mr_pink
-                   ],
+                   authors=[author_hans_landa],
                    created_at="2024-06-05",
                    user_id=4)
     create_dataset(session, title="Delta dataset",
                    description="Unrelated description",
                    tags="history,art",
                    authors=[author_mr_pink],
-                   created_at="2025-03-30",
+                   created_at="2024-10-10",
                    user_id=5)
     create_dataset(session, title="Sigma dataset",
                    description="Nuclear fusion",
@@ -145,7 +143,7 @@ def test_filter_by_text_query_author_affiliation(repository):
 
 def test_filter_by_text_query_author_orcid(repository):
     # ORCID de autor
-    search = "0000-0000-0000-005"
+    search = "0000-0000-0000-0005"
     results = repository.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Gamma dataset"
@@ -200,14 +198,14 @@ def test_filter_by_date_range(repository):
 
 def test_filter_by_author_multiple(repository):
     # Varios resultados
-    results = repository.filter(author="Mr. Pink")
-    assert len(results) == 3
+    results = repository.filter(author="John Doe")
+    assert len(results) == 2
     titles = [ds.ds_meta_data.title for ds in results]
-    assert "Alpha dataset" not in titles
-    assert "Beta dataset" not in titles
-    assert "Gamma dataset" in titles
-    assert "Epsilon dataset" in titles
-    assert "Delta dataset" in titles
+    assert "Alpha dataset" in titles
+    assert "Beta dataset" in titles
+    assert "Gamma dataset" not in titles
+    assert "Epsilon dataset" not in titles
+    assert "Delta dataset" not in titles
     assert "Sigma dataset" not in titles
 
 
