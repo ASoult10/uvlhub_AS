@@ -1,0 +1,188 @@
+{% extends "base_template.html" %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<style>
+    .edit-container {
+        max_width: 700px; /* Un poco más ancho para acomodar más campos */
+        margin: 40px auto;
+        background: #1e1e2f;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        font-family: 'Poppins', sans-serif;
+        color: #f5f5f5;
+    }
+
+    .edit-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #2b2b3f;
+        padding-bottom: 20px;
+    }
+
+    .edit-header h2 {
+        margin: 0;
+        color: #fff;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #a0a0b0;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        background: #2b2b3f;
+        border: 1px solid #3a3a55;
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #6a11cb;
+        outline: none;
+    }
+
+    /* Estilos para errores de validación */
+    .text-danger {
+        color: #ff4b5c;
+        font-size: 0.85em;
+        margin-top: 5px;
+        display: block;
+    }
+
+    /* Estilo para la lista de roles (SelectMultiple) */
+    select[multiple] {
+        height: 120px;
+        overflow-y: auto;
+    }
+    
+    select[multiple] option {
+        padding: 8px;
+        margin-bottom: 2px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    select[multiple] option:checked {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        color: white;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+        margin-top: 20px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(37, 117, 252, 0.4);
+    }
+
+    .btn-cancel {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #a0a0b0;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+    .btn-cancel:hover {
+        color: #fff;
+    }
+    
+    .section-title {
+        color: #fff;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+        border-left: 4px solid #6a11cb;
+        padding-left: 10px;
+    }
+</style>
+
+<div class="edit-container">
+    <div class="edit-header">
+        <h2>Edit User: {{ user.email }}</h2>
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="section-title">Account Settings</div>
+        
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.roles.label }}
+            {{ form.roles(class="form-control") }}
+            <div style="font-size: 0.8em; color: #666; margin-top:5px;">
+                Hold Ctrl (Windows) or Cmd (Mac) to select multiple roles.
+            </div>
+        </div>
+
+        <div class="section-title">Profile Information</div>
+
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% for error in form.name.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.surname.label }}
+            {{ form.surname(class="form-control") }}
+            {% for error in form.surname.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.orcid.label }}
+            {{ form.orcid(class="form-control", placeholder="0000-0000-0000-0000") }}
+            {% for error in form.orcid.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.affiliation.label }}
+            {{ form.affiliation(class="form-control") }}
+            {% for error in form.affiliation.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        {{ form.submit(class="btn-submit") }}
+        <a href="{{ url_for('admin.list_users') }}" class="btn-cancel">Cancel</a>
+    </form>
+</div>
+{% endblock %}
