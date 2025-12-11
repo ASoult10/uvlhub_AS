@@ -42,9 +42,7 @@ class AuthSeeder(BaseSeeder):
         # Seeding permissions TODO: define more permissions
         permissions = [
             # Define permissions here if needed
-            Permission(name="manage_roles", description="Can assign roles to users"),
             Permission(name="manage_users", description="Can create, edit, delete users"),
-            Permission(name="publish_to_zenodo", description="Can publish content to Zenodo"),
             Permission(name="create_content", description="Can create new content"),
             Permission(name="edit_any_content", description="Can edit any content"),
             Permission(name="delete_any_content", description="Can delete any content"),

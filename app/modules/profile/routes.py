@@ -1,6 +1,6 @@
 import logging
 
-from flask import abort, current_app, redirect, render_template, request, url_for
+from flask import abort, current_app, redirect, render_template, request, url_for, flash
 from flask_login import current_user, login_required
 
 from app import db
@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 @profile_bp.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def edit_profile():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot edit profile. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     auth_service = AuthenticationService()
     profile = auth_service.get_authenticated_user_profile
     # print(f"Found auth profile {profile}", flush=True)

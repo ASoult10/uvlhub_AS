@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pyotp
 from flask import current_app, flash, redirect, render_template, request, session, url_for
-from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
-from flask_login import current_user, logout_user
+from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies, set_access_cookies, set_refresh_cookies
+from flask_login import current_user, logout_user, login_user
 
 from app import db, limiter
 from app.modules.auth import auth_bp
@@ -12,6 +12,7 @@ from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 from app.modules.token.services import TokenService
+import traceback ############################################
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -125,6 +126,9 @@ def verify_2fa_login():
 
 @auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot set 2fa. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     if not current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
@@ -171,6 +175,7 @@ def verify_2fa():
 @auth_bp.route("/logout")
 @jwt_required(optional=True)
 def logout():
+
     response = redirect(url_for("public.index"))
 
     try:
@@ -189,7 +194,22 @@ def logout():
         pass
 
     unset_jwt_cookies(response)
+
+    is_guest = current_user.email.endswith("@guest.local")
+    user_id = current_user.id
+
     logout_user()
+
+    if is_guest:
+        user = User.query.get(user_id)
+        if user:
+            try:
+                db.session.delete(user)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                pass
+
     return response
 
 
@@ -238,3 +258,28 @@ def reset_password(token):
         return redirect(url_for("auth.recover_password"))
 
     return render_template("auth/reset_password_form.html", form=form)
+
+@auth_bp.route("/login/guest")
+def login_guest():
+    try:
+        guest_user = authentication_service.create_guest_user()
+        login_user(guest_user)
+
+        device_info = token_service.get_device_name_by_request(request)
+        ip_address = token_service.get_real_ip(request)
+        location_info = token_service.get_location_by_ip(ip_address)
+
+        access_token, refresh_token = token_service.create_tokens(guest_user.id, device_info, location_info)
+        response = redirect(url_for("public.index"))
+
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        
+        return response
+
+    except Exception as e:
+        current_app.logger.error("ERROR GUEST LOGIN:")
+        current_app.logger.error(traceback.format_exc())
+        error_msg = str(e)
+        flash(f"Failed to login as guest. Please try again. Error: {error_msg}", "error")
+        return redirect(url_for("auth.login"))

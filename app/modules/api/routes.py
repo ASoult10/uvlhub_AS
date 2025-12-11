@@ -12,6 +12,9 @@ from app.modules.dataset.models import DataSet, DSMetaData
 @api_bp.route("/manage", methods=["GET"])
 @login_required
 def manage_keys():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot manage apy keys. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     """Vista para gestionar las API keys del usuario"""
     form = ApiKeyForm()
     revoke_form = RevokeApiKeyForm()

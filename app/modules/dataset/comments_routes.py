@@ -1,6 +1,6 @@
 import logging
 
-from flask import jsonify, request
+from flask import jsonify, request, flash, redirect, url_for
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
@@ -25,6 +25,9 @@ def list_dataset_comments(dataset_id: int):
 @dataset_bp.route("/dataset/<int:dataset_id>/comments/", methods=["POST"])
 @login_required
 def create_dataset_comment(dataset_id: int):
+    if current_user.has_role("guest"):
+        return jsonify({"error": "Guest users cannot post comments. Please register for an account."}), 400
+
     try:
         payload = request.get_json(silent=True) or {}
         content = payload.get("content") or request.form.get("content") or ""

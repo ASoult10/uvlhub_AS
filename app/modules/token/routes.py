@@ -1,4 +1,4 @@
-from flask import jsonify, render_template
+from flask import jsonify, render_template, flash, redirect, url_for
 from flask_jwt_extended import get_jwt
 from flask_login import current_user, login_required
 
@@ -11,6 +11,9 @@ token_service = TokenService()
 @token_bp.route("/token/sessions", methods=["GET"])
 @login_required
 def sessions_page():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot manage sessions. Please register for an account.", "error")
+        return redirect(url_for("profile.my_profile"))
     tokens = token_service.get_active_tokens_by_user(current_user.id)
     current_token = get_jwt()
     for token in tokens:

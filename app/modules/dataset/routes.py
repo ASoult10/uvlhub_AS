@@ -16,6 +16,7 @@ from flask import (
     request,
     send_from_directory,
     url_for,
+    flash,
 )
 from flask_login import current_user, login_required
 
@@ -47,6 +48,9 @@ ds_view_record_service = DSViewRecordService()
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
 def create_dataset():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot create datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     form = DataSetForm()
     if request.method == "POST":
 
@@ -138,6 +142,9 @@ def create_dataset():
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
 @login_required
 def list_dataset():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot see their datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     return render_template(
         "dataset/list_datasets.html",
         datasets=dataset_service.get_synchronized(current_user.id),
@@ -148,6 +155,10 @@ def list_dataset():
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
 @login_required
 def upload():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot upload datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
@@ -189,6 +200,10 @@ def upload():
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
 def delete():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot delete datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+
     data = request.get_json()
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
@@ -307,6 +322,9 @@ def subdomain_index(doi):
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
 @login_required
 def get_unsynchronized_dataset(dataset_id):
+    if current_user.has_role("guest"):
+        flash("Guest users cannot get datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
 
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
@@ -332,4 +350,7 @@ def get_unsynchronized_dataset(dataset_id):
 @dataset_bp.route("/datasets/import", methods=["GET"])
 @login_required
 def import_model_page():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot import datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     return render_template("dataset/import_model.html")
