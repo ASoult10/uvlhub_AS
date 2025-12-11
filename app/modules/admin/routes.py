@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 
 from app import db
 from app.modules.admin import admin_bp
-from app.modules.admin.forms import DeleteUserForm
+from app.modules.admin.forms import DeleteUserForm, EditUserForm
 from app.modules.admin.services import AdminService
 from app.modules.auth import require_permission
 from app.modules.auth.models import User
@@ -75,3 +75,45 @@ def delete_user(user_id):
         flash("User not found.", "error")
 
     return redirect(url_for("admin.list_users"))
+
+@admin_bp.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
+@login_required
+@require_permission("manage_users")
+def edit_user(user_id):
+    if current_user.id == user_id:
+        flash("You cannot edit your own account from here.", "warning")
+        return redirect(url_for("admin.list_users"))
+
+    user = admin_service.get_user(user_id)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("admin.list_users"))
+
+    form = EditUserForm()
+
+    available_roles = admin_service.get_all_roles()
+    form.roles.choices = [(role.id, role.name) for role in available_roles]
+
+    if form.validate_on_submit():
+        try:
+            success = admin_service.update_user(user_id, form)
+            if success:
+                flash("User updated successfully.", "success")
+                return redirect(url_for("admin.view_user", user_id=user_id))
+            else:
+                flash("Error updating user.", "error")
+        except Exception as e:
+            current_app.logger.error(f"Error updating user with id={user_id}: {e}")
+            flash("An error occurred while trying to update the user.", "error")
+
+    if request.method == "GET":
+        form.email.data = user.email
+        if user.profile:
+            form.name.data = user.profile.name
+            form.surname.data = user.profile.surname
+            form.orcid.data = user.profile.orcid
+            form.affiliation.data = user.profile.affiliation
+
+        form.roles.data = [role.id for role in user.roles]
+
+    return render_template("editUser.html", form=form, user=user)
