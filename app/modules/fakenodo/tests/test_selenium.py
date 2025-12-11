@@ -1,6 +1,9 @@
 import pytest
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
@@ -24,11 +27,13 @@ def wait_for_js_variable(driver, var_name, timeout=10):
         return None
 
 
+#Pruebas de API
+
 def test_01_render_main_page(driver):
     host = get_host_for_selenium_testing()
     driver.get(f"{host}/fakenodo/api/view")
-    WebDriverWait(driver, 5).until(lambda d: "View fakenodo" in d.page_source)
-    assert "View fakenodo" in driver.page_source
+    WebDriverWait(driver, 5).until(lambda d: "Fakenodo API Playground" in d.page_source)
+    assert "Fakenodo API Playground" in driver.page_source
 
 
 def test_02_create_deposition(driver):
@@ -190,3 +195,65 @@ def test_11_delete_nonexistent_deposition(driver):
     )
     error_delete_status = wait_for_js_variable(driver, "errorDeleteStatus")
     assert error_delete_status == 404
+
+
+#Pruebas de interfaz gráfica
+
+def test_ui_create_deposition(driver):
+    host = get_host_for_selenium_testing()
+    driver.get(f"{host}/fakenodo/api/view")
+    input_title = driver.find_element("id", "dep-title")
+    input_title.clear()
+    input_title.send_keys("Selenium UI Test")
+    btn_create = driver.find_element("xpath", "//button[contains(., 'Crear depósito')]")
+    btn_create.click()
+    WebDriverWait(driver, 5).until(EC.alert_is_present())
+    driver.switch_to.alert.accept()
+    WebDriverWait(driver, 5).until(lambda d: "Selenium UI Test" in d.page_source)
+    assert "Selenium UI Test" in driver.page_source
+
+
+def test_ui_list_depositions(driver):
+    btn_update = driver.find_element("xpath", "//button[contains(., 'Actualizar lista')]")
+    btn_update.click()
+    ul = driver.find_element("id", "depositions-list")
+    items = ul.find_elements("tag name", "li")
+    assert any("Selenium UI Test" in item.text for item in items)
+
+
+def test_ui_get_deposition_detail(driver):
+    ul = driver.find_element("id", "depositions-list")
+    items = ul.find_elements("tag name", "li")
+    # Tomar el primer ID de la lista
+    first_id = items[0].text.split(',')[0].split(':')[1].strip()
+    input_id = driver.find_element("id", "dep-id")
+    input_id.clear()
+    input_id.send_keys(first_id)
+    btn_detail = driver.find_element("xpath", "//button[contains(., 'Ver detalles')]")
+    btn_detail.click()
+    WebDriverWait(driver, 5).until(lambda d: "Selenium UI Test" in d.find_element("id", "deposition-detail").text)
+    assert "Selenium UI Test" in driver.find_element("id", "deposition-detail").text
+
+
+def test_ui_upload_file(driver):
+    input_file = driver.find_element("id", "file-name")
+    input_file.clear()
+    input_file.send_keys("selenium_ui.txt")
+    btn_upload = driver.find_element("xpath", "//button[contains(., 'Subir archivo')]")
+    btn_upload.click()
+    WebDriverWait(driver, 5).until(EC.alert_is_present())
+    driver.switch_to.alert.accept()
+
+
+def test_ui_publish_deposition(driver):
+    btn_publish = driver.find_element("xpath", "//button[contains(., 'Publicar')]")
+    btn_publish.click()
+    WebDriverWait(driver, 5).until(EC.alert_is_present())
+    driver.switch_to.alert.accept()
+
+
+def test_ui_delete_deposition(driver):
+    btn_delete = driver.find_element("xpath", "//button[contains(., 'Eliminar')]")
+    btn_delete.click()
+    WebDriverWait(driver, 5).until(EC.alert_is_present())
+    driver.switch_to.alert.accept()
