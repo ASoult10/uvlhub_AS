@@ -139,7 +139,7 @@ class AuthenticationService(BaseService):
     def send_password_recovery_email(self, to_email, reset_link):
         msg = Message(
             subject="Password Reset Request",
-            sender="noreply@astronomiahub.com",
+            sender="astronomiahub@gmail.com",
             recipients=[to_email],
             body=(
                 "Hello,\n\n"
