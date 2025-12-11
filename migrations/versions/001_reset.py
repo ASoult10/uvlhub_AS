@@ -161,7 +161,7 @@ def upgrade():
         sa.Column('file_id', sa.Integer(), nullable=True),
         sa.Column('download_date', sa.DateTime(), nullable=False),
         sa.Column('download_cookie', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['file_id'], ['file.id']),
+        sa.ForeignKeyConstraint(['file_id'], ['file.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
@@ -171,7 +171,7 @@ def upgrade():
         sa.Column('file_id', sa.Integer(), nullable=False),
         sa.Column('view_date', sa.DateTime(), nullable=True),
         sa.Column('view_cookie', sa.String(length=36), nullable=True),
-        sa.ForeignKeyConstraint(['file_id'], ['file.id']),
+        sa.ForeignKeyConstraint(['file_id'], ['file.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('id')
     )
