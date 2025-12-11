@@ -16,7 +16,7 @@ admin_service = AdminService()
 @login_required
 @require_permission("manage_users")
 def list_users():
-    users = admin_service.list_users()
+    users = [u for u in admin_service.list_users() if getattr(u, "email", None) != "locust@local"]
     users_forms = {}
     for user in users:
         users_forms[user.id] = DeleteUserForm()
@@ -32,11 +32,11 @@ def view_user(user_id):
 
     user_datasets_pagination = (
         db.session.query(DataSet)
-        .filter(DataSet.user_id == current_user.id)
+        .filter(DataSet.user_id == user_id)
         .order_by(DataSet.created_at.desc())
         .paginate(page=page, per_page=per_page, error_out=False)
     )
-    total_datasets_count = db.session.query(DataSet).filter(DataSet.user_id == current_user.id).count()
+    total_datasets_count = db.session.query(DataSet).filter(DataSet.user_id == user_id).count()
     user = admin_service.get_user(user_id)
     if not user:
         flash("User not found.", "error")
