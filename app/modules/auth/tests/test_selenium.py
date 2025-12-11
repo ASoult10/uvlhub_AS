@@ -4,10 +4,11 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import close_driver, initialize_driver
 from app import create_app
 from app.modules.auth.services import AuthenticationService
+from core.environment.host import get_host_for_selenium_testing
+from core.selenium.common import close_driver, initialize_driver
+
 
 def test_login_and_check_element():
 
@@ -48,7 +49,9 @@ def test_login_and_check_element():
         # Close the browser
         close_driver(driver)
 
+
 # RECOVER MY PASSWORD TESTS
+
 
 def test_recover_password_existing_email():
 
@@ -71,6 +74,7 @@ def test_recover_password_existing_email():
     finally:
         close_driver(driver)
 
+
 def test_recover_password_nonexistent_email():
 
     driver = initialize_driver()
@@ -92,6 +96,7 @@ def test_recover_password_nonexistent_email():
     finally:
         close_driver(driver)
 
+
 def test_reset_password_valid_token():
 
     driver = initialize_driver()
@@ -104,8 +109,7 @@ def test_reset_password_valid_token():
             user = service.repository.get_by_email("user1@example.com")
             if not user:
                 user = service.create_with_profile(
-                    name="Test", surname="User",
-                    email="user1@example.com", password="1234"
+                    name="Test", surname="User", email="user1@example.com", password="1234"
                 )
 
             token = user.generate_reset_token()
