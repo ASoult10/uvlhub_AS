@@ -181,15 +181,15 @@ class TokenService(BaseService):
 
         os_info = (
             f"{
-            ua.os.family} {
-            ua.os.version_string}".strip()
+                ua.os.family} {
+                ua.os.version_string}".strip()
             if ua.os.family
             else ""
         )
         browser_info = (
             f"{
-            ua.browser.family} {
-            ua.browser.version_string}".strip()
+                ua.browser.family} {
+                ua.browser.version_string}".strip()
             if ua.browser.family
             else ""
         )

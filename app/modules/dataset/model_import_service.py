@@ -1,8 +1,8 @@
-import os
-import zipfile
-import tempfile
-import shutil
 import logging
+import os
+import shutil
+import zipfile
+
 import requests
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class ModelImportService:
 
         try:
             os.remove(zip_path)
-        except:
+        except BaseException:
             pass
 
         return {"path": extract_path, "source": "zip"}
@@ -76,7 +76,7 @@ class ModelImportService:
             if r.status_code == 200:
                 data = r.json()
                 return data.get("default_branch", "main")
-        except:
+        except BaseException:
             pass
         return "main"
 
@@ -121,7 +121,10 @@ class ModelImportService:
         try:
             r = requests.get(zip_url, timeout=10)
             if r.status_code != 200:
-                return {"error": f"GitHub download failed: HTTP {r.status_code}"}
+                return {
+                    "error": f"GitHub download failed: HTTP {
+                        r.status_code}"
+                }
         except Exception as e:
             return {"error": f"Error downloading from GitHub: {e}"}
 

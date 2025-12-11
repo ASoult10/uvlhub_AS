@@ -132,7 +132,7 @@ class DataSet(db.Model):
     def get_zenodo_url(self):
         return (
             f"https://zenodo.org/record/{
-            self.ds_meta_data.deposition_id}"
+                self.ds_meta_data.deposition_id}"
             if self.ds_meta_data.dataset_doi
             else None
         )
