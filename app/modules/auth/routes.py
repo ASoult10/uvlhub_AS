@@ -195,19 +195,22 @@ def logout():
 
     unset_jwt_cookies(response)
 
-    is_guest = current_user.email.endswith("@guest.local")
-    user_id = current_user.id
+    if current_user.is_authenticated:
+        is_guest = current_user.email.endswith("@guest.local")
+        user_id = current_user.id
 
-    logout_user()
-
-    if is_guest:
-        user = User.query.get(user_id)
-        if user:
-            try:
-                db.session.delete(user)
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
+        logout_user()
+    
+        if is_guest:
+            user_to_delete = User.query.get(user_id)
+            if user_to_delete:
+                try:
+                    db.session.delete(user_to_delete)
+                    db.session.commit()
+                    current_app.logger.info(f"Deleted guest user with ID {user_id} upon logout.")
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.error(f"Failed to delete guest user with ID {user_id} upon logout.")
 
     return response
 
