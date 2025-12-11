@@ -9,6 +9,10 @@ from app.modules.auth.services import AuthenticationService
 from app.modules.token.services import TokenService
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
+from app import db
+from app import create_app
+from app.modules.auth.models import User
+from app.modules.profile.models import UserProfile
 
 NAME = "Peter"
 SURNAME = "Pan"
@@ -17,17 +21,39 @@ PASSWORD = "elalola"
 
 
 @pytest.fixture(scope="function")
-def selenium_user(test_client):
-    with test_client.application.app_context():
+def selenium_user():
+    """
+    Creates a user for Selenium tests in the DEVELOPMENT database.
+    """
+    app = create_app('development')
+    user_id = None
+    
+    with app.app_context():
         auth_service = AuthenticationService()
-        if auth_service.is_email_available(EMAIL):
-            user = auth_service.create_with_profile(name=NAME, surname=SURNAME, email=EMAIL, password=PASSWORD)
+
+        existing_user = User.query.filter_by(email=EMAIL).first()
+        if not existing_user:    
+            user = auth_service.create_with_profile(
+                name=NAME,
+                surname=SURNAME,
+                email=EMAIL,
+                password=PASSWORD
+            )
+            user_id = user.id
+            db.session.commit()
+    
     yield
-    # Cleanup automático
-    with test_client.application.app_context():
-        user = auth_service.repository.get_by_email(EMAIL)
+    
+    # Cleanup
+    with app.app_context():
+        user = User.query.get(user_id)
         if user:
             TokenService().revoke_all_tokens_for_user(user.id)
+            profile = UserProfile.query.filter_by(user_id=user.id).first()
+            if profile:
+                db.session.delete(profile)
+            db.session.delete(user)
+            db.session.commit()
 
 
 class TestSessions:
