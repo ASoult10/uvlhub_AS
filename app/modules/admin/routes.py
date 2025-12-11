@@ -58,7 +58,7 @@ def delete_user(user_id):
     if not target_user:
         flash("User not found.", "error")
         return redirect(url_for("admin.list_users"))
-    
+
     if target_user.has_role("admin"):
         flash("You cannot delete an admin user.", "warning")
         return redirect(url_for("admin.list_users"))
@@ -68,7 +68,10 @@ def delete_user(user_id):
         return redirect(url_for("admin.list_users"))
 
     admin_user = User.query.get(current_user.id)
-    current_app.logger.info(f"Attempting to delete user with id={user_id} by admin id={admin_user.id}")
+    current_app.logger.info(
+        f"Attempting to delete user with id={user_id} by admin id={
+            admin_user.id}"
+    )
 
     try:
         success = admin_service.delete_user(user_id)
@@ -84,6 +87,7 @@ def delete_user(user_id):
 
     return redirect(url_for("admin.list_users"))
 
+
 @admin_bp.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
 @login_required
 @require_permission("manage_users")
@@ -95,7 +99,7 @@ def edit_user(user_id):
 
     if target_user.has_role("admin") and target_user.id != current_user.id:
         flash("You cannot edit an admin user from here.", "warning")
-        return redirect(url_for("admin.list_users"))    
+        return redirect(url_for("admin.list_users"))
 
     form = EditUserForm()
 

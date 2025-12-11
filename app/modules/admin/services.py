@@ -23,13 +23,13 @@ class AdminService:
             raise exc
 
     def get_all_roles(self):
-        return Role.query.filter(Role.name != 'user').order_by(Role.name).all()
-    
+        return Role.query.filter(Role.name != "user").order_by(Role.name).all()
+
     def update_user(self, user_id, form):
         user = self.get_user(user_id)
         if not user:
             return False
-        
+
         try:
             user.email = form.email.data
 
@@ -41,16 +41,16 @@ class AdminService:
             user.profile.affiliation = form.affiliation.data
 
             user.roles = []
-            base_user_role = Role.query.filter_by(name='user').first()
+            base_user_role = Role.query.filter_by(name="user").first()
             if base_user_role:
                 user.add_role(base_user_role)
-                
+
             selected_roles = form.roles.data
             if selected_roles:
                 roles_to_add = Role.query.filter(Role.id.in_(selected_roles)).all()
                 for role in roles_to_add:
                     user.add_role(role)
-                
+
             db.session.commit()
             return True
 
