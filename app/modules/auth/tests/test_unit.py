@@ -6,7 +6,6 @@ import pytest
 from flask import url_for
 
 from app import db, limiter
-from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
@@ -249,9 +248,6 @@ def test_check_temp_code_success():
         assert AuthenticationService().check_temp_code(totp) is True
 
 
-from sqlalchemy.orm import joinedload
-
-
 def test_2fa_verify_invalid_code_service():
 
     # Create user and secret
@@ -272,7 +268,6 @@ def test_2fa_verify_invalid_code_service():
         result = AuthenticationService().check_temp_code(invalid_code)
 
     assert result is False
-
 
 
 # Password recovery tests
