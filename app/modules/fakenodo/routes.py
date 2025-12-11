@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, render_template
 from app.modules.fakenodo import fakenodo_bp
 from flask import request
 import itertools
@@ -97,4 +97,9 @@ def get_deposition(deposition_id):
         return jsonify({"message": "Deposition not found"}), 404
     else:
         return jsonify(record), 200
+
+#Renderizar la vista de Fakenodo
+@fakenodo_bp.route('/view', methods=['GET'])
+def fakenodo_index():
+    return render_template('fakenodo/index.html')
 
