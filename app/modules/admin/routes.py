@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 
 from app import db
 from app.modules.admin import admin_bp
-from app.modules.admin.forms import DeleteUserForm, EditUserForm
+from app.modules.admin.forms import DeleteUserForm, EditUserForm, CreateUserForm
 from app.modules.admin.services import AdminService
 from app.modules.auth import require_permission
 from app.modules.auth.models import User
@@ -129,3 +129,23 @@ def edit_user(user_id):
         form.roles.data = [role.id for role in target_user.roles]
 
     return render_template("editUser.html", form=form, user=target_user)
+
+@admin_bp.route("/users/create", methods=["GET", "POST"])
+@login_required
+@require_permission("manage_users")
+def create_user():
+    form = CreateUserForm()
+
+    available_roles = admin_service.get_all_roles()
+    form.roles.choices = [(role.id, role.name) for role in available_roles]
+
+    if form.validate_on_submit():
+        success, message = admin_service.create_user(form)
+        if success:
+            flash(message, "success")
+            return redirect(url_for("admin.list_users"))
+        else:
+            flash(message, "error")
+
+
+    return render_template("createUser.html", form=form)

@@ -178,6 +178,7 @@ def create_app(config_name="development"):
             "admin.delete_user",
             "profile.author_profile",
             "admin.edit_user",
+            "admin.create_user",
         ]
 
         excluded_paths = ["/dataset/file/upload", "/dataset/file/delete", "/dataset/upload", "/recover-password/"]

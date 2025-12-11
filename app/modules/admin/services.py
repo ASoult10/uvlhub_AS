@@ -58,51 +58,39 @@ class AdminService:
             db.session.rollback()
             raise exc
 
-    def create_user(self, email: str, password: str, role_names=None, **profile_data):
-
-        if not email or not password:
-            raise ValueError("Email and password are required to create a user.")
-
-        if role_names:
-            roles_to_assign = Role.query.filter(Role.name.in_(role_names)).all()
-        else:
-            default_role = Role.query.filter_by(name="user").first()
-            roles_to_assign = [default_role] if default_role else []
+    def create_user(self, form):
+        if User.query.filter_by(email=form.email.data).first():
+            return False, "Email already exists."
 
         try:
-            user = User(email=email)
-            user.set_password(password)
-            db.session.add(user)
-            db.session.flush()  # To get user.id
+            new_user = User(email=form.email.data)
+            new_user.set_password("contras3nya")
 
-            if profile_data:
-                profile = UserProfile(user_id=user.id, **profile_data)
-                db.session.add(profile)
+            db.session.add(new_user)
+            db.session.flush()
 
-                for key, value in profile_data.items():
-                    if hasattr(user, key):
-                        setattr(user, key, value)
+            profile = UserProfile(
+                user_id=new_user.id,
+                name=form.name.data,
+                surname=form.surname.data,
+                orcid=form.orcid.data,
+                affiliation=form.affiliation.data,
+            )
+            db.session.add(profile)
 
-            user.roles = roles_to_assign
+            base_user_role = Role.query.filter_by(name="user").first()
+            if base_user_role:
+                new_user.add_role(base_user_role)
+
+            selected_roles_ids = form.roles.data
+            if selected_roles_ids:
+                roles_to_add = Role.query.filter(Role.id.in_(selected_roles_ids)).all()
+                for role in roles_to_add:
+                    new_user.add_role(role)
 
             db.session.commit()
-            return user
+            return True, "User created successfully."
+
         except Exception as exc:
             db.session.rollback()
-            raise exc
-
-    def assign_role_to_user(self, user: User, role_name: str):
-        role = db.session.query(Role).filter_by(name=role_name).first()
-        if role:
-            user.add_role(role)
-            db.session.commit()
-            return True
-        return False
-
-    def remove_role_from_user(self, user: User, role_name: str):
-        role = db.session.query(Role).filter_by(name=role_name).first()
-        if role:
-            user.remove_role(role)
-            db.session.commit()
-            return True
-        return False
+            return False, str(exc)
