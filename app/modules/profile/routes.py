@@ -1,6 +1,6 @@
 import logging
 
-from flask import abort, current_app, redirect, render_template, request, url_for, flash
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db

@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, flash, redirect, url_for
+from flask import flash, jsonify, redirect, render_template, url_for
 from flask_jwt_extended import get_jwt
 from flask_login import current_user, login_required
 

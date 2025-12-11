@@ -9,7 +9,18 @@ from datetime import datetime, timezone
 # el entorno)
 from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
-from flask import current_app, jsonify, make_response, render_template, request, send_file, send_from_directory, flash, redirect, url_for
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from app import db
@@ -144,7 +155,7 @@ def view_saved_files():
     if current_user.has_role("guest"):
         flash("Guest users cannot see saved datasets. Please register for an account.", "error")
         return redirect(url_for("public.index"))
-        
+
     hubfile_service = HubfileService()
     saved_files = hubfile_service.get_saved_files_for_user(current_user.id)
 

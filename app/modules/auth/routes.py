@@ -1,9 +1,10 @@
+import traceback
 from datetime import datetime
 
 import pyotp
 from flask import current_app, flash, redirect, render_template, request, session, url_for
-from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies, set_access_cookies, set_refresh_cookies
-from flask_login import current_user, logout_user, login_user
+from flask_jwt_extended import get_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
+from flask_login import current_user, login_user, logout_user
 
 from app import db, limiter
 from app.modules.auth import auth_bp
@@ -12,7 +13,6 @@ from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 from app.modules.token.services import TokenService
-import traceback ############################################
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -208,7 +208,6 @@ def logout():
                 db.session.commit()
             except Exception:
                 db.session.rollback()
-                pass
 
     return response
 
@@ -259,6 +258,7 @@ def reset_password(token):
 
     return render_template("auth/reset_password_form.html", form=form)
 
+
 @auth_bp.route("/login/guest")
 def login_guest():
     try:
@@ -274,7 +274,7 @@ def login_guest():
 
         set_access_cookies(response, access_token)
         set_refresh_cookies(response, refresh_token)
-        
+
         return response
 
     except Exception as e:

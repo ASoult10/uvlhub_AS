@@ -9,6 +9,7 @@ from zipfile import ZipFile
 
 from flask import (
     abort,
+    flash,
     jsonify,
     make_response,
     redirect,
@@ -16,7 +17,6 @@ from flask import (
     request,
     send_from_directory,
     url_for,
-    flash,
 )
 from flask_login import current_user, login_required
 
