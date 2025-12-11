@@ -13,17 +13,14 @@ class FakenodoUser(HttpUser):
     """
 
     host = get_host_for_locust_testing()
-    wait_time = lambda self: random.uniform(5, 9)   # Sustituye min_wait/max_wait
+    wait_time = lambda self: random.uniform(5, 9)
 
-    # -------------------------------------------------------
-    # Inicio: comportamientos equivalentes a tu antiguo TaskSet
-    # -------------------------------------------------------
+
 
     def on_start(self):
         self.created_ids = []
-        self.index()   # Igual que antes
+        self.index()
 
-    # ---------------------- TAREAS -------------------------
 
     @task(1)
     def index(self):
