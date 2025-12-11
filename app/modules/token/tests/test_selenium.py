@@ -5,14 +5,13 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+from app import create_app, db
+from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
+from app.modules.profile.models import UserProfile
 from app.modules.token.services import TokenService
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
-from app import db
-from app import create_app
-from app.modules.auth.models import User
-from app.modules.profile.models import UserProfile
 
 NAME = "Peter"
 SURNAME = "Pan"
@@ -25,25 +24,20 @@ def selenium_user():
     """
     Creates a user for Selenium tests in the DEVELOPMENT database.
     """
-    app = create_app('development')
+    app = create_app("development")
     user_id = None
-    
+
     with app.app_context():
         auth_service = AuthenticationService()
 
         existing_user = User.query.filter_by(email=EMAIL).first()
-        if not existing_user:    
-            user = auth_service.create_with_profile(
-                name=NAME,
-                surname=SURNAME,
-                email=EMAIL,
-                password=PASSWORD
-            )
+        if not existing_user:
+            user = auth_service.create_with_profile(name=NAME, surname=SURNAME, email=EMAIL, password=PASSWORD)
             user_id = user.id
             db.session.commit()
-    
+
     yield
-    
+
     # Cleanup
     with app.app_context():
         user = User.query.get(user_id)
