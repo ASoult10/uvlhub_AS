@@ -1,6 +1,7 @@
 import logging
+import sys
 
-from flask import abort, redirect, render_template, request, url_for
+from flask import abort, current_app, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
@@ -19,16 +20,29 @@ logger = logging.getLogger(__name__)
 def edit_profile():
     auth_service = AuthenticationService()
     profile = auth_service.get_authenticated_user_profile
+    #print(f"Found auth profile {profile}", flush=True)
+
+
     if not profile:
+        current_app.logger.debug(f"redirect to index")
+
         return redirect(url_for("public.index"))
 
     form = UserProfileForm()
     if request.method == "POST":
         service = UserProfileService()
-        result, errors = service.update_profile(profile.id, form)
+        result, errors = service.update_profile(current_user.id, form)
+        print(f"Result {result}", flush=True)
+        print(f"Result {errors}", flush=True)
+
+
         return service.handle_service_response(
             result, errors, "profile.edit_profile", "Profile updated successfully", "profile/edit.html", form
         )
+
+    print("Goes past method because", flush=True)
+    print(f"{request}", flush=True)
+
 
     return render_template("profile/edit.html", form=form)
 
@@ -38,6 +52,7 @@ def edit_profile():
 def my_profile():
     page = request.args.get("page", 1, type=int)
     per_page = 5
+
 
     user_datasets_pagination = (
         db.session.query(DataSet)

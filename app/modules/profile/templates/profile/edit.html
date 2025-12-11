@@ -33,7 +33,8 @@
 
         <div class="col-12 col-lg-6">
 
-            <form method="POST" action="{{ url_for('profile.edit_profile') }}" class="needs-validation" novalidate>
+            <form id="edit-form" onsubmit="submitProfileForm(event)">
+
                 {{ form.hidden_tag() }}
 
                 <div class="row form-group">
@@ -124,5 +125,35 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('profile.scripts') }}"></script>
+    //<script src="{{ url_for('profile.scripts') }}"></script>
+
+    <script>
+        async function submitProfileForm(event) {
+            event.preventDefault();
+
+            const csrfToken = getCookie('csrf_access_token');
+            const form = document.querySelector('#edit-form');
+            const formData = new FormData(form);
+
+            const response = await fetch("/profile/edit", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: formData
+            });
+
+            window.location.reload();
+        }
+
+        function getCookie(name) {
+            return document.cookie
+            .split("; ")
+            .find(row => row.startsWith(name + "="))
+            ?.split("=")[1];
+        }
+        </script>
+
+    
+
 {% endblock %}
