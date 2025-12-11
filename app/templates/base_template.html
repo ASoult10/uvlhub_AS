@@ -105,6 +105,15 @@ chico sundermann">
                         </a>
                     </li>
 
+                    <!-- ⭐ AÑADIDO → BOTÓN IMPORT DATASET -->
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.import_model_page' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('dataset.import_model_page') }}">
+                            <i class="align-middle" data-feather="download"></i>
+                            <span class="align-middle">Import dataset</span>
+                        </a>
+                    </li>
+                    <!-- ⭐ FIN AÑADIDO -->
+
                     <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.list_dataset' else '' }}">
                         <a class="sidebar-link" href="{{ url_for('dataset.list_dataset') }}">
                             <i class="align-middle" data-feather="list"></i> <span
