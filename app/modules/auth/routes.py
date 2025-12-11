@@ -200,7 +200,7 @@ def logout():
         user_id = current_user.id
 
         logout_user()
-    
+
         if is_guest:
             user_to_delete = User.query.get(user_id)
             if user_to_delete:
