@@ -14,14 +14,13 @@ class FakenodoUser(HttpUser):
     """
 
     host = get_host_for_locust_testing()
-    wait_time = lambda self: random.uniform(5, 9)
 
-
+    def wait_time(self):
+        return random.uniform(5, 9)
 
     def on_start(self):
         self.created_ids = []
         self.index()
-
 
     @task(1)
     def index(self):
