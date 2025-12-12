@@ -1,5 +1,6 @@
 import base64
 import os
+import uuid
 from io import BytesIO
 
 import pyotp
@@ -9,7 +10,7 @@ from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from flask_login import current_user, login_user
 from flask_mail import Message
 
-from app import mail
+from app import db, mail
 from app.modules.auth.models import Role, User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
@@ -151,3 +152,43 @@ class AuthenticationService(BaseService):
             ),
         )
         mail.send(msg)
+
+    def create_guest_user(self):
+        try:
+            # 1. Generar datos aleatorios
+            # Si 'uuid' te da error aquí, es que falta el import arriba del
+            # todo
+            unique_id = str(uuid.uuid4())[:8]
+            guest_email = f"guest_{unique_id}@guest.local"
+            guest_pass = str(uuid.uuid4())
+
+            # 2. Crear usuario
+            user = User(email=guest_email)
+            user.set_password(guest_pass)
+
+            # Usamos la sesión global 'db.session' para asegurar consistencia
+            db.session.add(user)
+            db.session.flush()  # Obtenemos ID
+
+            # 3. Crear Perfil
+            profile = UserProfile(
+                user_id=user.id, name="Guest", surname="Visitor", affiliation="Guest Access", orcid=None
+            )
+            db.session.add(profile)
+
+            # 4. Asignar Rol (Controlando que exista)
+            guest_role = Role.query.filter_by(name="guest").first()
+            if guest_role:
+                user.roles.append(guest_role)
+            else:
+                # Si no existe el rol, imprimimos aviso pero permitimos crear
+                # el usuario
+                print("WARNING: Rol 'guest' no encontrado en la BD. El usuario se creará sin rol.")
+
+            db.session.commit()
+            return user
+
+        except Exception as exc:
+            db.session.rollback()
+            # Esto permitirá ver el error real en el traceback
+            raise exc

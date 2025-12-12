@@ -1,9 +1,10 @@
+import traceback
 from datetime import datetime
 
 import pyotp
 from flask import current_app, flash, redirect, render_template, request, session, url_for
-from flask_jwt_extended import get_jwt, jwt_required, unset_jwt_cookies
-from flask_login import current_user, logout_user
+from flask_jwt_extended import get_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
+from flask_login import current_user, login_user, logout_user
 
 from app import db, limiter
 from app.modules.auth import auth_bp
@@ -125,6 +126,9 @@ def verify_2fa_login():
 
 @auth_bp.route("/2fa-setup", methods=["GET"])
 def two_factor_setup():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot set 2fa. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     if not current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
@@ -171,6 +175,9 @@ def verify_2fa():
 @auth_bp.route("/logout")
 @jwt_required(optional=True)
 def logout():
+    from app.modules.dataset.models import DSDownloadRecord, DSViewRecord
+    from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
+
     response = redirect(url_for("public.index"))
 
     try:
@@ -189,7 +196,29 @@ def logout():
         pass
 
     unset_jwt_cookies(response)
-    logout_user()
+
+    if current_user.is_authenticated:
+        is_guest = current_user.email.endswith("@guest.local")
+        user_id = current_user.id
+
+        logout_user()
+
+        if is_guest:
+            user_to_delete = User.query.get(user_id)
+            if user_to_delete:
+                try:
+                    DSViewRecord.query.filter(DSViewRecord.user_id == user_id).delete()
+                    DSDownloadRecord.query.filter(DSDownloadRecord.user_id == user_id).delete()
+                    HubfileViewRecord.query.filter(HubfileViewRecord.user_id == user_id).delete()
+                    HubfileDownloadRecord.query.filter(HubfileDownloadRecord.user_id == user_id).delete()
+
+                    db.session.delete(user_to_delete)
+                    db.session.commit()
+                    current_app.logger.info(f"Deleted guest user with ID {user_id} upon logout.")
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.error(f"Failed to delete guest user with ID {user_id} upon logout.")
+
     return response
 
 
@@ -238,3 +267,29 @@ def reset_password(token):
         return redirect(url_for("auth.recover_password"))
 
     return render_template("auth/reset_password_form.html", form=form)
+
+
+@auth_bp.route("/login/guest")
+def login_guest():
+    try:
+        guest_user = authentication_service.create_guest_user()
+        login_user(guest_user)
+
+        device_info = token_service.get_device_name_by_request(request)
+        ip_address = token_service.get_real_ip(request)
+        location_info = token_service.get_location_by_ip(ip_address)
+
+        access_token, refresh_token = token_service.create_tokens(guest_user.id, device_info, location_info)
+        response = redirect(url_for("public.index"))
+
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+
+        return response
+
+    except Exception as e:
+        current_app.logger.error("ERROR GUEST LOGIN:")
+        current_app.logger.error(traceback.format_exc())
+        error_msg = str(e)
+        flash(f"Failed to login as guest. Please try again. Error: {error_msg}", "error")
+        return redirect(url_for("auth.login"))

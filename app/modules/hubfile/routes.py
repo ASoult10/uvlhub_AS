@@ -9,7 +9,18 @@ from datetime import datetime, timezone
 # el entorno)
 from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
-from flask import current_app, jsonify, make_response, render_template, request, send_file, send_from_directory
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from app import db
@@ -106,6 +117,8 @@ def view_file(file_id):
 # Endpoint para guardar un archivo en el carrito
 @hubfile_bp.route("/file/save/<int:file_id>", methods=["POST"])
 def save_file(file_id):
+    if current_user.has_role("guest"):
+        return jsonify({"success": False, "error": "You must be logged in as a user to save files."})
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "You must be logged in to save files."})
     try:
@@ -141,6 +154,10 @@ def get_saved_files():
 @hubfile_bp.route("/file/saved/view", methods=["GET"])
 @login_required
 def view_saved_files():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot see saved datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+
     hubfile_service = HubfileService()
     saved_files = hubfile_service.get_saved_files_for_user(current_user.id)
 

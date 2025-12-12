@@ -163,6 +163,7 @@ class TestRutaGuardarArchivo:
 
         mock_user.is_authenticated = True
         mock_user.id = 1
+        mock_user.has_role = MagicMock(return_value=False)
         mock_service_instance = MagicMock()
         mock_service.return_value = mock_service_instance
 

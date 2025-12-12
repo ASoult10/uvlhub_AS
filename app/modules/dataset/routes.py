@@ -9,6 +9,7 @@ from zipfile import ZipFile
 
 from flask import (
     abort,
+    flash,
     jsonify,
     make_response,
     redirect,
@@ -20,7 +21,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
-from app.modules.dataset.forms import DataSetForm
+from app.modules.dataset.forms import DataSetForm, EditDataSetForm
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
@@ -47,6 +48,9 @@ ds_view_record_service = DSViewRecordService()
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
 def create_dataset():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot create datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     form = DataSetForm()
     if request.method == "POST":
 
@@ -138,16 +142,29 @@ def create_dataset():
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
 @login_required
 def list_dataset():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot see their datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+    if current_user.has_role("curator"):
+        dataset = dataset_service.get_all_synchronized_datasets()
+        local = dataset_service.get_all_unsynchronized_datasets()
+    else:
+        dataset = dataset_service.get_synchronized(current_user.id)
+        local = dataset_service.get_unsynchronized(current_user.id)
     return render_template(
         "dataset/list_datasets.html",
-        datasets=dataset_service.get_synchronized(current_user.id),
-        local_datasets=dataset_service.get_unsynchronized(current_user.id),
+        datasets=dataset,
+        local_datasets=local,
     )
 
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
 @login_required
 def upload():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot upload datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
@@ -189,6 +206,10 @@ def upload():
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
 def delete():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot delete datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
+
     data = request.get_json()
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
@@ -307,6 +328,9 @@ def subdomain_index(doi):
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
 @login_required
 def get_unsynchronized_dataset(dataset_id):
+    if current_user.has_role("guest"):
+        flash("Guest users cannot get datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
 
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
@@ -332,4 +356,72 @@ def get_unsynchronized_dataset(dataset_id):
 @dataset_bp.route("/datasets/import", methods=["GET"])
 @login_required
 def import_model_page():
+    if current_user.has_role("guest"):
+        flash("Guest users cannot import datasets. Please register for an account.", "error")
+        return redirect(url_for("public.index"))
     return render_template("dataset/import_model.html")
+
+
+@dataset_bp.route("/datasets/<int:dataset_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_dataset(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    is_curator = current_user.has_role("curator")
+
+    if not is_curator:
+        flash("Only curators can edit datasets.", "error")
+        return redirect(url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset_id))
+
+    form = EditDataSetForm()
+
+    if request.method == "GET":
+        form.title.data = dataset.ds_meta_data.title
+        form.description.data = dataset.ds_meta_data.description
+        form.publication_type.data = dataset.ds_meta_data.publication_type
+        form.tags.data = dataset.ds_meta_data.tags
+
+        if dataset.ds_meta_data.observation:
+            obs = dataset.ds_meta_data.observation
+            form.object_name.data = obs.object_name
+            form.ra.data = obs.ra
+            form.dec.data = obs.dec
+            form.magnitude.data = obs.magnitude
+            if obs.observation_date:
+                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%dT%H:%M")
+            form.filter_used.data = obs.filter_used
+            form.notes.data = obs.notes
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            try:
+                dataset_service.update_from_form(dataset_id, form)
+                flash("Dataset updated successfully!", "success")
+                return redirect(url_for("dataset.list_dataset"))
+            except Exception as exc:
+                logger.exception(f"Exception while updating dataset data: {exc}")
+                flash(f"Error updating dataset: {exc}", "error")
+                return redirect(url_for("dataset.edit_dataset", dataset_id=dataset_id))
+
+    return render_template("dataset/edit_dataset.html", form=form, dataset=dataset)
+
+
+@dataset_bp.route("/datasets/<int:dataset_id>/delete", methods=["POST"])
+@login_required
+def delete_dataset(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    is_curator = current_user.has_role("curator")
+
+    if not is_curator:
+        flash("Only curators can delete datasets.", "error")
+        return redirect(url_for("dataset.list_dataset"))
+
+    try:
+        dataset_service.delete(dataset_id)
+        flash("Dataset deleted successfully!", "success")
+        return redirect(url_for("dataset.list_dataset"))
+    except Exception as exc:
+        logger.exception(f"Exception while deleting dataset data: {exc}")
+        flash(f"Error deleting dataset: {exc}", "error")
+        return redirect(url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset_id))

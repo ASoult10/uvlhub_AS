@@ -4,12 +4,17 @@
 
 {% block content %}
 
-    <h1 class="h3 mb-3">My datasets</h1>
-
+    <h1 class="h3 mb-3">
+        {% if current_user.has_role('curator') %}
+            All datasets
+        {% else %}
+            My datasets
+        {% endif %}
+    </h1>
+    
     {% if datasets %}
-        <div class=" col-12">
+        <div class="col-12">
             <div class="card">
-
                 <div class="card-body">
                     <table class="table">
                         <thead>
@@ -31,8 +36,7 @@
                                 </td>
                                 <td>{{ dataset.ds_meta_data.description }}</td>
                                 <td>{{ dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
-                                <td><a href="{{ dataset.get_uvlhub_doi() }}"
-                                       target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
+                                <td><a href="{{ dataset.get_uvlhub_doi() }}" target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
                                 <td>
                                     <a href="{{ dataset.get_uvlhub_doi() }}">
                                         <i data-feather="eye"></i>
@@ -40,36 +44,29 @@
                                     <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}">
                                         <i data-feather="download"></i>
                                     </a>
-                                </td>
+
+                                    {% if current_user.has_role('curator') %}
+                                        <a href="{{ url_for('dataset.edit_dataset', dataset_id=dataset.id) }}" style="margin-left: 5px;">
+                                            <i data-feather="edit"></i>
+                                        </a>
+                                        <form action="{{ url_for('dataset.delete_dataset', dataset_id=dataset.id) }}" method="POST" style="display:inline;">
+                                            <button type="submit" style="border: none; background: none; color: #dc3545; cursor: pointer; margin-left: 5px;" onclick="return confirm('Are you sure?');">
+                                                <i data-feather="trash-2"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    </td>
                             </tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
-
             </div>
-
         </div>
     {% else %}
-        <div class="col-12 col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">No datasets found</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">
-                        You have not created any dataset synchronized with Zenodo, are you up for it?
-                    </p>
-                    <a href="{{ url_for('dataset.create_dataset') }}" class="btn btn-primary">
-                        Upload dataset</a>
-                </div>
-            </div>
-        </div>
-    {% endif %}
+        {% endif %}
 
     <div class="row">
-
-
         <div class="col-12">
             {% if local_datasets %}
                 <div class="card">
@@ -104,7 +101,18 @@
                                             <a href="{{ url_for('dataset.download_dataset', dataset_id=local_dataset.id) }}">
                                                 <i data-feather="download"></i>
                                             </a>
-                                        </td>
+
+                                            {% if current_user.has_role('curator') %}
+                                                <a href="{{ url_for('dataset.edit_dataset', dataset_id=local_dataset.id) }}" style="margin-left: 5px;">
+                                                    <i data-feather="edit"></i>
+                                                </a>
+                                                <form action="{{ url_for('dataset.delete_dataset', dataset_id=local_dataset.id) }}" method="POST" style="display:inline;">
+                                                    <button type="submit" style="border: none; background: none; color: #dc3545; cursor: pointer; margin-left: 5px;" onclick="return confirm('Are you sure?');">
+                                                        <i data-feather="trash-2"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            </td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -114,5 +122,6 @@
                 </div>
             {% endif %}
         </div>
+    </div>
 
 {% endblock %}
