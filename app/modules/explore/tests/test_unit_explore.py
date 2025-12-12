@@ -1,9 +1,10 @@
-import pytest
 from datetime import datetime
-from app.modules.dataset.models import DataSet, DSMetaData, Author, PublicationType
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
 
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
 from app.modules.explore.services import ExploreService
 
 
@@ -18,17 +19,11 @@ def create_dataset(
     user_id=1,
 ):
     if authors is None:
-        authors = [
-            Author(name="John Doe", affiliation="Uni Madrid", orcid="0000-0000-0000-0001")
-        ]
+        authors = [Author(name="John Doe", affiliation="Uni Madrid", orcid="0000-0000-0000-0001")]
 
     ds = DataSet(created_at=datetime.fromisoformat(created_at), user_id=user_id)
     meta = DSMetaData(
-        title=title,
-        description=description,
-        tags=tags,
-        publication_type=publication_type,
-        dataset_doi="doi:123"
+        title=title, description=description, tags=tags, publication_type=publication_type, dataset_doi="doi:123"
     )
 
     for a in authors:
@@ -53,8 +48,7 @@ def db_session():
     Session = scoped_session(sessionmaker(bind=engine))
     session = Session()
 
-    author_oppenheimer = Author(id=1, name="J. Robert Oppenheimer",
-                                affiliation="Caltech", orcid="0000-0000-0000-0002")
+    author_oppenheimer = Author(id=1, name="J. Robert Oppenheimer", affiliation="Caltech", orcid="0000-0000-0000-0002")
     author_hans_landa = Author(id=2, name="Hans Landa", affiliation="Uni Vienna", orcid="0000-0000-0000-0003")
     author_mr_pink = Author(id=3, name="Mr Pink", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0004")
     author_jules = Author(id=4, name="Jules", affiliation="Uni Los Angeles", orcid="0000-0000-0000-0005")
@@ -66,36 +60,51 @@ def db_session():
 
     # Crear datasets con user_id único para cada uno
     create_dataset(session)
-    create_dataset(session, title="Beta dataset",
-                   description="Another description",
-                   tags="chemistry,geo",
-                   created_at="2024-01-15",
-                   user_id=2)
-    create_dataset(session, title="Gamma dataset",
-                   description="Meridian rocks",
-                   tags="geo",
-                   authors=[author_jules],
-                   created_at="2024-02-27",
-                   user_id=3)
-    create_dataset(session, title="Epsilon dataset",
-                   description="Nombre del cuarto de libra con queso en Paris",
-                   tags="medicine,geo",
-                   authors=[author_hans_landa],
-                   created_at="2024-06-05",
-                   user_id=4)
-    create_dataset(session, title="Delta dataset",
-                   description="Unrelated description",
-                   tags="history,art",
-                   authors=[author_mr_pink],
-                   created_at="2024-10-10",
-                   user_id=5)
-    create_dataset(session, title="Sigma dataset",
-                   description="Nuclear fusion",
-                   tags="physics,history",
-                   authors=[author_oppenheimer],
-                   created_at="2025-10-31",
-                   publication_type=PublicationType.DATA_PAPER,
-                   user_id=6)
+    create_dataset(
+        session,
+        title="Beta dataset",
+        description="Another description",
+        tags="chemistry,geo",
+        created_at="2024-01-15",
+        user_id=2,
+    )
+    create_dataset(
+        session,
+        title="Gamma dataset",
+        description="Meridian rocks",
+        tags="geo",
+        authors=[author_jules],
+        created_at="2024-02-27",
+        user_id=3,
+    )
+    create_dataset(
+        session,
+        title="Epsilon dataset",
+        description="Nombre del cuarto de libra con queso en Paris",
+        tags="medicine,geo",
+        authors=[author_hans_landa],
+        created_at="2024-06-05",
+        user_id=4,
+    )
+    create_dataset(
+        session,
+        title="Delta dataset",
+        description="Unrelated description",
+        tags="history,art",
+        authors=[author_mr_pink],
+        created_at="2024-10-10",
+        user_id=5,
+    )
+    create_dataset(
+        session,
+        title="Sigma dataset",
+        description="Nuclear fusion",
+        tags="physics,history",
+        authors=[author_oppenheimer],
+        created_at="2025-10-31",
+        publication_type=PublicationType.DATA_PAPER,
+        user_id=6,
+    )
 
     yield session
 
