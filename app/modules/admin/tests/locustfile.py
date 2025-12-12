@@ -1,9 +1,11 @@
-from locust import HttpUser, task, between
+from faker import Faker
+from locust import HttpUser, between, task
+
 from core.environment.host import get_host_for_locust_testing
 from core.locust.common import get_csrf_token
-from faker import Faker
 
 fake = Faker()
+
 
 class AdminUserBehavior(HttpUser):
     # Simulamos un usuario que espera entre 1 y 5 segundos entre acciones
@@ -27,12 +29,10 @@ class AdminUserBehavior(HttpUser):
         csrf_token = get_csrf_token(response)
 
         # 2. POST con las credenciales
-        response = self.client.post("/login", data={
-            "email": self.email,
-            "password": self.password,
-            "csrf_token": csrf_token
-        })
-        
+        response = self.client.post(
+            "/login", data={"email": self.email, "password": self.password, "csrf_token": csrf_token}
+        )
+
         if response.status_code != 200:
             print(f"Admin Login failed: {response.status_code}")
         else:
@@ -68,7 +68,8 @@ class AdminUserBehavior(HttpUser):
         Tarea baja (peso 1): Crear un usuario realmente (POST).
         Generamos datos falsos para evitar errores de duplicidad.
         """
-        # 1. Primero hacemos GET para robar el CSRF token de la página de creación
+        # 1. Primero hacemos GET para robar el CSRF token de la página de
+        # creación
         response = self.client.get("/users/create")
         csrf_token = get_csrf_token(response)
 
@@ -76,16 +77,20 @@ class AdminUserBehavior(HttpUser):
         random_email = fake.email()
         random_name = fake.first_name()
         random_surname = fake.last_name()
-        
+
         # 3. Enviamos el formulario tal cual lo tienes definido en el HTML
-        # Nota: 'roles' es un select multiple. Enviamos '1' asumiendo que es un ID válido de rol.
-        self.client.post("/users/create", data={
-            "csrf_token": csrf_token,
-            "email": random_email,
-            "name": random_name,
-            "surname": random_surname,
-            "orcid": "0000-0000-0000-0000",
-            "affiliation": "Locust Test University",
-            "roles": "1",  # Asumiendo ID 1 para algún rol
-            "submit": "Submit" # A veces necesario si el backend chequea qué botón se pulsó
-        })
+        # Nota: 'roles' es un select multiple. Enviamos '1' asumiendo que es un
+        # ID válido de rol.
+        self.client.post(
+            "/users/create",
+            data={
+                "csrf_token": csrf_token,
+                "email": random_email,
+                "name": random_name,
+                "surname": random_surname,
+                "orcid": "0000-0000-0000-0000",
+                "affiliation": "Locust Test University",
+                "roles": "1",  # Asumiendo ID 1 para algún rol
+                "submit": "Submit",  # A veces necesario si el backend chequea qué botón se pulsó
+            },
+        )
