@@ -65,6 +65,22 @@ class DataSetRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
+    def get_all_unsynchronized(self) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DSMetaData.dataset_doi.is_(None))
+            .order_by(self.model.created_at.desc())
+            .all()
+        )
+
+    def get_all_synchronized(self) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DSMetaData.dataset_doi.isnot(None))
+            .order_by(self.model.created_at.desc())
+            .all()
+        )
+
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
@@ -82,11 +98,17 @@ class DataSetRepository(BaseRepository):
         )
 
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
-        return (
-            self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DataSet.id == dataset_id, DSMetaData.dataset_doi.is_(None))
-            .first()
+        query = self.model.query.join(DSMetaData).filter(
+            DataSet.id == dataset_id,
+            DSMetaData.dataset_doi.is_(None),
         )
+
+        is_curator = current_user.is_authenticated and current_user.has_role("curator")
+
+        if not is_curator:
+            query = query.filter(DataSet.user_id == current_user_id)
+
+        return query.first()
 
     def count_synchronized_datasets(self):
         return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None)).count()

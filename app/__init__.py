@@ -169,6 +169,8 @@ def create_app(config_name="development"):
             "team.index",
             "dataset.list_dataset_comments",
             "dataset.download_dataset",
+            "dataset.delete_dataset",
+            "dataset.edit_dataset",
             "hubfile.view_file",
             "hubfile.download_file",
             "hubfile.unsave_file",

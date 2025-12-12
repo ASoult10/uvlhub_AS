@@ -23,7 +23,7 @@ class AdminService:
             raise exc
 
     def get_all_roles(self):
-        return Role.query.filter(Role.name != "user").order_by(Role.name).all()
+        return Role.query.filter(Role.name.notin_(["user", "guest"])).order_by(Role.name).all()
 
     def update_user(self, user_id, form):
         user = self.get_user(user_id)

@@ -12,7 +12,7 @@ from wtforms import (
     SubmitField,
     TextAreaField,
 )
-from wtforms.validators import URL, DataRequired, Optional
+from wtforms.validators import URL, DataRequired, Optional, Length
 
 from app.modules.dataset.models import PublicationType
 
@@ -157,3 +157,51 @@ class DataSetForm(FlaskForm):
         if self.observation.form.is_empty():
             return None
         return self.observation.form.get_observation()
+
+class EditDataSetForm(FlaskForm):
+    # --- Metadatos Generales ---
+    title = StringField("Title", validators=[DataRequired(), Length(max=120)])
+    description = TextAreaField("Description", validators=[DataRequired(), Length(max=1000)])
+    
+    # Cargamos los tipos de la Enum PublicationType
+    publication_type = SelectField(
+        "Publication Type",
+        choices=[(pt.name, pt.name.replace("_", " ").title()) for pt in PublicationType],
+        validators=[DataRequired()]
+    )
+    
+    tags = StringField("Tags", validators=[Optional(), Length(max=120)])
+
+    # --- Datos de Observación ---
+    object_name = StringField("Object Name", validators=[Optional(), Length(max=120)])
+    ra = StringField("Right Ascension (RA)", validators=[Optional(), Length(max=50)])
+    dec = StringField("Declination (Dec)", validators=[Optional(), Length(max=50)])
+    magnitude = FloatField("Magnitude", validators=[Optional()])
+    
+    # Usamos string para la fecha para evitar problemas de formato, o DateField si prefieres
+    observation_date = StringField("Observation Date", validators=[Optional()]) 
+    
+    filter_used = StringField("Filter Used", validators=[Optional(), Length(max=50)])
+    notes = TextAreaField("Notes", validators=[Optional(), Length(max=1000)])
+
+    submit = SubmitField("Update Dataset")
+
+    # --- MÉTODOS AUXILIARES (Necesarios para que tu servicio funcione) ---
+    def get_dsmetadata(self):
+        return {
+            "title": self.title.data,
+            "description": self.description.data,
+            "publication_type": self.publication_type.data,
+            "tags": self.tags.data,
+        }
+
+    def get_observation(self):
+        return {
+            "object_name": self.object_name.data,
+            "ra": self.ra.data,
+            "dec": self.dec.data,
+            "magnitude": self.magnitude.data,
+            "observation_date": self.observation_date.data,
+            "filter_used": self.filter_used.data,
+            "notes": self.notes.data,
+        }

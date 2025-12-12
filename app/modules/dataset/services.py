@@ -371,6 +371,53 @@ class DataSetService(BaseService):
 
         return recommendations[:limit]
 
+    def get_or_404(self, dataseet_id):
+        return self.repository.get_or_404(dataseet_id)
+
+    def update_from_form(self, dataset_id: int, form):
+        dataset = self.get_or_404(dataset_id)
+
+        try:
+            dsmetadata = form.get_dsmetadata()
+            self.dsmetadata_repository.update(dataset.ds_meta_data.id, **dsmetadata)
+
+            observation = dataset.ds_meta_data.observation
+            obs_data = form.get_observation()
+
+            if observation and obs_data:
+                observation.object_name = obs_data.get("object_name")
+                observation.ra = obs_data.get("ra")
+                observation.dec = obs_data.get("dec")
+                observation.magnitude = obs_data.get("magnitude")
+                observation.observation_date = obs_data.get("observation_date")
+                observation.filter_used = obs_data.get("filter_used")
+                observation.notes = obs_data.get("notes")
+
+                self.repository.session.add(observation)
+
+            self.repository.session.commit()
+            return dataset
+        except Exception as exc:
+            logger.info(f"Exception updating dataset from form...: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+    def delete_datset(self, dataset_id: int):
+        try:
+            dataset = self.get_or_404(dataset_id)
+            self.repository.delete(dataset)
+            return True
+        except Exception as exc:
+            logger.info(f"Exception deleting dataset...: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+
+    def get_all_synchronized_datasets(self):
+        return self.repository.get_all_synchronized()
+
+    def get_all_unsynchronized_datasets(self):
+        return self.repository.get_all_unsynchronized()
 
 class AuthorService(BaseService):
     def __init__(self):
@@ -443,3 +490,5 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
+
+    
