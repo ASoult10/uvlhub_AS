@@ -652,4 +652,3 @@ class TestRecommendationSystemUnit:
                 result = mock_dataset_service.get_recommendations(1, limit=10)
                 assert len(result) == 1
                 # Old dataset should have tier3 recency score
-
