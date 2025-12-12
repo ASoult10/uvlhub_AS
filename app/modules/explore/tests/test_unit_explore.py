@@ -1,9 +1,10 @@
 import pytest
 from datetime import datetime
-from app.modules.explore.repositories import ExploreRepository
 from app.modules.dataset.models import DataSet, DSMetaData, Author, PublicationType
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+
+from app.modules.explore.services import ExploreService
 
 
 def create_dataset(
@@ -102,57 +103,58 @@ def db_session():
     engine.dispose()
 
 
+# Servicio que tambien permite probar el repositorio
 @pytest.fixture
-def repository(db_session):
-    repo = ExploreRepository()
-    repo.model.query = db_session.query(repo.model)
-    return repo
+def service(db_session):
+    service = ExploreService()
+    service.repository.model.query = db_session.query(service.repository.model)
+    return service
 
 
-def test_filter_by_text_query_title(repository):
+def test_filter_by_text_query_title(service):
     # Titulo
     search = "alpha"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Alpha dataset"
 
 
-def test_filter_by_text_query_description(repository):
+def test_filter_by_text_query_description(service):
     # Descripcion
     search = "Nuclear"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Sigma dataset"
 
 
-def test_filter_by_text_query_author_name(repository):
+def test_filter_by_text_query_author_name(service):
     # Nombre de autor
     search = "Oppenheimer"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Sigma dataset"
 
 
-def test_filter_by_text_query_author_affiliation(repository):
+def test_filter_by_text_query_author_affiliation(service):
     # Afiliacion de autor
     search = "Vienna"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Epsilon dataset"
 
 
-def test_filter_by_text_query_author_orcid(repository):
+def test_filter_by_text_query_author_orcid(service):
     # ORCID de autor
     search = "0000-0000-0000-0005"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Gamma dataset"
 
 
-def test_filter_by_text_query_tags(repository):
+def test_filter_by_text_query_tags(service):
     # Tags
     search = "history"
-    results = repository.filter(query=search)
+    results = service.filter(query=search)
     assert len(results) == 2
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" not in titles
@@ -163,16 +165,16 @@ def test_filter_by_text_query_tags(repository):
     assert "Sigma dataset" in titles
 
 
-def test_filter_by_date_after(repository):
+def test_filter_by_date_after(service):
     # Fecha despues de 2025-01-01
-    results = repository.filter(date_after="2025-01-01")
+    results = service.filter(date_after="2025-01-01")
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Sigma dataset"
 
 
-def test_filter_by_date_before(repository):
+def test_filter_by_date_before(service):
     # Fecha antes de 2024-02-01
-    results = repository.filter(date_before="2024-02-01")
+    results = service.filter(date_before="2024-02-01")
     assert len(results) == 2
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" in titles
@@ -183,9 +185,9 @@ def test_filter_by_date_before(repository):
     assert "Sigma dataset" not in titles
 
 
-def test_filter_by_date_range(repository):
+def test_filter_by_date_range(service):
     # Rango de fechas
-    results = repository.filter(date_after="2024-01-01", date_before="2024-12-31")
+    results = service.filter(date_after="2024-01-01", date_before="2024-12-31")
     assert len(results) == 5
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" in titles
@@ -196,9 +198,9 @@ def test_filter_by_date_range(repository):
     assert "Sigma dataset" not in titles
 
 
-def test_filter_by_author_multiple(repository):
+def test_filter_by_author_multiple(service):
     # Varios resultados
-    results = repository.filter(author="John Doe")
+    results = service.filter(author="John Doe")
     assert len(results) == 2
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" in titles
@@ -209,16 +211,16 @@ def test_filter_by_author_multiple(repository):
     assert "Sigma dataset" not in titles
 
 
-def test_filter_by_author_single(repository):
+def test_filter_by_author_single(service):
     # Un unico resultado
-    results = repository.filter(author="Hans Landa")
+    results = service.filter(author="Hans Landa")
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Epsilon dataset"
 
 
-def test_filter_by_tags_single(repository):
+def test_filter_by_tags_single(service):
     # Un tag
-    results = repository.filter(tags=["geo"])
+    results = service.filter(tags=["geo"])
     assert len(results) == 4
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" in titles
@@ -229,9 +231,9 @@ def test_filter_by_tags_single(repository):
     assert "Sigma dataset" not in titles
 
 
-def test_filter_by_tags_multiple(repository):
+def test_filter_by_tags_multiple(service):
     # Varios tags
-    results = repository.filter(tags=["history", "art"])
+    results = service.filter(tags=["history", "art"])
     assert len(results) == 2
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" not in titles
@@ -242,16 +244,16 @@ def test_filter_by_tags_multiple(repository):
     assert "Sigma dataset" in titles
 
 
-def test_filter_by_publication_type_single(repository):
+def test_filter_by_publication_type_single(service):
     # Tipo de publicacion DATA_PAPER
-    results = repository.filter(publication_type="data_paper")
+    results = service.filter(publication_type="data_paper")
     assert len(results) == 1
     assert results[0].ds_meta_data.title == "Sigma dataset"
 
 
-def test_filter_by_publication_type_multiple(repository):
+def test_filter_by_publication_type_multiple(service):
     # Tipo de publicacion JOURNAL_ARTICLE
-    results = repository.filter(publication_type="journal_article")
+    results = service.filter(publication_type="journal_article")
     assert len(results) == 5
     titles = [ds.ds_meta_data.title for ds in results]
     assert "Alpha dataset" in titles
