@@ -3,8 +3,8 @@ import pytest
 from app import db
 from app.modules.auth.models import User
 from app.modules.conftest import logout
-from app.modules.profile.models import UserProfile
 from app.modules.dataset.models import DataSet, DSMetaData, PublicationType
+from app.modules.profile.models import UserProfile
 
 
 @pytest.fixture(scope="module")
@@ -20,11 +20,7 @@ def test_client(test_client):
         db.session.commit()
 
         profile = UserProfile(
-            user_id=user_test.id,
-            name="John",
-            surname="Doe",
-            affiliation="Test University",
-            orcid="0000-0001-2345-6789"
+            user_id=user_test.id, name="John", surname="Doe", affiliation="Test University", orcid="0000-0001-2345-6789"
         )
         db.session.add(profile)
         db.session.commit()
@@ -35,16 +31,12 @@ def test_client(test_client):
             title="Dataset 1",
             description="First test dataset",
             publication_type=PublicationType.DATA_PAPER,
-            tags="test, dataset1"
+            tags="test, dataset1",
         )
         db.session.add(meta1)
         db.session.commit()
 
-        dataset1 = DataSet(
-            user_id=user_test.id,
-            ds_meta_data_id=meta1.id,
-            download_count=5
-        )
+        dataset1 = DataSet(user_id=user_test.id, ds_meta_data_id=meta1.id, download_count=5)
         db.session.add(dataset1)
 
         # Dataset 2 with 10 downloads
@@ -52,16 +44,12 @@ def test_client(test_client):
             title="Dataset 2",
             description="Second test dataset",
             publication_type=PublicationType.OBSERVATION_DATA,
-            tags="observation, test, dataset2"
+            tags="observation, test, dataset2",
         )
         db.session.add(meta2)
         db.session.commit()
 
-        dataset2 = DataSet(
-            user_id=user_test.id,
-            ds_meta_data_id=meta2.id,
-            download_count=10
-        )
+        dataset2 = DataSet(user_id=user_test.id, ds_meta_data_id=meta2.id, download_count=10)
         db.session.add(dataset2)
 
         db.session.commit()

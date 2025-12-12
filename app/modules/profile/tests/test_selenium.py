@@ -1,13 +1,13 @@
 import time
 import traceback
 
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, WebDriverException, TimeoutException
 
 
 def wait_for_page_to_load(driver, timeout=4):
@@ -101,7 +101,10 @@ def test_author_profile_from_homepage():
         print("   ✓ Navigated to profile page")
 
         print("\n📍 Step 4: Verifying profile page...")
-        assert "/profile/" in driver.current_url, f"Expected '/profile/' in URL, got: {driver.current_url}"
+        assert (
+            "/profile/" in driver.current_url
+        ), f"Expected '/profile/' in URL, got: {
+            driver.current_url}"
         print(f"   ✓ URL is correct: {driver.current_url}")
 
         assert author_name in driver.page_source, f"Author name '{author_name}' not found in page"
@@ -137,10 +140,9 @@ def test_author_profile_from_explore():
 
         try:
             author_link = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((
-                    By.XPATH,
-                    "//span[contains(., 'Updated by')]/../following-sibling::div//a"
-                ))
+                EC.presence_of_element_located(
+                    (By.XPATH, "//span[contains(., 'Updated by')]/../following-sibling::div//a")
+                )
             )
         except TimeoutException:
             raise AssertionError("Datasets exist on explore page but no author link was found")
@@ -155,7 +157,10 @@ def test_author_profile_from_explore():
         print("   ✓ Navigated to profile page")
 
         print("\n📍 Step 4: Verifying profile page...")
-        assert "/profile/" in driver.current_url, f"Expected '/profile/' in URL, got: {driver.current_url}"
+        assert (
+            "/profile/" in driver.current_url
+        ), f"Expected '/profile/' in URL, got: {
+            driver.current_url}"
         print(f"   ✓ URL is correct: {driver.current_url}")
 
         assert author_name in driver.page_source, f"Author name '{author_name}' not found in page"
@@ -166,26 +171,27 @@ def test_author_profile_from_explore():
 
 
 if __name__ == "__main__":
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🚀 Starting Selenium Tests: Editing Profile")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     test_edit_profile_page()
 
     print("Test test_edit_profile_page() completed!\n")
 
-    # This messages will be shown only when running rosemary selenium profile (specifiying the module)
-    print("\n" + "="*70)
+    # This messages will be shown only when running rosemary selenium profile
+    # (specifiying the module)
+    print("\n" + "=" * 70)
     print("🚀 Starting Selenium Tests: Author Profile Navigation")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     tests_passed = 0
     tests_failed = 0
 
     # Test 1: Navigation from homepage
-    print("\n" + "-"*70)
+    print("\n" + "-" * 70)
     print("Test 1: Navigation from Homepage")
-    print("-"*70 + "\n")
+    print("-" * 70 + "\n")
     try:
         test_author_profile_from_homepage()
         tests_passed += 1
@@ -196,9 +202,9 @@ if __name__ == "__main__":
         print(f"   Error: {str(e)}")
         print("   ℹ️  This might be due to browser/driver issues (quota, installation, etc.)")
         print("\n   📋 Full traceback:")
-        print("   " + "-"*66)
+        print("   " + "-" * 66)
         traceback.print_exc()
-        print("   " + "-"*66 + "\n")
+        print("   " + "-" * 66 + "\n")
     except AssertionError as e:
         tests_failed += 1
         print("\n❌ Test 1 FAILED: Assertion Error")
@@ -210,9 +216,9 @@ if __name__ == "__main__":
         print(f"   Error message: {str(e)}\n")
 
     # Test 2: Navigation from explore page
-    print("\n" + "-"*70)
+    print("\n" + "-" * 70)
     print("Test 2: Navigation from Explore Page")
-    print("-"*70 + "\n")
+    print("-" * 70 + "\n")
     try:
         test_author_profile_from_explore()
         tests_passed += 1
@@ -223,9 +229,9 @@ if __name__ == "__main__":
         print(f"   Error: {str(e)}")
         print("   ℹ️  This might be due to browser/driver issues (quota, installation, etc.)")
         print("\n   📋 Full traceback:")
-        print("   " + "-"*66)
+        print("   " + "-" * 66)
         traceback.print_exc()
-        print("   " + "-"*66 + "\n")
+        print("   " + "-" * 66 + "\n")
     except AssertionError as e:
         tests_failed += 1
         print("\n❌ Test 2 FAILED: Assertion Error")
@@ -237,10 +243,10 @@ if __name__ == "__main__":
         print(f"   Error message: {str(e)}\n")
 
     # Summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
     print(f"   ✅ Passed: {tests_passed}")
     print(f"   ❌ Failed: {tests_failed}")
     print(f"   📈 Total:  {tests_passed + tests_failed}")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")

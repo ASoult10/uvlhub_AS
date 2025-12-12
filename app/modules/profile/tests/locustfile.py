@@ -27,7 +27,8 @@ class ProfileBehavior(TaskSet):
         if response.status_code == 200:
             # Look for profile links in the format /profile/{user_id}
             import re
-            match = re.search(r'/profile/(\d+)', response.text)
+
+            match = re.search(r"/profile/(\d+)", response.text)
             if match:
                 return int(match.group(1))
 
@@ -35,7 +36,8 @@ class ProfileBehavior(TaskSet):
         response = self.client.get("/explore")
         if response.status_code == 200:
             import re
-            match = re.search(r'/profile/(\d+)', response.text)
+
+            match = re.search(r"/profile/(\d+)", response.text)
             if match:
                 return int(match.group(1))
 
@@ -52,11 +54,7 @@ class ProfileBehavior(TaskSet):
         if not self.user_id:
             return
 
-        with self.client.get(
-            f"/profile/{self.user_id}",
-            catch_response=True,
-            name="/profile/[user_id]"
-        ) as response:
+        with self.client.get(f"/profile/{self.user_id}", catch_response=True, name="/profile/[user_id]") as response:
             if response.status_code == 200:
                 # Verify that essential content is present
                 if b"Datasets authored by" in response.content or b"datasets" in response.content:
@@ -64,9 +62,15 @@ class ProfileBehavior(TaskSet):
                 else:
                     response.failure("Profile page loaded but missing expected content")
             elif response.status_code == 404:
-                response.failure(f"User with id {self.user_id} not found (404)")
+                response.failure(
+                    f"User with id {
+                        self.user_id} not found (404)"
+                )
             else:
-                response.failure(f"Unexpected status code: {response.status_code}")
+                response.failure(
+                    f"Unexpected status code: {
+                        response.status_code}"
+                )
 
     @task(1)
     def view_different_author_profiles(self):
@@ -77,12 +81,11 @@ class ProfileBehavior(TaskSet):
         """
         # Test with random user_ids (1-10)
         import random
+
         random_user_id = random.randint(1, 10)
 
         with self.client.get(
-            f"/profile/{random_user_id}",
-            catch_response=True,
-            name="/profile/[random_user_id]"
+            f"/profile/{random_user_id}", catch_response=True, name="/profile/[random_user_id]"
         ) as response:
             if response.status_code == 200:
                 response.success()
@@ -90,7 +93,10 @@ class ProfileBehavior(TaskSet):
                 # 404 is acceptable for random user_ids that don't exist
                 response.success()
             else:
-                response.failure(f"Unexpected status code: {response.status_code}")
+                response.failure(
+                    f"Unexpected status code: {
+                        response.status_code}"
+                )
 
     @task(1)
     def view_nonexistent_profile(self):
@@ -102,20 +108,22 @@ class ProfileBehavior(TaskSet):
         nonexistent_id = 99999
 
         with self.client.get(
-            f"/profile/{nonexistent_id}",
-            catch_response=True,
-            name="/profile/[nonexistent]"
+            f"/profile/{nonexistent_id}", catch_response=True, name="/profile/[nonexistent]"
         ) as response:
             if response.status_code == 404:
                 response.success()
             else:
-                response.failure(f"Expected 404 for nonexistent user, got {response.status_code}")
+                response.failure(
+                    f"Expected 404 for nonexistent user, got {
+                        response.status_code}"
+                )
 
 
 class ProfileUser(HttpUser):
     """
     Simulated user that performs profile-related tasks.
     """
+
     tasks = [ProfileBehavior]
     wait_time = between(1, 3)  # Wait between 1 and 3 seconds between tasks
     host = get_host_for_locust_testing()
