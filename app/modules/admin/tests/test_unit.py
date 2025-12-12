@@ -7,7 +7,7 @@ from flask_login import LoginManager
 from app.modules.admin.services import AdminService
 
 # ==========================================
-# 1. TESTS DEL SERVICIO (Lógica de Negocio)
+# 1. TESTS SERVICIO
 # ==========================================
 
 
@@ -141,7 +141,7 @@ class TestAdminService:
 
 
 # ==========================================
-# 2. TESTS DE LAS RUTAS (Controladores)
+# 2. TESTS RUTAS
 # ==========================================
 
 
@@ -326,8 +326,6 @@ class TestAdminRoutes:
 
         with app.test_request_context("/users/1/edit", method="POST"):
             with patch("app.modules.admin.routes.EditUserForm") as MockForm:
-                # Usamos 'form' aquí para evitar NameError si se usaba
-                # form_instance
                 form = MockForm.return_value
                 form.validate_on_submit.return_value = True
 
@@ -340,7 +338,6 @@ class TestAdminRoutes:
                 response = edit_user(1)
 
                 assert response.status_code == 302
-                # Aseguramos que se llame con el formulario mockeado
                 mock_service_instance.update_user.assert_called_once_with(1, form)
 
     def test_delete_user_route_success(self, mock_service_instance, mock_auth):
