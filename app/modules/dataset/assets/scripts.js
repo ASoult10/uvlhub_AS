@@ -243,9 +243,35 @@ function write_upload_error(error_message) {
     let alert = document.createElement('p');
     alert.style.margin = '0';
     alert.style.padding = '0';
-    alert.textContent = 'Upload error: ' + error_message;
+
+    // --- LÓGICA NUEVA PARA CORREGIR EL [object Object] ---
+    let mensaje_final = "";
+
+    if (typeof error_message === 'object' && error_message !== null) {
+        // Si el backend envía return jsonify({"error": "Texto..."})
+        if (error_message.error) {
+            mensaje_final = error_message.error;
+        } 
+        // Si el backend envía return jsonify({"message": "Texto..."})
+        else if (error_message.message) {
+            mensaje_final = error_message.message;
+        } 
+        // Si es otro tipo de objeto, lo convertimos a texto para poder leerlo
+        else {
+            mensaje_final = JSON.stringify(error_message);
+        }
+    } else {
+        // Si ya es texto plano, lo usamos tal cual
+        mensaje_final = error_message;
+    }
+    // -----------------------------------------------------
+
+    alert.textContent = 'Upload error: ' + mensaje_final;
     upload_error.appendChild(alert);
     upload_error.style.display = 'block';
+    
+    // Debug: Esto te ayudará a ver en la consola qué está llegando realmente
+    console.log("Error original recibido:", error_message);
 }
 
 function showObservationError(row, message) {
