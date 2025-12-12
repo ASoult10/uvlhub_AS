@@ -5,10 +5,10 @@ from flask import jsonify, render_template, request
 
 from app.modules.fakenodo import fakenodo_bp
 
-_STATE: Dict[str, object] = {
-    "next_id": itertools.count(1),
-    "records": {},
-}
+from app.modules.fakenodo.services import FakenodoService
+
+# Creamos un único servicio compartido (singleton en el módulo)
+fakenodo_service = FakenodoService()
 
 
 # Ruta de prueba de conexión (GET /fakenodo/api)
@@ -22,9 +22,8 @@ def test_connection_fakenodo():
 # /fakenodo/api/deposit/depositions/<depositionId>)
 @fakenodo_bp.route("/deposit/depositions/<depositionId>", methods=["DELETE"])
 def delete_deposition_fakenodo(depositionId):
-    deposition_id_int = int(depositionId)
-    if deposition_id_int in _STATE["records"]:
-        del _STATE["records"][deposition_id_int]
+    deleted = fakenodo_service.delete_deposition(depositionId)
+    if deleted:
         return jsonify({"message": "Deposition deleted"}), 200
     else:
         return jsonify({"message": "Deposition not found"}), 404
@@ -34,21 +33,15 @@ def delete_deposition_fakenodo(depositionId):
 # /fakenodo/api/deposit/depositions)
 @fakenodo_bp.route("/deposit/depositions", methods=["GET"])
 def get_all_depositions():
-    return jsonify({"depositions": list(_STATE["records"].values())}), 200
+    return jsonify(fakenodo_service.get_all_depositions()), 200
 
 
 # Simulación de creación de un nuevo depósito (POST
 # /fakenodo/api/deposit/depositions)
 @fakenodo_bp.route("/deposit/depositions", methods=["POST"])
 def create_new_deposition():
-
     payload = request.get_json() or {}
-    metadata = payload.get("metadata", {})
-
-    record_id = next(_STATE["next_id"])
-
-    record = {"id": record_id, "metadata": metadata, "files": [], "doi": None, "published": False}
-    _STATE["records"][record_id] = record
+    record = fakenodo_service.create_new_deposition(payload)
     return jsonify(record), 201
 
 
@@ -56,42 +49,30 @@ def create_new_deposition():
 # /fakenodo/api/deposit/depositions/<deposition_id>/files)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>/files", methods=["POST"])
 def upload_file(deposition_id):
-
-    record = _STATE["records"].get(deposition_id)
+    record = fakenodo_service.get_deposition(deposition_id)
     if not record:
         return jsonify({"message": "Deposition not found"}), 404
 
     filename = request.form.get("filename") or "unnamed_file"
-
-    record["files"].append(
-        {
-            "filename": filename,
-        }
-    )
-
-    return jsonify({"filename": filename, "link": f"http://fakenodo.org/files/{deposition_id}/files/{filename}"}), 201
+    result = fakenodo_service.upload_file(deposition_id, filename)
+    return jsonify(result), 201
 
 
 # Simulación de publicación de depósito (POST
 # /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>/actions/publish", methods=["POST"])
 def publish_deposition(deposition_id):
-    record = _STATE["records"].get(deposition_id)
-    if not record:
+    result = fakenodo_service.publish_deposition(deposition_id)
+    if not result:
         return jsonify({"message": "Deposition not found"}), 404
-
-    doi = f"10.5072/fakenodo.{deposition_id}"
-    record["doi"] = doi
-    record["published"] = True
-
-    return jsonify({"id": deposition_id, "doi": doi}), 202
+    return jsonify(result), 202
 
 
 # Simulación de obtención de detalles del depósito (GET
 # /fakenodo/api/deposit/depositions/<deposition_id>)
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>", methods=["GET"])
 def get_deposition(deposition_id):
-    record = _STATE["records"].get(deposition_id)
+    record = fakenodo_service.get_deposition(deposition_id)
     if not record:
         return jsonify({"message": "Deposition not found"}), 404
     else:
