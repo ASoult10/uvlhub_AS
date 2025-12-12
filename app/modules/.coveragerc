@@ -1,0 +1,21 @@
+[run]
+omit =
+    */tests/locustfile.py
+    */tests/locustfile_*.py
+    */tests/test_selenium.py
+    */tests/test_selenium_*.py
+    */tests/*selenium*.py
+    */tests/*locustfile*.py
+    **/selenium/**
+    **/locust/**
+
+[report]
+omit =
+    */tests/locustfile.py
+    */tests/locustfile_*.py
+    */tests/test_selenium.py
+    */tests/test_selenium_*.py
+    */tests/*selenium*.py
+    */tests/*locustfile*.py
+    **/selenium/**
+    **/locust/**
