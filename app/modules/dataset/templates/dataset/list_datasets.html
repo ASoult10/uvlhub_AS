@@ -4,8 +4,14 @@
 
 {% block content %}
 
-    <h1 class="h3 mb-3">My datasets</h1>
-
+    <h1 class="h3 mb-3">
+        {% if current_user.has_role('curator') %}
+            All datasets
+        {% else %}
+            My datasets
+        {% endif %}
+    </h1>
+    
     {% if datasets %}
         <div class="col-12">
             <div class="card">

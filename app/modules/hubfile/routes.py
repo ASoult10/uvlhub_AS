@@ -117,6 +117,8 @@ def view_file(file_id):
 # Endpoint para guardar un archivo en el carrito
 @hubfile_bp.route("/file/save/<int:file_id>", methods=["POST"])
 def save_file(file_id):
+    if current_user.has_role("guest"):
+        return jsonify({"success": False, "error": "You must be logged in as a user to save files."})
     if not current_user.is_authenticated:
         return jsonify({"success": False, "error": "You must be logged in to save files."})
     try:

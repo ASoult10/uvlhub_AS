@@ -97,8 +97,8 @@ def edit_user(user_id):
         flash("User not found.", "error")
         return redirect(url_for("admin.list_users"))
 
-    if target_user.has_role("admin") and target_user.id != current_user.id:
-        flash("You cannot edit an admin user from here.", "warning")
+    if target_user.has_role("admin") or target_user.id != current_user.id:
+        flash("You cannot edit an admin.", "warning")
         return redirect(url_for("admin.list_users"))
 
     form = EditUserForm()
