@@ -175,8 +175,8 @@ def verify_2fa():
 @auth_bp.route("/logout")
 @jwt_required(optional=True)
 def logout():
-    from app.modules.dataset.models import DSViewRecord, DSDownloadRecord
-    from app.modules.hubfile.models import HubfileViewRecord, HubfileDownloadRecord
+    from app.modules.dataset.models import DSDownloadRecord, DSViewRecord
+    from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
 
     response = redirect(url_for("public.index"))
 
@@ -211,7 +211,7 @@ def logout():
                     DSDownloadRecord.query.filter(DSDownloadRecord.user_id == user_id).delete()
                     HubfileViewRecord.query.filter(HubfileViewRecord.user_id == user_id).delete()
                     HubfileDownloadRecord.query.filter(HubfileDownloadRecord.user_id == user_id).delete()
-                    
+
                     db.session.delete(user_to_delete)
                     db.session.commit()
                     current_app.logger.info(f"Deleted guest user with ID {user_id} upon logout.")
