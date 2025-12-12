@@ -153,7 +153,6 @@ def list_dataset():
         local = dataset_service.get_unsynchronized(current_user.id)
     return render_template(
         "dataset/list_datasets.html",
-        
         datasets=dataset,
         local_datasets=local,
     )
@@ -362,7 +361,8 @@ def import_model_page():
         return redirect(url_for("public.index"))
     return render_template("dataset/import_model.html")
 
-@dataset_bp.route("/datasets/<int:dataset_id>/edit", methods=["GET","POST"])
+
+@dataset_bp.route("/datasets/<int:dataset_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
@@ -388,7 +388,7 @@ def edit_dataset(dataset_id):
             form.dec.data = obs.dec
             form.magnitude.data = obs.magnitude
             if obs.observation_date:
-                form.observation_date.data = obs.observation_date.strftime('%Y-%m-%dT%H:%M')
+                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%dT%H:%M")
             form.filter_used.data = obs.filter_used
             form.notes.data = obs.notes
 
@@ -401,11 +401,12 @@ def edit_dataset(dataset_id):
             except Exception as exc:
                 logger.exception(f"Exception while updating dataset data: {exc}")
                 flash(f"Error updating dataset: {exc}", "error")
-                return redirect(url_for("dataset.edit_dataset", dataset_id=dataset_id)) 
+                return redirect(url_for("dataset.edit_dataset", dataset_id=dataset_id))
 
     return render_template("dataset/edit_dataset.html", form=form, dataset=dataset)
 
-@dataset_bp.route("/datasets/<int:dataset_id>/delete", methods=["POST"]) 
+
+@dataset_bp.route("/datasets/<int:dataset_id>/delete", methods=["POST"])
 @login_required
 def delete_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
@@ -424,4 +425,3 @@ def delete_dataset(dataset_id):
         logger.exception(f"Exception while deleting dataset data: {exc}")
         flash(f"Error deleting dataset: {exc}", "error")
         return redirect(url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset_id))
-

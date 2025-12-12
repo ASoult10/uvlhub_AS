@@ -412,12 +412,12 @@ class DataSetService(BaseService):
             self.repository.session.rollback()
             raise exc
 
-
     def get_all_synchronized_datasets(self):
         return self.repository.get_all_synchronized()
 
     def get_all_unsynchronized_datasets(self):
         return self.repository.get_all_unsynchronized()
+
 
 class AuthorService(BaseService):
     def __init__(self):
@@ -490,5 +490,3 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
-
-    

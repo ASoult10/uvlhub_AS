@@ -12,7 +12,7 @@ from wtforms import (
     SubmitField,
     TextAreaField,
 )
-from wtforms.validators import URL, DataRequired, Optional, Length
+from wtforms.validators import URL, DataRequired, Length, Optional
 
 from app.modules.dataset.models import PublicationType
 
@@ -158,18 +158,19 @@ class DataSetForm(FlaskForm):
             return None
         return self.observation.form.get_observation()
 
+
 class EditDataSetForm(FlaskForm):
     # --- Metadatos Generales ---
     title = StringField("Title", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Description", validators=[DataRequired(), Length(max=1000)])
-    
+
     # Cargamos los tipos de la Enum PublicationType
     publication_type = SelectField(
         "Publication Type",
         choices=[(pt.name, pt.name.replace("_", " ").title()) for pt in PublicationType],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
-    
+
     tags = StringField("Tags", validators=[Optional(), Length(max=120)])
 
     # --- Datos de Observación ---
@@ -177,10 +178,11 @@ class EditDataSetForm(FlaskForm):
     ra = StringField("Right Ascension (RA)", validators=[Optional(), Length(max=50)])
     dec = StringField("Declination (Dec)", validators=[Optional(), Length(max=50)])
     magnitude = FloatField("Magnitude", validators=[Optional()])
-    
-    # Usamos string para la fecha para evitar problemas de formato, o DateField si prefieres
-    observation_date = StringField("Observation Date", validators=[Optional()]) 
-    
+
+    # Usamos string para la fecha para evitar problemas de formato, o
+    # DateField si prefieres
+    observation_date = StringField("Observation Date", validators=[Optional()])
+
     filter_used = StringField("Filter Used", validators=[Optional(), Length(max=50)])
     notes = TextAreaField("Notes", validators=[Optional(), Length(max=1000)])
 
