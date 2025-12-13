@@ -1,12 +1,3 @@
-from core.seeders.BaseSeeder import BaseSeeder
+"""Flamapy seeder removed: placeholder to avoid import errors."""
 
-
-class FlamapySeeder(BaseSeeder):
-
-    def run(self):
-
-        data = [
-            # Create any Model object you want to make seed
-        ]
-
-        self.seed(data)
+__all__ = []

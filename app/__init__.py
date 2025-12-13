@@ -175,8 +175,6 @@ def create_app(config_name="development"):
             "hubfile.download_file",
             "hubfile.unsave_file",
             "hubfile.save_file",
-            "flamapy.check_uvl",
-            "flamapy.valid",
             "static",
             "admin.delete_user",
             "profile.author_profile",

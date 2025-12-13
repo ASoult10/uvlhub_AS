@@ -1,7 +1,4 @@
-from app.modules.flamapy.models import Flamapy
-from core.repositories.BaseRepository import BaseRepository
+"""Flamapy repository removed: placeholder to avoid import errors."""
 
-
-class FlamapyRepository(BaseRepository):
-    def __init__(self):
-        super().__init__(Flamapy)
+# Module removed. Placeholder to avoid import errors.
+__all__ = []

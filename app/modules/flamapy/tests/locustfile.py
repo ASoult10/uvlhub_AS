@@ -1,22 +1,7 @@
-from locust import HttpUser, TaskSet, task
+# Flamapy locust tests removed. Placeholder for compatibility.
 
-from core.environment.host import get_host_for_locust_testing
-
-
-class FlamapyBehavior(TaskSet):
-    def on_start(self):
-        self.index()
-
-    @task
-    def index(self):
-        response = self.client.get("/flamapy")
-
-        if response.status_code != 200:
-            print(f"Flamapy index failed: {response.status_code}")
+from locust import HttpUser
 
 
 class FlamapyUser(HttpUser):
-    tasks = [FlamapyBehavior]
-    min_wait = 5000
-    max_wait = 9000
-    host = get_host_for_locust_testing()
+    host = "http://localhost"

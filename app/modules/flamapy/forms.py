@@ -1,6 +1,4 @@
-from flask_wtf import FlaskForm
-from wtforms import SubmitField
+"""Flamapy forms removed: placeholder module."""
 
-
-class FlamapyForm(FlaskForm):
-    submit = SubmitField("Save flamapy")
+# Module removed. Placeholder to avoid import errors.
+__all__ = []

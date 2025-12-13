@@ -512,29 +512,30 @@ function hideLoading() { document.getElementById("loading").style.display = "non
 function checkUVL(file_id) {
     const outputDiv = document.getElementById('check_' + file_id);
     outputDiv.innerHTML = '';
-
-    fetch(`/flamapy/check_uvl/${file_id}`)
-        .then(response => {
-            return response.json().then(data => ({ status: response.status, data }));
-        })
-        .then(({ status, data }) => {
-            if (status === 400) {
-                if (data.errors) {
-                    outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
-                    data.errors.forEach(error => {
-                        const e = document.createElement('span');
-                        e.className = 'badge badge-danger';
+    // Call the JSON validation endpoint instead of the UVL parser
+    fetch(`/file/check_json/${file_id}`)
+        .then(response => response.json().then(body => ({ status: response.status, body })))
+        .then(({ status, body }) => {
+            if (status === 200 && body.valid) {
+                outputDiv.innerHTML = '<span class="badge badge-success">JSON valid</span>';
+            } else if (status === 400) {
+                const errs = body.errors || body.error || JSON.stringify(body);
+                outputDiv.innerHTML = '<span class="badge badge-danger">JSON errors:</span>';
+                if (Array.isArray(errs)) {
+                    errs.forEach(error => {
+                        const e = document.createElement('div');
+                        e.className = 'text-danger';
                         e.textContent = error;
                         outputDiv.appendChild(e);
-                        outputDiv.appendChild(document.createElement('br'));
                     });
                 } else {
-                    outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
+                    const e = document.createElement('div');
+                    e.className = 'text-danger';
+                    e.textContent = errs;
+                    outputDiv.appendChild(e);
                 }
-            } else if (status === 200) {
-                outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
             } else {
-                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
+                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response: ${status}</span>`;
             }
         })
         .catch(error => {

@@ -1,1 +1,2 @@
-console.log("Hi, I am a script from flamapy module ;)")
+// Flamapy module removed: asset placeholder
+console.log("Flamapy module removed: script placeholder");

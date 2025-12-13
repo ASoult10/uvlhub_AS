@@ -5,10 +5,7 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
-# Importaciones de Flamapy y tempfile (asumimos que están disponibles en
-# el entorno)
-from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
-from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
+# Note: FlamaPy removed — export will return original files only
 from flask import (
     current_app,
     flash,
@@ -27,6 +24,7 @@ from app import db
 from app.modules.hubfile import hubfile_bp
 from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
 from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
+from app.modules.jsonChecker import validate_json_file
 
 
 @hubfile_bp.route("/file/download/<int:file_id>", methods=["GET"])
@@ -65,6 +63,31 @@ def download_file(file_id):
     return resp
 
 
+@hubfile_bp.route("/file/check_json/<int:file_id>", methods=["GET"])
+def check_json(file_id):
+    """Validate a saved hubfile as JSON and return validation result."""
+    try:
+        hubfile = HubfileService().get_or_404(file_id)
+        path = hubfile.get_path()
+        if not path or not os.path.exists(path):
+            return jsonify({"error": "File not found"}), 404
+
+        res = validate_json_file(path)
+        # If parse error or not JSON -> 400
+        if not res.get("is_json"):
+            return jsonify({"is_json": False, "valid": False, "errors": res.get("errors", [])}), 400
+
+        # If parsed but invalid structure -> 400 with errors
+        if not res.get("valid"):
+            return jsonify({"is_json": True, "valid": False, "errors": res.get("errors", [])}), 400
+
+        # Valid JSON and structure
+        return jsonify({"is_json": True, "valid": True, "errors": []}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @hubfile_bp.route("/file/view/<int:file_id>", methods=["GET"])
 def view_file(file_id):
     file = HubfileService().get_or_404(file_id)
@@ -76,8 +99,16 @@ def view_file(file_id):
 
     try:
         if os.path.exists(file_path):
-            with open(file_path, "r") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
+
+            # If the file is a JSON, validate structure and include results
+            validation = None
+            if filename.lower().endswith(".json"):
+                try:
+                    validation = validate_json_file(file_path)
+                except Exception as e:
+                    validation = {"is_json": False, "valid": False, "errors": [str(e)], "data": None}
 
             user_cookie = request.cookies.get("view_cookie")
             if not user_cookie:
@@ -102,7 +133,13 @@ def view_file(file_id):
                 db.session.commit()
 
             # Prepare response
-            response = jsonify({"success": True, "content": content})
+            payload = {"success": True, "content": content}
+            if validation is not None:
+                payload["json_is_json"] = validation.get("is_json")
+                payload["json_valid"] = validation.get("valid")
+                payload["json_errors"] = validation.get("errors")
+
+            response = jsonify(payload)
             if not request.cookies.get("view_cookie"):
                 response = make_response(response)
                 response.set_cookie("view_cookie", user_cookie, max_age=60 * 60 * 24 * 365 * 2)
@@ -187,8 +224,7 @@ def download_all_saved():
     if not saved_files:
         return "No saved files to download.", 404
 
-    # Asumimos que Flamapy está disponible; export_format controlará la
-    # conversión
+    # Export: write original files into the ZIP. Conversions were removed with FlamaPy.
 
     # Cookie para registro de descargas (se usará la misma para todos los
     # ficheros del ZIP)
@@ -207,68 +243,11 @@ def download_all_saved():
                 parent_directory_path = os.path.dirname(current_app.root_path)
                 original_path = os.path.join(parent_directory_path, directory_path, file.name)
 
-                if export_format == "uvl":
-                    # Añadimos el UVL original si existe
-                    if os.path.exists(original_path):
-                        zipf.write(original_path, arcname=file.name)
-                    else:
-                        print(f"Warning: File not found {original_path}")
+                # Add the original file into the ZIP if it exists
+                if os.path.exists(original_path):
+                    zipf.write(original_path, arcname=file.name)
                 else:
-                    # Para los formatos que requieren conversión, utilizamos
-                    # flamapy como en las rutas individuales
-                    tmp = tempfile.NamedTemporaryFile(suffix=".tmp", delete=False)
-                    tmp_name = tmp.name
-                    tmp.close()
-
-                    try:
-                        # Leemos el modelo UVL y aplicamos la transformación
-                        # según el formato
-                        hubfile = HubfileService().get_or_404(file.id)
-                        fm = UVLReader(hubfile.get_path()).transform()
-
-                        if export_format == "glencoe":
-                            out_name = f"{
-                                os.path.splitext(
-                                    file.name)[0]}_glencoe.txt"
-                            GlencoeWriter(tmp_name, fm).transform()
-                        elif export_format == "splot":
-                            out_name = f"{
-                                os.path.splitext(
-                                    file.name)[0]}_splot.txt"
-                            SPLOTWriter(tmp_name, fm).transform()
-                        elif export_format in ("cnf", "dimacs"):
-                            out_name = f"{
-                                os.path.splitext(
-                                    file.name)[0]}_cnf.txt"
-                            sat = FmToPysat(fm).transform()
-                            DimacsWriter(tmp_name, sat).transform()
-                        else:
-                            # Formato desconocido -> fallback a UVL
-                            out_name = file.name
-                            if os.path.exists(original_path):
-                                zipf.write(original_path, arcname=out_name)
-                                # saltamos al siguiente archivo
-                                os.remove(tmp_name)
-                                continue
-
-                        # Si la transformación creó el tmp file, lo leemos y lo
-                        # añadimos al ZIP
-                        if os.path.exists(tmp_name):
-                            with open(tmp_name, "rb") as f:
-                                zipf.writestr(out_name, f.read())
-                        else:
-                            print(
-                                f"Warning: Conversion output not found for file {
-                                    file.id} (format={export_format})"
-                            )
-
-                    finally:
-                        # Intentamos limpiar el temporal
-                        try:
-                            if os.path.exists(tmp_name):
-                                os.remove(tmp_name)
-                        except Exception:
-                            pass
+                    print(f"Warning: File not found {original_path}")
 
                 # Creación del registro de descarga (opcional)
                 existing_record = HubfileDownloadRecord.query.filter_by(
