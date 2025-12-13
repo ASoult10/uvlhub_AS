@@ -15,7 +15,13 @@ def _expect(obj: Dict[str, Any], key: str, types: Tuple[type, ...], errors: List
         # allow int where float expected
         if float in types and isinstance(val, int):
             return val
-        errors.append(f"{path}.{key} expected {', '.join([t.__name__ for t in types])} got {type(val).__name__}")
+        errors.append(
+            f"{path}.{key} expected {
+                ', '.join(
+                    [
+                        t.__name__ for t in types])} got {
+                type(val).__name__}"
+        )
     return val
 
 
@@ -212,7 +218,8 @@ def validate_json_file(path: str) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import argparse, pprint
+    import argparse
+    import pprint
 
     parser = argparse.ArgumentParser(description="Validate dataset JSON structure")
     parser.add_argument("file", help="Path to JSON file")

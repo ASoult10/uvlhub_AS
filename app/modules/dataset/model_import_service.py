@@ -4,6 +4,7 @@ import shutil
 import zipfile
 
 import requests
+
 from app.modules.jsonChecker import validate_json_file
 
 logger = logging.getLogger(__name__)

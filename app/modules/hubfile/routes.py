@@ -1,6 +1,5 @@
 import io
 import os
-import tempfile
 import uuid
 import zipfile
 from datetime import datetime, timezone
@@ -224,7 +223,8 @@ def download_all_saved():
     if not saved_files:
         return "No saved files to download.", 404
 
-    # Export: write original files into the ZIP. Conversions were removed with FlamaPy.
+    # Export: write original files into the ZIP. Conversions were removed with
+    # FlamaPy.
 
     # Cookie para registro de descargas (se usará la misma para todos los
     # ficheros del ZIP)

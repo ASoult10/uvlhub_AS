@@ -32,8 +32,8 @@ from app.modules.dataset.services import (
     DSViewRecordService,
 )
 from app.modules.hubfile.services import HubfileService
-from app.modules.zenodo.services import ZenodoService
 from app.modules.jsonChecker import validate_json_file
+from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
 
@@ -204,14 +204,17 @@ def upload():
             except Exception:
                 pass
             return (
-                jsonify({
-                    "message": "Invalid JSON file",
-                    "errors": res.get("errors", []),
-                }),
+                jsonify(
+                    {
+                        "message": "Invalid JSON file",
+                        "errors": res.get("errors", []),
+                    }
+                ),
                 400,
             )
     except Exception as e:
-        # In case validation itself fails unexpectedly, remove file and return error
+        # In case validation itself fails unexpectedly, remove file and return
+        # error
         try:
             os.remove(file_path)
         except Exception:
