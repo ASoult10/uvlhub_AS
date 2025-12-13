@@ -2,7 +2,8 @@ import os
 import shutil
 import tempfile
 import zipfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from app.modules.dataset.model_import_service import ModelImportService
 
 
@@ -69,18 +70,18 @@ def test_import_from_github_builds_zip_url(mock_get):
 
         mock_zip.extractall = fake_extractall
 
-        result = ModelImportService.import_from_github(
-            "https://github.com/example/repo",
-            user
-        )
+        result = ModelImportService.import_from_github("https://github.com/example/repo", user)
 
     assert "error" not in result
     assert result["source"] == "github"
     assert os.path.isdir(result["path"])
 
+
 # =====================================================================
 # 3) UNIT TEST – GitHub: Failure when no valid files exist in ZIP
 # =====================================================================
+
+
 @patch("requests.get")
 def test_import_from_github_no_valid_files(mock_get):
     user = FakeUser()
@@ -95,9 +96,6 @@ def test_import_from_github_no_valid_files(mock_get):
     with patch("zipfile.ZipFile") as mock_zip_class:
         mock_zip_class.return_value.__enter__.return_value = mock_zip
 
-        result = ModelImportService.import_from_github(
-            "https://github.com/example/repo",
-            user
-        )
+        result = ModelImportService.import_from_github("https://github.com/example/repo", user)
 
     assert "error" in result

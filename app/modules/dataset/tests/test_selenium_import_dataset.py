@@ -1,7 +1,7 @@
 import os
+import tempfile
 import time
 import zipfile
-import tempfile
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -75,7 +75,7 @@ def test_import_dataset_zip():
         close_driver(driver)
         try:
             os.remove(temp_zip_path)
-        except:
+        except BaseException:
             pass
 
 
