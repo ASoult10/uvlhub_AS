@@ -195,7 +195,7 @@ def create_app(config_name="development"):
         if request.is_json or request.path.startswith("/api") or request.path.endswith("/scripts.js"):
             return
 
-        if request.blueprint == "fakenodo" or request.path.startswith("/fakenodo/api"):
+        if request.blueprint == "fakenodo" or request.path.startswith("/fakenodo/api") or request.path.startswith("/doi"):
             return
 
         try:

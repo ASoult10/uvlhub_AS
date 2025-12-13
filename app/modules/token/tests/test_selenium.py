@@ -124,3 +124,11 @@ class TestSessions:
             self.driver.switch_to.alert.accept()
         except Exception:
             pytest.fail("test_revokeAllTokens failed unexpectedly")
+
+
+
+TestSessions.test_getSessions()
+
+TestSessions.test_revokeToken()
+
+TestSessions.test_revokeAllTokens()
