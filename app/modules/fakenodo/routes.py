@@ -54,9 +54,19 @@ def upload_file(deposition_id):
         return jsonify({"message": "Deposition not found"}), 404
 
     filename = request.form.get("filename") or "unnamed_file"
-    result = fakenodo_service.upload_file(deposition_id, filename)
-    return jsonify(result), 201
 
+    # Creamos un objeto minimalista compatible con la firma que espera el servicio
+    class _Hubfile:
+        def __init__(self, name):
+            self.name = name
+
+    hubfile = _Hubfile(filename)
+    dummy_dataset = type("DummyDataset", (), {"user_id": None, "id": ""})()
+
+    result = fakenodo_service.upload_file(dummy_dataset, deposition_id, hubfile)
+    if result is None:
+        return jsonify({"message": "Deposition not found"}), 404
+    return jsonify(result), 201
 
 # Simulación de publicación de depósito (POST
 # /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
