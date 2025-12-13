@@ -19,26 +19,22 @@ EMAIL = "peterpan@yahoo.com"
 PASSWORD = "elalola"
 
 
-@pytest.fixture(scope="function")
-def selenium_user():
-    """
-    Creates a user for Selenium tests in the DEVELOPMENT database.
-    """
+def create_test_user():
+    """Create a user for Selenium tests in the DEVELOPMENT database."""
     app = create_app("development")
-    user_id = None
-
     with app.app_context():
         auth_service = AuthenticationService()
-
         existing_user = User.query.filter_by(email=EMAIL).first()
         if not existing_user:
             user = auth_service.create_with_profile(name=NAME, surname=SURNAME, email=EMAIL, password=PASSWORD)
-            user_id = user.id
             db.session.commit()
+            return user.id
+        return existing_user.id
 
-    yield
 
-    # Cleanup
+def cleanup_test_user(user_id):
+    """Cleanup test user from database."""
+    app = create_app("development")
     with app.app_context():
         user = User.query.get(user_id)
         if user:
@@ -50,84 +46,95 @@ def selenium_user():
             db.session.commit()
 
 
-class TestSessions:
-    def setup_method(self, method):
-        self.driver = initialize_driver()
-        self.vars = {}
-        self.token_service = TokenService()
-        self.authentication_service = AuthenticationService()
-
-    def teardown_method(self, method):
-        close_driver(self.driver)
-
-    def test_getSessions(self, test_client, selenium_user):
-        try:
-            host = get_host_for_selenium_testing()
-            self.driver.get(f"{host}/")
-            self.driver.set_window_size(1051, 797)
-            self.driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
-            self.driver.find_element(By.ID, "email").click()
-            self.driver.find_element(By.ID, "email").send_keys(EMAIL)
-            self.driver.find_element(By.ID, "password").click()
-            self.driver.find_element(By.ID, "password").send_keys(PASSWORD)
-            self.driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
-            time.sleep(2)
-            self.driver.find_element(By.LINK_TEXT, "Pan, Peter").click()
-            self.driver.find_element(By.LINK_TEXT, "My profile").click()
-            self.driver.find_element(By.CSS_SELECTOR, ".btn").click()
-            time.sleep(2)
-            current_session_badge = self.driver.find_element(By.CSS_SELECTOR, "span.badge.bg-success.ms-1")
-            assert current_session_badge.text == "Current Session"
-        except Exception:
-            pytest.fail("test_getSessions failed unexpectedly")
-
-    def test_revokeToken(self, test_client, selenium_user):
-        try:
-            host = get_host_for_selenium_testing()
-            self.driver.get(f"{host}/")
-            self.driver.set_window_size(1552, 832)
-            self.driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
-            self.driver.find_element(By.ID, "email").click()
-            self.driver.find_element(By.ID, "email").send_keys(EMAIL)
-            self.driver.find_element(By.ID, "password").click()
-            self.driver.find_element(By.ID, "password").send_keys(PASSWORD)
-            self.driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
-            time.sleep(2)
-            self.driver.find_element(By.CSS_SELECTOR, ".text-dark").click()
-            self.driver.find_element(By.LINK_TEXT, "My profile").click()
-            self.driver.find_element(By.CSS_SELECTOR, ".btn").click()
-            self.driver.find_element(By.CSS_SELECTOR, ".btn-sm").click()
-            assert self.driver.switch_to.alert.text == "Are you sure you want to revoke this session?"
-            self.driver.switch_to.alert.accept()
-        except Exception:
-            pytest.fail("test_revokeToken failed unexpectedly")
-
-    def test_revokeAllTokens(self, test_client, selenium_user):
-        try:
-            host = get_host_for_selenium_testing()
-            self.driver.get(f"{host}/")
-            self.driver.set_window_size(1051, 797)
-            self.driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
-            self.driver.find_element(By.ID, "email").click()
-            self.driver.find_element(By.ID, "email").send_keys(EMAIL)
-            self.driver.find_element(By.ID, "password").send_keys(PASSWORD)
-            self.driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
-            time.sleep(2)
-            self.driver.find_element(By.CSS_SELECTOR, ".text-dark").click()
-            self.driver.find_element(By.LINK_TEXT, "My profile").click()
-            self.driver.find_element(By.CSS_SELECTOR, ".btn").click()
-            self.driver.find_element(By.CSS_SELECTOR, ".mt-3 > .btn").click()
-            assert (
-                self.driver.switch_to.alert.text
-                == "Are you sure you want to revoke ALL sessions? You will be logged out :("
-            )
-            self.driver.switch_to.alert.accept()
-        except Exception:
-            pytest.fail("test_revokeAllTokens failed unexpectedly")
+def test_getSessions():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/")
+        driver.set_window_size(1051, 797)
+        driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "email").send_keys(EMAIL)
+        driver.find_element(By.ID, "password").click()
+        driver.find_element(By.ID, "password").send_keys(PASSWORD)
+        driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
+        time.sleep(2)
+        driver.find_element(By.LINK_TEXT, "Pan, Peter").click()
+        driver.find_element(By.LINK_TEXT, "My profile").click()
+        driver.find_element(By.CSS_SELECTOR, ".btn").click()
+        time.sleep(2)
+        current_session_badge = driver.find_element(By.CSS_SELECTOR, "span.badge.bg-success.ms-1")
+        assert current_session_badge.text == "Current Session"
+        print("test_getSessions passed!")
+    except Exception as e:
+        print(f"test_getSessions failed: {e}")
+        raise
+    finally:
+        close_driver(driver)
 
 
-TestSessions.test_getSessions()
+def test_revokeToken():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/")
+        driver.set_window_size(1552, 832)
+        driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "email").send_keys(EMAIL)
+        driver.find_element(By.ID, "password").click()
+        driver.find_element(By.ID, "password").send_keys(PASSWORD)
+        driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
+        time.sleep(2)
+        driver.find_element(By.CSS_SELECTOR, ".text-dark").click()
+        driver.find_element(By.LINK_TEXT, "My profile").click()
+        driver.find_element(By.CSS_SELECTOR, ".btn").click()
+        driver.find_element(By.CSS_SELECTOR, ".btn-sm").click()
+        assert driver.switch_to.alert.text == "Are you sure you want to revoke this session?"
+        driver.switch_to.alert.accept()
+        print("test_revokeToken passed!")
+    except Exception as e:
+        print(f"test_revokeToken failed: {e}")
+        raise
+    finally:
+        close_driver(driver)
 
-TestSessions.test_revokeToken()
 
-TestSessions.test_revokeAllTokens()
+def test_revokeAllTokens():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+        driver.get(f"{host}/")
+        driver.set_window_size(1051, 797)
+        driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
+        driver.find_element(By.ID, "email").click()
+        driver.find_element(By.ID, "email").send_keys(EMAIL)
+        driver.find_element(By.ID, "password").send_keys(PASSWORD)
+        driver.find_element(By.ID, "password").send_keys(Keys.ENTER)
+        time.sleep(2)
+        driver.find_element(By.CSS_SELECTOR, ".text-dark").click()
+        driver.find_element(By.LINK_TEXT, "My profile").click()
+        driver.find_element(By.CSS_SELECTOR, ".btn").click()
+        driver.find_element(By.CSS_SELECTOR, ".mt-3 > .btn").click()
+        assert (
+            driver.switch_to.alert.text
+            == "Are you sure you want to revoke ALL sessions? You will be logged out :("
+        )
+        driver.switch_to.alert.accept()
+        print("test_revokeAllTokens passed!")
+    except Exception as e:
+        print(f"test_revokeAllTokens failed: {e}")
+        raise
+    finally:
+        close_driver(driver)
+
+
+if __name__ == "__main__":
+    user_id = create_test_user()
+    
+    try:
+        test_getSessions()
+        test_revokeToken()
+        test_revokeAllTokens()
+    finally:
+        cleanup_test_user(user_id)
