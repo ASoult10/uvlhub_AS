@@ -2,13 +2,10 @@ import time
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import close_driver, initialize_driver
-from selenium.webdriver.support import expected_conditions as EC
 
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
+
 
 def test_hubfile_index():
 
@@ -52,7 +49,6 @@ def test_verListaDeSavedModels():
         close_driver(driver)
 
 
-
 def test_saveAndUnsaveModel():
     driver = initialize_driver()
     try:
@@ -72,17 +68,11 @@ def test_saveAndUnsaveModel():
         driver.find_element(By.LINK_TEXT, "Saved models").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
 
-        driver.find_element(
-            By.CSS_SELECTOR,
-            ".sidebar-item:nth-child(2) .align-middle:nth-child(2)"
-        ).click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(2) .align-middle:nth-child(2)").click()
 
         driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
 
-        driver.find_element(
-            By.CSS_SELECTOR,
-            ".sidebar-item:nth-child(9) .align-middle:nth-child(2)"
-        ).click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(9) .align-middle:nth-child(2)").click()
 
     except NoSuchElementException:
         raise AssertionError("Test failed!")
@@ -107,18 +97,12 @@ def test_descargarMultiplesModelos():
         driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
 
-        driver.find_element(
-            By.CSS_SELECTOR,
-            ".sidebar-item:nth-child(2) .align-middle:nth-child(2)"
-        ).click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(2) .align-middle:nth-child(2)").click()
 
         driver.find_element(By.LINK_TEXT, "Dataset with author 1").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-6 > span").click()
 
-        driver.find_element(
-            By.CSS_SELECTOR,
-            ".sidebar-item:nth-child(9) .align-middle:nth-child(2)"
-        ).click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(9) .align-middle:nth-child(2)").click()
 
         driver.find_element(By.LINK_TEXT, "Export All as JSON").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-6 > span").click()
@@ -129,7 +113,6 @@ def test_descargarMultiplesModelos():
 
     finally:
         close_driver(driver)
-
 
 
 # Call the test function

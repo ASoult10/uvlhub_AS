@@ -188,6 +188,7 @@ class TestRutaGuardarArchivo:
             assert call_args["success"] is False
             assert call_args["error"] == "not_authenticated"
 
+
 class TestRutaEliminarArchivo:
     @patch("app.modules.hubfile.routes.current_user")
     @patch("app.modules.hubfile.routes.HubfileService")
