@@ -155,7 +155,8 @@ def view_file(file_id):
 def save_file(file_id):
     # First ensure the user is authenticated before asking about roles.
     if not current_user.is_authenticated:
-        # Keep behavior consistent with `unsave_file` which returns this error string
+        # Keep behavior consistent with `unsave_file` which returns this error
+        # string
         return jsonify({"success": False, "error": "not_authenticated"})
 
     # Guard the role check in case user object does not implement has_role
