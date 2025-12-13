@@ -116,15 +116,26 @@ function saveInCart(fileId) {
     fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.text().then(text => ({ response, text })))
         .then(({ response, text }) => {
+            // If backend redirected to login page or returned unauthorized, show a friendly message
+            if (response.status === 401 || response.status === 302) {
+                throw new Error('Debes iniciar sesión para guardar archivos');
+            }
+
             if (!response.ok) {
-                const msg = text || response.statusText || `HTTP ${response.status}`;
-                throw new Error(msg);
+                // Try to parse a JSON error body, but never show raw HTML to users
+                try {
+                    const json = text ? JSON.parse(text) : null;
+                    const msg = (json && (json.error || json.message)) || response.statusText || `HTTP ${response.status}`;
+                    throw new Error(msg);
+                } catch (_) {
+                    throw new Error(response.statusText || `HTTP ${response.status}`);
+                }
             }
 
             let parsedData = null;
             if (text) {
                 try { parsedData = JSON.parse(text); }
-                catch (_) {}
+                catch (_) { parsedData = null; }
             }
 
             if (parsedData && ((parsedData.success === false) || parsedData.error)) {
