@@ -34,6 +34,7 @@ coverage.xml
 # Config & environment
 # ==========================
 .env
+.env.docker
 .version
 nginx.prod.ssl.conf
 entrypoint.sh

@@ -1,9 +1,8 @@
 services:
   web:
     container_name: web_app_container
-    image: drorganvidez/uvlhub:dev
     env_file:
-      - ../.env
+      - ../.env.docker
     expose:
       - "5000"
     depends_on:
@@ -21,13 +20,13 @@ services:
   db:
     container_name: mariadb_container
     env_file:
-      - ../.env
+      - ../.env.docker
     build:
       context: ../
       dockerfile: docker/images/Dockerfile.mariadb
     restart: always
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
     networks:
