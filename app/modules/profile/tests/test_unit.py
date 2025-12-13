@@ -2,7 +2,6 @@ import pytest
 
 from app import db
 from app.modules.auth.models import User
-from app.modules.conftest import login, logout
 from app.modules.profile.models import UserProfile
 
 
@@ -22,5 +21,3 @@ def test_client(test_client):
         db.session.commit()
 
     yield test_client
-
-
