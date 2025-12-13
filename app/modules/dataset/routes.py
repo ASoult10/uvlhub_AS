@@ -33,6 +33,7 @@ from app.modules.dataset.services import (
 )
 from app.modules.hubfile.services import HubfileService
 from app.modules.zenodo.services import ZenodoService
+from app.modules.jsonChecker import validate_json_file
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,30 @@ def upload():
         file.save(file_path)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+    # Validate JSON structure immediately after saving
+    try:
+        res = validate_json_file(file_path)
+        if not res.get("is_json") or not res.get("valid"):
+            # remove invalid file
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+            return (
+                jsonify({
+                    "message": "Invalid JSON file",
+                    "errors": res.get("errors", []),
+                }),
+                400,
+            )
+    except Exception as e:
+        # In case validation itself fails unexpectedly, remove file and return error
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+        return jsonify({"message": f"JSON validation error: {e}"}), 500
 
     return (
         jsonify(

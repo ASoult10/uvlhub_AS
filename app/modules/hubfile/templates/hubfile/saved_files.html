@@ -44,7 +44,7 @@
                             <i data-feather="check"></i> Check
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
-                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="checkJSON('{{ file.id }}')">Syntax check</a></li>
                         </ul>
                     </div>
 
@@ -171,19 +171,24 @@ function viewFile(fileId) {
         });
 }
 
-function checkUVL(fileId) {
-    fetch(`/flamapy/check_uvl/${fileId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.valid) {
-                alert('✓ Syntax is valid!');
+// Note: UVL-based syntax checking was replaced by JSON validation.
+
+function checkJSON(fileId) {
+    fetch(`/file/check_json/${fileId}`)
+        .then(response => response.json().then(body => ({ status: response.status, body })))
+        .then(({ status, body }) => {
+            if (status === 200 && body.valid) {
+                alert('✓ JSON is valid and structure matches expected schema');
+            } else if (status === 400) {
+                const errs = body.errors || body.body || JSON.stringify(body);
+                alert('✗ JSON errors found:\n\n' + (Array.isArray(errs) ? errs.join('\n') : errs));
             } else {
-                alert('✗ Syntax errors found:\n\n' + data.errors);
+                alert('Error validating JSON: ' + (body.error || JSON.stringify(body)));
             }
         })
         .catch(error => {
-            console.error('Error checking syntax:', error);
-            alert('Error checking syntax');
+            console.error('Error checking JSON:', error);
+            alert('Error checking JSON');
         });
 }
 </script>
