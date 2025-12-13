@@ -126,7 +126,6 @@ class TestSessions:
             pytest.fail("test_revokeAllTokens failed unexpectedly")
 
 
-
 TestSessions.test_getSessions()
 
 TestSessions.test_revokeToken()
