@@ -153,10 +153,15 @@ def view_file(file_id):
 # Endpoint para guardar un archivo en el carrito
 @hubfile_bp.route("/file/save/<int:file_id>", methods=["POST"])
 def save_file(file_id):
-    if current_user.has_role("guest"):
-        return jsonify({"success": False, "error": "You must be logged in as a user to save files."})
+    # First ensure the user is authenticated before asking about roles.
     if not current_user.is_authenticated:
-        return jsonify({"success": False, "error": "You must be logged in to save files."})
+        # Keep behavior consistent with `unsave_file` which returns this error string
+        return jsonify({"success": False, "error": "not_authenticated"})
+
+    # Guard the role check in case user object does not implement has_role
+    has_role = getattr(current_user, "has_role", lambda role: False)
+    if has_role("guest"):
+        return jsonify({"success": False, "error": "You must be logged in as a user to save files."})
     try:
         HubfileService().add_to_user_saved(file_id, current_user.id)
         return jsonify({"success": True, "message": "File saved successfully", "saved": True})
