@@ -5,23 +5,24 @@
 import os
 import subprocess
 import time
-import pytest
 
+import pytest
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
     NoSuchElementException,
     TimeoutException,
-    ElementClickInterceptedException,
 )
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from core.environment.host import get_host_for_selenium_testing
-from core.selenium.common import initialize_driver, close_driver
+from core.selenium.common import close_driver, initialize_driver
 
 # Emails used in admin test (kept fixed to simplify cleanup fixture)
 USER_EMAIL_1 = "usuario@nue.vo"
 USER_EMAIL_2 = "admin@nuevo.es"
+
 
 def _run_shell(cmd, env=None):
     """
@@ -31,7 +32,11 @@ def _run_shell(cmd, env=None):
     try:
         subprocess.run(cmd, shell=True, check=True, env=env)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Command failed: {cmd}\nExit: {e.returncode}") from e
+        raise RuntimeError(
+            f"Command failed: {cmd}\nExit: {
+                e.returncode}"
+        ) from e
+
 
 @pytest.fixture(scope="function")
 def migrate_and_seed():
@@ -135,7 +140,8 @@ class TestGuestuser:
             except (NoSuchElementException, TimeoutException):
                 raise AssertionError("Link 'Dataset with tag5 and author 7' no encontrado")
 
-            # Try open/close preview modal (if present) and wait backdrop to disappear
+            # Try open/close preview modal (if present) and wait backdrop to
+            # disappear
             try:
                 wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".btn-outline-secondary:nth-child(1)"))).click()
                 time.sleep(0.5)
@@ -252,7 +258,11 @@ class TestAdmin:
                 wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "Users"))).click()
             except Exception:
                 try:
-                    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".sidebar-item:nth-child(11) .align-middle:nth-child(2)"))).click()
+                    wait.until(
+                        EC.element_to_be_clickable(
+                            (By.CSS_SELECTOR, ".sidebar-item:nth-child(11) .align-middle:nth-child(2)")
+                        )
+                    ).click()
                 except Exception:
                     raise AssertionError("No se pudo abrir la sección Users")
 
@@ -304,9 +314,14 @@ class TestAdmin:
 
             # Delete first user
             try:
-                self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(11) .align-middle:nth-child(2)").click()
+                self.driver.find_element(
+                    By.CSS_SELECTOR, ".sidebar-item:nth-child(11) .align-middle:nth-child(2)"
+                ).click()
                 self.driver.find_element(By.CSS_SELECTOR, "tr:nth-child(1) .btn-delete").click()
-                assert self.driver.switch_to.alert.text == "Are you sure you want to delete this user? This action cannot be undone."
+                assert (
+                    self.driver.switch_to.alert.text
+                    == "Are you sure you want to delete this user? This action cannot be undone."
+                )
                 self.driver.switch_to.alert.accept()
                 time.sleep(1)
             except Exception as exc:
@@ -408,7 +423,11 @@ class TestCurator:
 
             # Open curator area (sidebar item 8)
             try:
-                wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)"))).click()
+                wait.until(
+                    EC.element_to_be_clickable(
+                        (By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)")
+                    )
+                ).click()
             except Exception:
                 raise AssertionError("No se pudo acceder a la sección de curador")
 
@@ -443,7 +462,8 @@ class TestCurator:
             except Exception:
                 raise AssertionError("No se pudo abrir el editor del primer dataset")
 
-            # Trigger the action that raises a confirmation alert (as in original script)
+            # Trigger the action that raises a confirmation alert (as in
+            # original script)
             try:
                 action_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "tr:nth-child(1) form .feather")))
                 try:
@@ -452,7 +472,10 @@ class TestCurator:
                     self.driver.execute_script("arguments[0].click();", action_btn)
 
                 alert = wait.until(EC.alert_is_present())
-                assert alert.text == "Are you sure?", f"Texto de alerta inesperado: {alert.text}"
+                assert (
+                    alert.text == "Are you sure?"
+                ), f"Texto de alerta inesperado: {
+                    alert.text}"
                 alert.accept()
             except Exception as exc:
                 raise AssertionError(f"Fallo en la acción final del curator: {exc}")
