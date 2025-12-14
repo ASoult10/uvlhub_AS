@@ -8,6 +8,7 @@ from app import db
 from app.modules.auth.models import Role, User
 from app.modules.profile.models import UserProfile
 from app.modules.dataset.models import DataSet, DSMetaData, Author, Observation, PublicationType
+from app.modules.hubfile.models import Hubfile
 from app.modules.conftest import login, logout
 from datetime import date
 
@@ -246,6 +247,8 @@ def test_client(test_client):
         test_client.ds_meta2_title = ds_meta2.title  # Regular user's dataset
         test_client.ds_meta3_title = ds_meta3.title  # Other user's dataset
         test_client.ds_meta4_title = ds_meta4.title  # Other user's dataset
+
+        test_client.test_dataset_id = dataset1.id
 
     yield test_client
 
@@ -882,5 +885,55 @@ class TestDeleteFileRoute:
 
         # The route will try to delete a file with None name, which should fail
         assert response.status_code in [404, 500], "Should return error for missing filename"
+
+        logout(test_client)
+
+
+class TestDownloadDatasetRoute:
+    """ Tests for the download dataset route. """
+    download_dataset_url = "/dataset/download/"  # Format with dataset ID
+
+    def test_download_nonexistent_dataset(self, test_client):
+        """
+        Tests that downloading a non-existent dataset returns 404.
+        """
+        # No need to login for this test
+        non_existent_dataset_id = 99999
+        response = test_client.get(
+            f"{self.download_dataset_url}{non_existent_dataset_id}",
+            follow_redirects=False
+        )
+
+        assert response.status_code == 404, "Should return 404 for non-existent dataset"
+
+    def test_download_existing_dataset(self, test_client):
+        """
+        POSITIVE TEST: Successfully downloads an existing dataset.
+        """
+        # No need to login for this test
+        with test_client.application.app_context():
+            dataset_id = test_client.test_dataset_id
+            dataset = DataSet.query.filter_by(id=dataset_id).first()
+            assert dataset is not None, f"Dataset {dataset_id} should exist"
+            download_count = dataset.download_count
+
+        response = test_client.get(
+            f"{self.download_dataset_url}{dataset_id}",
+            follow_redirects=False
+        )
+
+        assert response.status_code == 200, "Should successfully download dataset"
+        assert response.headers["Content-Type"] == "application/zip", (
+            f"Response should be zip file but was {response.headers['Content-Type']}"
+        )
+        assert "attachment" in response.headers["Content-Disposition"], "Response should be an attachment"
+
+        with test_client.application.app_context():
+            # Need to session refresh to get updated value
+            dataset_after = DataSet.query.filter_by(id=dataset_id).first()
+            assert dataset_after.download_count == download_count + 1, (
+                f"Download counter should be incremented from {download_count} to {download_count + 1}, "
+                f"but is {dataset_after.download_count}"
+            )
 
         logout(test_client)
