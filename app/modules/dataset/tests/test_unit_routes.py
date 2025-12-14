@@ -8,7 +8,6 @@ from app import db
 from app.modules.auth.models import Role, User
 from app.modules.profile.models import UserProfile
 from app.modules.dataset.models import DataSet, DSMetaData, Author, Observation, PublicationType
-from app.modules.hubfile.models import Hubfile
 from app.modules.conftest import login, logout
 from datetime import date
 
@@ -935,5 +934,65 @@ class TestDownloadDatasetRoute:
                 f"Download counter should be incremented from {download_count} to {download_count + 1}, "
                 f"but is {dataset_after.download_count}"
             )
+
+        logout(test_client)
+
+
+class TestImportRoute:
+    """ Tests for the import route. """
+    import_url = "/datasets/import"
+
+    def test_import_dataset_as_unauthenticated_user(self, test_client):
+        """ Tests that unauthenticated users cannot access the import dataset route. """
+
+        response = test_client.get(self.import_url, follow_redirects=False)
+        assert response.status_code == 302, "Should redirect unauthenticated users"
+        assert "/login" in response.headers["Location"], (
+            f"Should redirect to login page but was {response.headers['Location']}"
+        )
+
+    def test_import_dataset_as_guest_user(self, test_client):
+        """ Tests that guest users cannot access the import dataset route. """
+        # Ensure clean state - logout any previous user
+        logout(test_client)
+
+        # Login as guest user
+        login_response = login(test_client, test_client.guest_email, test_client.guest_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Verify current user has guest role
+        with test_client.application.app_context():
+            with test_client.session_transaction():
+                assert current_user.is_authenticated, "User should be authenticated"
+                assert current_user.has_role("guest"), (
+                    f"Current user should have guest role but role is {current_user.roles.all()}"
+                )
+
+        response = test_client.get(self.import_url, follow_redirects=False)
+        assert response.status_code == 302, "Should redirect guest users"
+        assert response.headers["Location"] == "/", "Should redirect to index page"
+        logout(test_client)
+
+    def test_import_dataset_success(self, test_client):
+        """
+        Tests that authenticated regular users can access the import dataset route.
+        """
+        # Ensure clean state - logout any previous user
+        logout(test_client)
+
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Verify current user is regular user
+        with test_client.application.app_context():
+            with test_client.session_transaction():
+                assert current_user.is_authenticated, "User should be authenticated"
+                assert not current_user.has_role("guest"), "User should not have guest role"
+                assert not current_user.has_role("curator"), "User should not have curator role"
+
+        response = test_client.get(self.import_url, follow_redirects=False)
+        assert response.status_code == 200, "Regular users should access the import dataset page"
+        assert b"Import" in response.data, "Import dataset page content should be present"
 
         logout(test_client)
