@@ -1,5 +1,7 @@
 import pytest
 import logging
+import os
+import shutil
 from flask_login import current_user
 
 from app import db
@@ -474,7 +476,7 @@ class TestListDatasetRoute:
         """
         # Ensure clean state - logout any previous user
         logout(test_client)
-        
+
         # Login as guest user
         login_response = login(test_client, test_client.guest_email, test_client.guest_password)
         assert login_response.status_code == 200, "Login should be successful"
@@ -499,7 +501,7 @@ class TestListDatasetRoute:
         """
         # Ensure clean state
         logout(test_client)
-        
+
         # Login as curator user
         login_response = login(test_client, test_client.curator_email, test_client.curator_password)
         assert login_response.status_code == 200, "Login should be successful"
@@ -525,7 +527,7 @@ class TestListDatasetRoute:
         """
         # Ensure clean state
         logout(test_client)
-        
+
         # Login as regular user
         login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
         assert login_response.status_code == 200, "Login should be successful"
@@ -569,3 +571,177 @@ class TestListDatasetRoute:
         assert "/login" in response.headers["Location"], (
             f"Should redirect to login page but was {response.headers['Location']}"
         )
+
+
+def cleanup_temp_folder(test_client, user_email):
+    """
+    Helper function to clean up temporary folder for a given user.
+
+    Args:
+        test_client: The Flask test client
+        user_email: Email of the user whose temp folder should be cleaned
+    """
+    with test_client.application.app_context():
+        user = User.query.filter_by(email=user_email).first()
+        if user:
+            temp_folder = user.temp_folder()
+            if os.path.exists(temp_folder):
+                shutil.rmtree(temp_folder)
+
+
+class TestUploadFileRoute:
+    """ Tests for the upload file route. """
+    upload_file_url = "/dataset/file/upload"
+
+    def test_upload_file_as_unauthenticated_user(self, test_client):
+        """
+        Tests that unauthenticated users cannot access the upload file route.
+        """
+
+        response = test_client.post(self.upload_file_url, follow_redirects=False)
+        assert response.status_code == 302, "Should redirect unauthenticated users"
+        assert "/login" in response.headers["Location"], (
+            f"Should redirect to login page but was {response.headers['Location']}"
+        )
+
+    def test_upload_file_as_guest_user(self, test_client):
+        """
+        Tests that guest users cannot access the upload file route.
+        """
+        # Ensure clean state - logout any previous user
+        logout(test_client)
+
+        # Login as guest user
+        login_response = login(test_client, test_client.guest_email, test_client.guest_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Verify current user has guest role
+        with test_client.application.app_context():
+            with test_client.session_transaction():
+                assert current_user.is_authenticated, "User should be authenticated"
+                assert current_user.has_role("guest"), (
+                    f"Current user should have guest role but role is {current_user.roles.all()}"
+                )
+
+        response = test_client.post(self.upload_file_url, follow_redirects=False)
+        assert response.status_code == 302, "Should redirect guest users"
+        assert response.headers["Location"] == "/", "Should redirect to index page"
+        logout(test_client)
+
+    def test_upload_file_successfully(self, test_client):
+        """
+        POSITIVE TEST: Successfully uploads a JSON file.
+        """
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Clean up temp folder
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+
+        # Prepare file upload
+        json_file_path = "app/modules/dataset/json_examples/M31_Andromeda.json"
+
+        with open(json_file_path, 'rb') as f:
+            data = {
+                'file': (f, 'M31_Andromeda.json')
+            }
+
+            response = test_client.post(
+                self.upload_file_url,
+                data=data,
+                content_type='multipart/form-data',
+                follow_redirects=False
+            )
+
+        assert response.status_code == 200, f"Should successfully upload file, got {response.status_code}"
+        json_data = response.get_json()
+        assert "message" in json_data, "Response should contain a message"
+        assert "uploaded successfully" in json_data["message"].lower(), "Should confirm successful upload"
+        assert "filename" in json_data, "Response should contain filename"
+        assert json_data["filename"] == "M31_Andromeda.json", "Filename should match uploaded file"
+
+        logout(test_client)
+
+    def test_upload_file_rejects_non_json(self, test_client):
+        """
+        Tests that non-JSON files are rejected.
+        """
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+        # Try to upload a non-JSON file
+        from io import BytesIO
+        data = {
+            'file': (BytesIO(b'This is not JSON'), 'test.txt')
+        }
+
+        response = test_client.post(
+            self.upload_file_url,
+            data=data,
+            content_type='multipart/form-data',
+            follow_redirects=False
+        )
+
+        assert response.status_code == 400, "Should reject non-JSON files"
+        json_data = response.get_json()
+        assert "message" in json_data, "Response should contain error message"
+        assert "valid file" in json_data["message"].lower(), "Error should mention invalid file"
+
+        logout(test_client)
+
+    def test_upload_file_handles_duplicate_names(self, test_client):
+        """
+        Tests that duplicate filenames are handled by adding a counter.
+        """
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        json_file_path = "app/modules/dataset/json_examples/M31_Andromeda.json"
+
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+
+        # Upload file first time
+        with open(json_file_path, 'rb') as f:
+            data = {
+                'file': (f, 'M31_Andromeda.json')
+            }
+            response1 = test_client.post(
+                self.upload_file_url,
+                data=data,
+                content_type='multipart/form-data',
+                follow_redirects=False
+            )
+
+        assert response1.status_code == 200, "First upload should succeed"
+        json_data1 = response1.get_json()
+        assert json_data1["filename"] == "M31_Andromeda.json", (
+            f"First filename should be original but was {json_data1['filename']}"
+        )
+
+        # Upload same file again
+        with open(json_file_path, 'rb') as f:
+            data = {
+                'file': (f, 'M31_Andromeda.json')
+            }
+            response2 = test_client.post(
+                self.upload_file_url,
+                data=data,
+                content_type='multipart/form-data',
+                follow_redirects=False
+            )
+
+        assert response2.status_code == 200, "Second upload should succeed"
+        json_data2 = response2.get_json()
+        assert json_data2["filename"] == "M31_Andromeda (1).json", "Second filename should have counter"
+
+        # Clean up temp folder
+        with test_client.application.app_context():
+            user = User.query.filter_by(email=test_client.regular_user_email).first()
+            temp_folder = user.temp_folder()
+            if os.path.exists(temp_folder):
+                shutil.rmtree(temp_folder)
+
+        logout(test_client)
