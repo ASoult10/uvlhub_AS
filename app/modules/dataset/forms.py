@@ -12,7 +12,7 @@ from wtforms import (
     SubmitField,
     TextAreaField,
 )
-from wtforms.validators import URL, DataRequired, Length, Optional
+from wtforms.validators import URL, DataRequired, Length, Optional, InputRequired, Regexp
 
 from app.modules.dataset.models import PublicationType
 
@@ -161,8 +161,8 @@ class DataSetForm(FlaskForm):
 
 class EditDataSetForm(FlaskForm):
     # --- Metadatos Generales ---
-    title = StringField("Title", validators=[DataRequired(), Length(max=120)])
-    description = TextAreaField("Description", validators=[DataRequired(), Length(max=1000)])
+    title = StringField("Title", validators=[DataRequired(), Length(min=3,max=120)])
+    description = TextAreaField("Description", validators=[DataRequired(), Length(min=3,max=1000)])
 
     # Cargamos los tipos de la Enum PublicationType
     publication_type = SelectField(
@@ -174,14 +174,34 @@ class EditDataSetForm(FlaskForm):
     tags = StringField("Tags", validators=[Optional(), Length(max=120)])
 
     # --- Datos de Observación ---
-    object_name = StringField("Object Name", validators=[Optional(), Length(max=120)])
-    ra = StringField("Right Ascension (RA)", validators=[Optional(), Length(max=50)])
-    dec = StringField("Declination (Dec)", validators=[Optional(), Length(max=50)])
+    object_name = StringField("Object Name", validators=[DataRequired(message="Object Name is required."), Length(max=120)])
+    
+    RA_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?$"
+    DEC_PATTERN = r"^[+-]?(?:[0-8]?\d|90):[0-5]\d:[0-5]\d(?:\.\d+)?$"
+
+    ra = StringField(
+        "Right Ascension (RA)", 
+        validators=[
+            DataRequired(message="RA is required."), 
+            Length(max=50),
+            Regexp(RA_PATTERN, message="Format must be HH:MM:SS (e.g., 12:00:00)")
+        ]
+    )
+
+    dec = StringField(
+        "Declination (Dec)", 
+        validators=[
+            DataRequired(message="DEC is required."), 
+            Length(max=50),
+            Regexp(DEC_PATTERN, message="Format must be +/-DD:MM:SS (e.g., +10:30:00)")
+        ]
+    )
+
     magnitude = FloatField("Magnitude", validators=[Optional()])
 
     # Usamos string para la fecha para evitar problemas de formato, o
     # DateField si prefieres
-    observation_date = StringField("Observation Date", validators=[Optional()])
+    observation_date = StringField("Observation Date", validators=[InputRequired(message="Observation Date is required."), Length(max=50)])
 
     filter_used = StringField("Filter Used", validators=[Optional(), Length(max=50)])
     notes = TextAreaField("Notes", validators=[Optional(), Length(max=1000)])

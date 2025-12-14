@@ -388,7 +388,7 @@ def edit_dataset(dataset_id):
             form.dec.data = obs.dec
             form.magnitude.data = obs.magnitude
             if obs.observation_date:
-                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%dT%H:%M")
+                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%d")
             form.filter_used.data = obs.filter_used
             form.notes.data = obs.notes
 
