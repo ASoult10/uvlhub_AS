@@ -745,3 +745,142 @@ class TestUploadFileRoute:
                 shutil.rmtree(temp_folder)
 
         logout(test_client)
+
+
+class TestDeleteFileRoute:
+    """ Tests for the delete file route. """
+    delete_file_url = "/dataset/file/delete"
+
+    def test_delete_file_as_unauthenticated_user(self, test_client):
+        """
+        Tests that unauthenticated users cannot access the delete file route.
+        """
+        logout(test_client)
+        
+        response = test_client.post(
+            self.delete_file_url,
+            json={"file": "test.json"},
+            follow_redirects=False
+        )
+        assert response.status_code == 302, "Should redirect unauthenticated users"
+        assert "/login" in response.headers["Location"], (
+            f"Should redirect to login page but was {response.headers['Location']}"
+        )
+
+    def test_delete_file_as_guest_user(self, test_client):
+        """
+        Tests that guest users cannot delete files.
+        """
+        logout(test_client)
+        # Login as guest user
+        login_response = login(test_client, test_client.guest_email, test_client.guest_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Verify current user has guest role
+        with test_client.application.app_context():
+            with test_client.session_transaction():
+                assert current_user.is_authenticated, "User should be authenticated"
+                assert current_user.has_role("guest"), (
+                    f"Current user should have guest role but role is {current_user.roles.all()}"
+                )
+
+        response = test_client.post(
+            self.delete_file_url,
+            json={"file": "test.json"},
+            follow_redirects=False
+        )
+        assert response.status_code == 302, "Should redirect guest users"
+        assert response.headers["Location"] == "/", "Should redirect to index page"
+        logout(test_client)
+
+    def test_delete_file_successfully(self, test_client):
+        """
+        POSITIVE TEST: Successfully deletes an existing file.
+        """
+        logout(test_client)
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # First, upload a file
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+
+        json_file_path = "app/modules/dataset/json_examples/M31_Andromeda.json"
+        with open(json_file_path, 'rb') as f:
+            data = {
+                'file': (f, 'test_delete.json')
+            }
+            upload_response = test_client.post(
+                "/dataset/file/upload",
+                data=data,
+                content_type='multipart/form-data',
+                follow_redirects=False
+            )
+
+        assert upload_response.status_code == 200, "Upload should succeed"
+
+        # Now delete the file
+        response = test_client.post(
+            self.delete_file_url,
+            json={"file": "test_delete.json"},
+            content_type='application/json',
+            follow_redirects=False
+        )
+
+        assert response.status_code == 200, f"Should successfully delete file, got {response.status_code}"
+        json_data = response.get_json()
+        assert "message" in json_data, "Response should contain a message"
+        assert "file deleted" in json_data["message"].lower(), "Should confirm successful deletion"
+        assert json_data["filename"] == "test_delete.json", "Filename should match deleted file"
+
+        # Clean up
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+        logout(test_client)
+
+    def test_delete_file_not_found(self, test_client):
+        """
+        Tests that deleting a non-existent file returns 404.
+        """
+        logout(test_client)
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Clean up to ensure no files exist
+        cleanup_temp_folder(test_client, test_client.regular_user_email)
+
+        # Try to delete non-existent file
+        response = test_client.post(
+            self.delete_file_url,
+            json={"file": "nonexistent.json"},
+            content_type='application/json',
+            follow_redirects=False
+        )
+
+        assert response.status_code == 404, "Should return 404 for non-existent file"
+        json_data = response.get_json()
+        assert "message" in json_data, "Response should contain error message"
+        assert "file not found" in json_data["message"].lower(), "Error should mention file not found"
+
+        logout(test_client)
+
+    def test_delete_file_without_filename(self, test_client):
+        """
+        Tests that deleting without providing filename returns error.
+        """
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # Try to delete without filename
+        response = test_client.post(
+            self.delete_file_url,
+            json={},
+            content_type='application/json',
+            follow_redirects=False
+        )
+
+        # The route will try to delete a file with None name, which should fail
+        assert response.status_code in [404, 500], "Should return error for missing filename"
+
+        logout(test_client)
