@@ -92,7 +92,7 @@ def test_client(test_client):
             description="Photometric observations of the Andromeda Galaxy",
             publication_type=PublicationType.DATA_PAPER,
             tags="M31, Andromeda, galaxy",
-            dataset_doi="10.5281/zenodo.123456",
+            dataset_doi="10.5281/dataset8",
             deposition_id=123456
         )
         db.session.add(ds_meta1)
@@ -248,6 +248,7 @@ def test_client(test_client):
         test_client.ds_meta4_title = ds_meta4.title  # Other user's dataset
 
         test_client.test_dataset_id = dataset1.id
+        test_client.test_dataset_doi = ds_meta1.dataset_doi
 
     yield test_client
 
@@ -890,7 +891,7 @@ class TestDeleteFileRoute:
 
 class TestDownloadDatasetRoute:
     """ Tests for the download dataset route. """
-    download_dataset_url = "/dataset/download/"  # Format with dataset ID
+    download_dataset_url = "/dataset/download/"
 
     def test_download_nonexistent_dataset(self, test_client):
         """
@@ -936,6 +937,35 @@ class TestDownloadDatasetRoute:
             )
 
         logout(test_client)
+
+
+class TestSubdomainIndexRoute:
+    """ Tests for the subdomain index route. Get dataset info page by DOI. """
+    subdomain_index_url = "/doi/{}"  # Format with DOI path
+
+    def test_subdomain_index_redirect(self, test_client):
+        """ Test access to a dataset info page by DOI """
+        logout(test_client)
+        # Login as regular user
+        login_response = login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        assert login_response.status_code == 200, "Login should be successful"
+
+        # GET dataset by doi
+        doi = test_client.test_dataset_doi
+        dataset_id = test_client.test_dataset_id
+
+        with test_client.application.app_context():
+            dataset = DataSet.query.filter_by(id=dataset_id).first()
+            assert dataset is not None, f"Dataset {dataset_id} should exist"
+
+        response = test_client.get(
+            f"{self.subdomain_index_url.format(doi)}",
+            follow_redirects=False
+        )
+        assert response.status_code == 308, "Should successfully redirect to dataset information page"
+        assert f"/doi/{doi}" in response.headers["Location"], (
+            f"Should redirect to dataset information page but was {response.headers['Location']}"
+        )
 
 
 class TestImportRoute:
