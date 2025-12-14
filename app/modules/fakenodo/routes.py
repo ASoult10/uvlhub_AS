@@ -1,6 +1,8 @@
-from flask import jsonify, render_template, request
 import itertools
 from typing import Dict
+
+from flask import jsonify, render_template, request
+
 from app.modules.fakenodo import fakenodo_bp
 
 _STATE: Dict[str, object] = {
