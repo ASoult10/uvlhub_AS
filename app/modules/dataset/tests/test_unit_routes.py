@@ -974,7 +974,7 @@ class TestImportRoute:
 
     def test_import_dataset_as_unauthenticated_user(self, test_client):
         """ Tests that unauthenticated users cannot access the import dataset route. """
-
+        logout(test_client)
         response = test_client.get(self.import_url, follow_redirects=False)
         assert response.status_code == 302, "Should redirect unauthenticated users"
         assert "/login" in response.headers["Location"], (
