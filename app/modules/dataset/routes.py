@@ -31,9 +31,9 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.hubfile.services import HubfileService
 from app.modules.jsonChecker import validate_json_file
 from app.modules.zenodo.services import ZenodoService
-from app.modules.hubfile.services import HubfileService
 
 logger = logging.getLogger(__name__)
 

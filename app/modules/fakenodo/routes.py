@@ -69,7 +69,6 @@ def upload_file(deposition_id):
     return jsonify({"filename": filename, "link": f"http://fakenodo.org/files/{deposition_id}/files/{filename}"}), 201
 
 
-
 # Simulación de publicación de depósito (POST
 # /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
 
