@@ -1,6 +1,7 @@
-import pytest
 from datetime import datetime
 from unittest.mock import Mock, patch
+
+import pytest
 
 from app import create_app
 from app.modules.dataset.models import PublicationType
@@ -144,7 +145,7 @@ class TestExploreUnit:
         """Test filtering by title"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[0]]
-            
+
             results = explore_service.filter(query="alpha")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Alpha dataset"
@@ -153,7 +154,7 @@ class TestExploreUnit:
         """Test filtering by description"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[5]]
-            
+
             results = explore_service.filter(query="Nuclear")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Sigma dataset"
@@ -162,7 +163,7 @@ class TestExploreUnit:
         """Test filtering by author name"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[5]]
-            
+
             results = explore_service.filter(query="Oppenheimer")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Sigma dataset"
@@ -171,7 +172,7 @@ class TestExploreUnit:
         """Test filtering by author affiliation"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[3]]
-            
+
             results = explore_service.filter(query="Vienna")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Epsilon dataset"
@@ -180,7 +181,7 @@ class TestExploreUnit:
         """Test filtering by author ORCID"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[2]]
-            
+
             results = explore_service.filter(query="0000-0000-0000-0005")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Gamma dataset"
@@ -189,7 +190,7 @@ class TestExploreUnit:
         """Test filtering by tags"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[4], sample_datasets[5]]
-            
+
             results = explore_service.filter(query="history")
             assert len(results) == 2
             titles = [ds.ds_meta_data.title for ds in results]
@@ -200,7 +201,7 @@ class TestExploreUnit:
         """Test filtering by date after"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[5]]
-            
+
             results = explore_service.filter(date_after="2025-01-01")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Sigma dataset"
@@ -209,7 +210,7 @@ class TestExploreUnit:
         """Test filtering by date before"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[0], sample_datasets[1]]
-            
+
             results = explore_service.filter(date_before="2024-02-01")
             assert len(results) == 2
             titles = [ds.ds_meta_data.title for ds in results]
@@ -220,7 +221,7 @@ class TestExploreUnit:
         """Test filtering by date range"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = sample_datasets[:5]
-            
+
             results = explore_service.filter(date_after="2024-01-01", date_before="2024-12-31")
             assert len(results) == 5
             titles = [ds.ds_meta_data.title for ds in results]
@@ -235,7 +236,7 @@ class TestExploreUnit:
         """Test filtering by author with multiple results"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[0], sample_datasets[1]]
-            
+
             results = explore_service.filter(author="John Doe")
             assert len(results) == 2
             titles = [ds.ds_meta_data.title for ds in results]
@@ -246,7 +247,7 @@ class TestExploreUnit:
         """Test filtering by author with single result"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[3]]
-            
+
             results = explore_service.filter(author="Hans Landa")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Epsilon dataset"
@@ -255,7 +256,7 @@ class TestExploreUnit:
         """Test filtering by single tag"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = sample_datasets[:4]
-            
+
             results = explore_service.filter(tags=["geo"])
             assert len(results) == 4
             titles = [ds.ds_meta_data.title for ds in results]
@@ -268,7 +269,7 @@ class TestExploreUnit:
         """Test filtering by multiple tags"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[4], sample_datasets[5]]
-            
+
             results = explore_service.filter(tags=["history", "art"])
             assert len(results) == 2
             titles = [ds.ds_meta_data.title for ds in results]
@@ -279,7 +280,7 @@ class TestExploreUnit:
         """Test filtering by single publication type"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = [sample_datasets[5]]
-            
+
             results = explore_service.filter(publication_type="data_paper")
             assert len(results) == 1
             assert results[0].ds_meta_data.title == "Sigma dataset"
@@ -288,7 +289,7 @@ class TestExploreUnit:
         """Test filtering by journal article publication type"""
         with patch.object(explore_service.repository, "filter") as mock_filter:
             mock_filter.return_value = sample_datasets[:5]
-            
+
             results = explore_service.filter(publication_type="journal_article")
             assert len(results) == 5
             titles = [ds.ds_meta_data.title for ds in results]
