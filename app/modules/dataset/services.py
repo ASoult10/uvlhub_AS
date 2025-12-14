@@ -22,6 +22,7 @@ from app.modules.hubfile.repositories import (
     HubfileRepository,
     HubfileViewRecordRepository,
 )
+from app.modules.jsonChecker import validate_json_file
 from core.services.BaseService import BaseService
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,27 @@ class DataSetService(BaseService):
             src_path = os.path.join(source_dir, filename)
             if not os.path.isfile(src_path):
                 continue
+            # If it's a JSON file, validate structure before moving
+            if filename.lower().endswith(".json"):
+                try:
+                    res = validate_json_file(src_path)
+                    if not res.get("is_json") or not res.get("valid"):
+                        logger.warning(
+                            f"Skipping invalid JSON file during move_hubfiles: {filename} -> {res.get('errors')}"
+                        )
+                        # remove invalid file from temp
+                        try:
+                            os.remove(src_path)
+                        except Exception:
+                            pass
+                        continue
+                except Exception as e:
+                    logger.warning(f"JSON validation error for {filename}: {e}")
+                    try:
+                        os.remove(src_path)
+                    except Exception:
+                        pass
+                    continue
 
             # calculate checksum and size
             checksum, size = calculate_checksum_and_size(src_path)
@@ -186,6 +208,26 @@ class DataSetService(BaseService):
                     file_path = os.path.join(temp_folder, filename)
                     if not os.path.isfile(file_path):
                         continue
+                    # If JSON, validate first
+                    if filename.lower().endswith(".json"):
+                        try:
+                            res = validate_json_file(file_path)
+                            if not res.get("is_json") or not res.get("valid"):
+                                logger.warning(
+                                    f"Skipping invalid JSON file during create_from_form: {filename} -> {res.get('errors')}"
+                                )
+                                try:
+                                    os.remove(file_path)
+                                except Exception:
+                                    pass
+                                continue
+                        except Exception as e:
+                            logger.warning(f"JSON validation error for {filename}: {e}")
+                            try:
+                                os.remove(file_path)
+                            except Exception:
+                                pass
+                            continue
 
                     checksum, size = calculate_checksum_and_size(file_path)
 

@@ -31,7 +31,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
-from app.modules.fakenodo.factory import get_zenodo_service
+from app.modules.jsonChecker import validate_json_file
+from app.modules.zenodo.services import ZenodoService
 from app.modules.hubfile.services import HubfileService
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ logger = logging.getLogger(__name__)
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
-zenodo_service = get_zenodo_service()
+zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 
@@ -192,6 +193,33 @@ def upload():
         file.save(file_path)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+    # Validate JSON structure immediately after saving
+    try:
+        res = validate_json_file(file_path)
+        if not res.get("is_json") or not res.get("valid"):
+            # remove invalid file
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+            return (
+                jsonify(
+                    {
+                        "message": "Invalid JSON file",
+                        "errors": res.get("errors", []),
+                    }
+                ),
+                400,
+            )
+    except Exception as e:
+        # In case validation itself fails unexpectedly, remove file and return
+        # error
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+        return jsonify({"message": f"JSON validation error: {e}"}), 500
 
     return (
         jsonify(

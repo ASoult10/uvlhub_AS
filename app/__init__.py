@@ -109,13 +109,11 @@ def create_app(config_name="development"):
     # Injecting environment variables into jinja context
     @app.context_processor
     def inject_vars_into_jinja():
-        use_fakenodo = os.getenv("UPLOADS_USE_FAKENODO_ONLY", "False").lower() in ("1", "true", "yes")
         return {
             "FLASK_APP_NAME": os.getenv("FLASK_APP_NAME"),
             "FLASK_ENV": os.getenv("FLASK_ENV"),
             "DOMAIN": os.getenv("DOMAIN", "localhost"),
             "APP_VERSION": get_app_version(),
-            "USE_FAKENODO": use_fakenodo,
         }
 
     # Initialize JWT blocklist loader
@@ -177,8 +175,7 @@ def create_app(config_name="development"):
             "hubfile.download_file",
             "hubfile.unsave_file",
             "hubfile.save_file",
-            "flamapy.check_uvl",
-            "flamapy.valid",
+            "hubfile.check_json",
             "static",
             "admin.delete_user",
             "profile.author_profile",
@@ -197,7 +194,11 @@ def create_app(config_name="development"):
         if request.is_json or request.path.startswith("/api") or request.path.endswith("/scripts.js"):
             return
 
-        if request.blueprint == "fakenodo" or request.path.startswith("/fakenodo/api"):
+        if (
+            request.blueprint == "fakenodo"
+            or request.path.startswith("/fakenodo/api")
+            or request.path.startswith("/doi")
+        ):
             return
 
         try:
