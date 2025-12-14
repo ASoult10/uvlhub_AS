@@ -453,26 +453,15 @@ function saveInCart(fileId) {
     fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.text().then(text => ({ response, text })))
         .then(({ response, text }) => {
-            // If backend redirected to login page or returned unauthorized, show a friendly message
-            if (response.status === 401 || response.status === 302) {
-                throw new Error('Debes iniciar sesión para guardar archivos');
-            }
-
             if (!response.ok) {
-                // Try to parse a JSON error body, but never show raw HTML to users
-                try {
-                    const json = text ? JSON.parse(text) : null;
-                    const msg = (json && (json.error || json.message)) || response.statusText || `HTTP ${response.status}`;
-                    throw new Error(msg);
-                } catch (_) {
-                    throw new Error(response.statusText || `HTTP ${response.status}`);
-                }
+                const msg = text || response.statusText || `HTTP ${response.status}`;
+                throw new Error(msg);
             }
 
             let parsedData = null;
             if (text) {
                 try { parsedData = JSON.parse(text); }
-                catch (_) { parsedData = null; }
+                catch (_) {}
             }
 
             if (parsedData && ((parsedData.success === false) || parsedData.error)) {
@@ -523,30 +512,29 @@ function hideLoading() { document.getElementById("loading").style.display = "non
 function checkUVL(file_id) {
     const outputDiv = document.getElementById('check_' + file_id);
     outputDiv.innerHTML = '';
-    // Call the JSON validation endpoint instead of the UVL parser
-    fetch(`/file/check_json/${file_id}`)
-        .then(response => response.json().then(body => ({ status: response.status, body })))
-        .then(({ status, body }) => {
-            if (status === 200 && body.valid) {
-                outputDiv.innerHTML = '<span class="badge badge-success">JSON valid</span>';
-            } else if (status === 400) {
-                const errs = body.errors || body.error || JSON.stringify(body);
-                outputDiv.innerHTML = '<span class="badge badge-danger">JSON errors:</span>';
-                if (Array.isArray(errs)) {
-                    errs.forEach(error => {
-                        const e = document.createElement('div');
-                        e.className = 'text-danger';
+
+    fetch(`/flamapy/check_uvl/${file_id}`)
+        .then(response => {
+            return response.json().then(data => ({ status: response.status, data }));
+        })
+        .then(({ status, data }) => {
+            if (status === 400) {
+                if (data.errors) {
+                    outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
+                    data.errors.forEach(error => {
+                        const e = document.createElement('span');
+                        e.className = 'badge badge-danger';
                         e.textContent = error;
                         outputDiv.appendChild(e);
+                        outputDiv.appendChild(document.createElement('br'));
                     });
                 } else {
-                    const e = document.createElement('div');
-                    e.className = 'text-danger';
-                    e.textContent = errs;
-                    outputDiv.appendChild(e);
+                    outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
                 }
+            } else if (status === 200) {
+                outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
             } else {
-                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response: ${status}</span>`;
+                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
             }
         })
         .catch(error => {

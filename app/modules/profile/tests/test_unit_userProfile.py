@@ -2,6 +2,7 @@ import pytest
 
 from app import db
 from app.modules.auth.models import User
+from app.modules.conftest import logout
 from app.modules.dataset.models import DataSet, DSMetaData, PublicationType
 from app.modules.profile.models import UserProfile
 
@@ -64,6 +65,7 @@ def test_author_profile_public_access(test_client):
     Tests public access to an author's profile page.
     Verifies that the page is accessible and displays correct author information.
     """
+    logout(test_client)  # Ensure no user is logged in
 
     response = test_client.get(f"/profile/{test_client.test_user_id}")
 

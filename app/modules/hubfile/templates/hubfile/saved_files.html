@@ -44,7 +44,7 @@
                             <i data-feather="check"></i> Check
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
-                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="checkJSON('{{ file.id }}')">Syntax check</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a></li>
                         </ul>
                     </div>
 
@@ -116,26 +116,15 @@ function saveInCart(fileId) {
     fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.text().then(text => ({ response, text })))
         .then(({ response, text }) => {
-            // If backend redirected to login page or returned unauthorized, show a friendly message
-            if (response.status === 401 || response.status === 302) {
-                throw new Error('Debes iniciar sesión para guardar archivos');
-            }
-
             if (!response.ok) {
-                // Try to parse a JSON error body, but never show raw HTML to users
-                try {
-                    const json = text ? JSON.parse(text) : null;
-                    const msg = (json && (json.error || json.message)) || response.statusText || `HTTP ${response.status}`;
-                    throw new Error(msg);
-                } catch (_) {
-                    throw new Error(response.statusText || `HTTP ${response.status}`);
-                }
+                const msg = text || response.statusText || `HTTP ${response.status}`;
+                throw new Error(msg);
             }
 
             let parsedData = null;
             if (text) {
                 try { parsedData = JSON.parse(text); }
-                catch (_) { parsedData = null; }
+                catch (_) {}
             }
 
             if (parsedData && ((parsedData.success === false) || parsedData.error)) {
@@ -182,24 +171,19 @@ function viewFile(fileId) {
         });
 }
 
-// Note: UVL-based syntax checking was replaced by JSON validation.
-
-function checkJSON(fileId) {
-    fetch(`/file/check_json/${fileId}`)
-        .then(response => response.json().then(body => ({ status: response.status, body })))
-        .then(({ status, body }) => {
-            if (status === 200 && body.valid) {
-                alert('✓ JSON is valid and structure matches expected schema');
-            } else if (status === 400) {
-                const errs = body.errors || body.body || JSON.stringify(body);
-                alert('✗ JSON errors found:\n\n' + (Array.isArray(errs) ? errs.join('\n') : errs));
+function checkUVL(fileId) {
+    fetch(`/flamapy/check_uvl/${fileId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                alert('✓ Syntax is valid!');
             } else {
-                alert('Error validating JSON: ' + (body.error || JSON.stringify(body)));
+                alert('✗ Syntax errors found:\n\n' + data.errors);
             }
         })
         .catch(error => {
-            console.error('Error checking JSON:', error);
-            alert('Error checking JSON');
+            console.error('Error checking syntax:', error);
+            alert('Error checking syntax');
         });
 }
 </script>

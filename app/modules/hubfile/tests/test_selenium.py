@@ -53,30 +53,25 @@ def test_saveAndUnsaveModel():
     driver = initialize_driver()
     try:
         host = get_host_for_selenium_testing()
-
         driver.get(f"{host}/")
-        driver.set_window_size(1067, 591)
-
+        driver.set_window_size(1280, 716)
         driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
         driver.find_element(By.ID, "email").send_keys("user1@example.com")
         driver.find_element(By.ID, "password").send_keys("1234")
+        driver.find_element(By.CSS_SELECTOR, ".h2").click()
+        driver.find_element(By.CSS_SELECTOR, "form > .row:nth-child(2)").click()
         driver.find_element(By.ID, "submit").click()
-
         driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
-
-        driver.find_element(By.LINK_TEXT, "Saved models").click()
+        driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) > .card-body:nth-child(1)").click()
+        driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) > .card-body:nth-child(1)").click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
-
+        driver.find_element(By.CSS_SELECTOR, ".active .align-middle:nth-child(2)").click()
         driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(2) .align-middle:nth-child(2)").click()
-
         driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
-
-        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(9) .align-middle:nth-child(2)").click()
-
     except NoSuchElementException:
         raise AssertionError("Test failed!")
-
     finally:
         close_driver(driver)
 
@@ -85,32 +80,26 @@ def test_descargarMultiplesModelos():
     driver = initialize_driver()
     try:
         host = get_host_for_selenium_testing()
-
         driver.get(f"{host}/")
-        driver.set_window_size(1119, 681)
-
+        driver.set_window_size(1067, 652)
         driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
         driver.find_element(By.ID, "email").send_keys("user1@example.com")
         driver.find_element(By.ID, "password").send_keys("1234")
         driver.find_element(By.ID, "submit").click()
-
-        driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
-        driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
-
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)").click()
         driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(2) .align-middle:nth-child(2)").click()
-
+        driver.find_element(By.LINK_TEXT, "Dataset with tag5 and author 7").click()
+        driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > .feather").click()
+        driver.find_element(By.LINK_TEXT, "Home").click()
         driver.find_element(By.LINK_TEXT, "Dataset with author 1").click()
-        driver.find_element(By.CSS_SELECTOR, "#save-btn-6 > span").click()
-
-        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(9) .align-middle:nth-child(2)").click()
-
+        driver.find_element(By.ID, "save-btn-6").click()
+        driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(8) .align-middle:nth-child(2)").click()
         driver.find_element(By.LINK_TEXT, "Export All as JSON").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-6 > span").click()
         driver.find_element(By.CSS_SELECTOR, "#save-btn-7 > span").click()
-
+        driver.find_element(By.CSS_SELECTOR, ".active .align-middle:nth-child(2)").click()
     except NoSuchElementException:
         raise AssertionError("Test failed!")
-
     finally:
         close_driver(driver)
 

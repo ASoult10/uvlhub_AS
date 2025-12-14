@@ -52,9 +52,9 @@ class ExploreRepository(BaseRepository):
             datasets = datasets.filter(DataSet.created_at <= date_before_dt)
 
         if author != "any":
-            author_normalized = author.strip().replace(" ", "").lower()
+            author = author.strip().replace(" ", "").lower()
             formatted_name = func.lower(func.replace(func.trim(Author.name), " ", ""))
-            datasets = datasets.filter(DSMetaData.authors.any(formatted_name.ilike(f"%{author_normalized}%")))
+            datasets = datasets.filter(DSMetaData.authors.any(formatted_name.like(f"%{author}%")))
 
         if len(tags) > 0:
             tag_conditions = [DSMetaData.tags.ilike(f"%{tag}%") for tag in tags]
