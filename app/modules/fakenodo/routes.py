@@ -1,10 +1,6 @@
-import itertools
-from typing import Dict
-
 from flask import jsonify, render_template, request
 
 from app.modules.fakenodo import fakenodo_bp
-
 from app.modules.fakenodo.services import FakenodoService
 
 # Creamos un único servicio compartido (singleton en el módulo)
@@ -55,7 +51,8 @@ def upload_file(deposition_id):
 
     filename = request.form.get("filename") or "unnamed_file"
 
-    # Creamos un objeto minimalista compatible con la firma que espera el servicio
+    # Creamos un objeto minimalista compatible con la firma que espera el
+    # servicio
     class _Hubfile:
         def __init__(self, name):
             self.name = name
@@ -68,8 +65,11 @@ def upload_file(deposition_id):
         return jsonify({"message": "Deposition not found"}), 404
     return jsonify(result), 201
 
+
 # Simulación de publicación de depósito (POST
 # /fakenodo/api/deposit/depositions/<deposition_id>/actions/publish)
+
+
 @fakenodo_bp.route("/deposit/depositions/<int:deposition_id>/actions/publish", methods=["POST"])
 def publish_deposition(deposition_id):
     result = fakenodo_service.publish_deposition(deposition_id)

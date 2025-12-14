@@ -31,8 +31,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
-from app.modules.hubfile.services import HubfileService
 from app.modules.fakenodo.factory import get_zenodo_service
+from app.modules.hubfile.services import HubfileService
 
 logger = logging.getLogger(__name__)
 
