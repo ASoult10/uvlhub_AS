@@ -49,8 +49,12 @@ jobs:
         pip install -r requirements.txt
 
     - name: Upload coverage to Codacy
+      env:
+        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
       run: |
         pip install codacy-coverage
-        coverage run -m pytest app/modules/ --ignore-glob='*selenium*'
-        coverage xml 
-        python-codacy-coverage -r coverage.xml
+        pytest app/modules/ \
+          --cov=app/modules \
+          --cov-report=xml \
+          --ignore-glob='*selenium*'
+        python -m codacy_coverage report -r coverage.xml
