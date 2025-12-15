@@ -1,9 +1,6 @@
 <div align="center">
+  <img src="app/static/img/logos/AstroLogo1.png" width="300" alt="AstronomíaHub Logo">
 
-</div>
-
-<div style="text-align: center;">
-  ![Logo de AstronomiaHub](astronomiahub/app/static/img/logos/logo.png)
 </div>
 
 # Astronomiahub.io
