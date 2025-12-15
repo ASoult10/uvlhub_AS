@@ -5,9 +5,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 
+from app.modules.dataset.tests.test_selenium_comments import test_dataset_comments_flow
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
-from app.modules.dataset.tests.test_selenium_comments import test_dataset_comments_flow
+
 
 def wait_for_page_to_load(driver, timeout=4):
     WebDriverWait(driver, timeout).until(
