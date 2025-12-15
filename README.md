@@ -1,18 +1,32 @@
 <div align="center">
 
-  <a href="">[![Pytest Testing Suite](https://github.com/diverso-lab/uvlhub/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/diverso-lab/uvlhub/actions/workflows/tests.yml)</a>
-  <a href="">[![Commits Syntax Checker](https://github.com/diverso-lab/uvlhub/actions/workflows/commits.yml/badge.svg?branch=main)](https://github.com/diverso-lab/uvlhub/actions/workflows/commits.yml)</a>
-  
 </div>
 
 <div style="text-align: center;">
-  <img src="https://www.uvlhub.io/static/img/logos/logo-light.svg" alt="Logo">
+  <img src="https://www.uvlhub.io/static/img/logos/logo-png" alt="Logo">
 </div>
 
 # Astronomiahub.io
 
-Repository of astronomy observations in JSON format - Developed by DiversoLab and AstronomiaHub team
+Repositorio de observaciones astronómicas en formato JSON — **desarrollado por el equipo de AstronomiaHub**.
 
-## Official documentation
+AstronomiaHub está construido sobre **UVLHub**, proporcionando una plataforma estructurada para gestionar, validar y publicar datos de observaciones astronómicas.
 
-You can consult the official documentation of the project at [docs.uvlhub.io](https://docs.uvlhub.io/)
+---
+
+## Documentación oficial
+
+La documentación completa y actualizada del proyecto está disponible en:
+
+- https://docs.uvlhub.io/
+- Instalación manual: https://docs.uvlhub.io/installation/manual_installation
+
+---
+
+##  Instalación manual
+
+Seguir todos los pasos de https://docs.uvlhub.io/installation/manual_installation.
+
+---
+
+
