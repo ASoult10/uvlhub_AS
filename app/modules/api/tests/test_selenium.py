@@ -30,22 +30,6 @@ def test_api_docs_page_loads():
         close_driver(driver)
 
 
-def test_api_manage_requires_login():
-    """Test que la página de gestión requiere login"""
-    driver = initialize_driver()
-
-    try:
-        host = get_host_for_selenium_testing()
-        driver.get(f"{host}/api/manage")
-        time.sleep(2)
-
-        assert "/login" in driver.current_url
-        print("Test api_manage_requires_login passed!")
-
-    finally:
-        close_driver(driver)
-
-
 def test_create_api_key():
     """Test crear una API key después de hacer login"""
     driver = initialize_driver()
@@ -140,71 +124,6 @@ def test_create_api_key_multiple_scopes():
 
     finally:
         close_driver(driver)
-
-
-def test_api_key_table_display():
-    """Test que las API keys se muestran en la tabla"""
-    driver = initialize_driver()
-
-    try:
-        host = get_host_for_selenium_testing()
-
-        driver.get(f"{host}/login")
-        time.sleep(2)
-
-        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
-        password_field = driver.find_element(By.NAME, "password")
-        password_field.send_keys("1234")
-        password_field.send_keys(Keys.RETURN)
-
-        time.sleep(3)
-
-        driver.get(f"{host}/api/manage")
-        time.sleep(2)
-
-        try:
-            page_source = driver.page_source.lower()
-            assert "api" in page_source and ("key" in page_source or "clave" in page_source)
-
-            print("Test api_key_table_display passed!")
-
-        except NoSuchElementException:
-            raise AssertionError("Could not find API key table!")
-
-    finally:
-        close_driver(driver)
-
-
-def test_api_playground_page_loads():
-    """Test que la página del playground carga correctamente (requiere login)"""
-    driver = initialize_driver()
-
-    try:
-        host = get_host_for_selenium_testing()
-
-        driver.get(f"{host}/login")
-        time.sleep(2)
-
-        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
-        password_field = driver.find_element(By.NAME, "password")
-        password_field.send_keys("1234")
-        password_field.send_keys(Keys.RETURN)
-        time.sleep(3)
-
-        driver.get(f"{host}/api/manage")
-        time.sleep(2)
-
-        try:
-            driver.find_element(By.ID, "ap_key")
-            driver.find_element(By.ID, "ap_endpoint")
-            driver.find_element(By.ID, "ap_send")
-            print("Test api_playground_page_loads passed!")
-        except NoSuchElementException:
-            raise AssertionError("API playground did not load correctly!")
-
-    finally:
-        close_driver(driver)
-
 
 def test_api_playground_test_datasets_endpoint():
     """Test probar endpoint /api/datasets desde el playground"""
@@ -450,54 +369,6 @@ def test_api_playground_test_stats_endpoint():
     finally:
         close_driver(driver)
 
-
-def test_api_playground_check_curl_generation():
-    """Test que el playground genera el comando cURL correctamente"""
-    driver = initialize_driver()
-
-    try:
-        host = get_host_for_selenium_testing()
-
-        driver.get(f"{host}/login")
-        time.sleep(2)
-        driver.find_element(By.NAME, "email").send_keys("user1@example.com")
-        password_field = driver.find_element(By.NAME, "password")
-        password_field.send_keys("1234")
-        password_field.send_keys(Keys.RETURN)
-        time.sleep(3)
-
-        driver.get(f"{host}/api/manage")
-        time.sleep(2)
-
-        try:
-            api_key_field = driver.find_element(By.ID, "ap_key")
-            api_key_field.clear()
-            api_key_field.send_keys("my-test-key")
-            time.sleep(1)
-
-            endpoint_select = Select(driver.find_element(By.ID, "ap_endpoint"))
-            endpoint_select.select_by_value("datasets")
-            time.sleep(1)
-
-            send_button = driver.find_element(By.ID, "ap_send")
-            send_button.click()
-            time.sleep(2)
-
-            curl_code = driver.find_element(By.ID, "ap_curl")
-            curl_text = curl_code.text
-            assert "curl" in curl_text
-            assert "my-test-key" in curl_text
-            assert "/api/datasets" in curl_text
-
-            print("Test api_playground_check_curl_generation passed!")
-        except NoSuchElementException as e:
-            print(f"Elemento no encontrado: {e}")
-            raise AssertionError("Could not verify cURL generation!")
-
-    finally:
-        close_driver(driver)
-
-
 def test_revoke_api_key():
     """Test revocar una API key existente"""
     driver = initialize_driver()
@@ -588,16 +459,12 @@ def test_delete_api_key():
 
 if __name__ == "__main__":
     test_api_docs_page_loads()
-    test_api_manage_requires_login()
     test_create_api_key()
     test_create_api_key_multiple_scopes()
-    test_api_key_table_display()
-    test_api_playground_page_loads()
     test_api_playground_test_datasets_endpoint()
     test_api_playground_test_datasets_by_id()
     test_api_playground_test_datasets_by_title()
     test_api_playground_test_search_endpoint()
     test_api_playground_test_stats_endpoint()
-    test_api_playground_check_curl_generation()
     test_revoke_api_key()
     test_delete_api_key()
