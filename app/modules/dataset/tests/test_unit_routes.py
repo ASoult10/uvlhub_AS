@@ -884,7 +884,7 @@ class TestDeleteFileRoute:
         )
 
         # The route will try to delete a file with None name, which should fail
-        assert response.status_code in [404, 500], "Should return error for missing filename"
+        assert response.status_code == 400, "Should return error for missing filename"
 
         logout(test_client)
 
