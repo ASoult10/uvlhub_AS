@@ -109,11 +109,13 @@ def create_app(config_name="development"):
     # Injecting environment variables into jinja context
     @app.context_processor
     def inject_vars_into_jinja():
+        use_fakenodo = os.getenv("UPLOADS_USE_FAKENODO_ONLY", "False").lower() in ("1", "true", "yes")
         return {
             "FLASK_APP_NAME": os.getenv("FLASK_APP_NAME"),
             "FLASK_ENV": os.getenv("FLASK_ENV"),
             "DOMAIN": os.getenv("DOMAIN", "localhost"),
             "APP_VERSION": get_app_version(),
+            "USE_FAKENODO": use_fakenodo,
         }
 
     # Initialize JWT blocklist loader
