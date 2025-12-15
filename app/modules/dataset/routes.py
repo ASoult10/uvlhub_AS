@@ -33,7 +33,7 @@ from app.modules.dataset.services import (
 )
 from app.modules.hubfile.services import HubfileService
 from app.modules.jsonChecker import validate_json_file
-from app.modules.zenodo.services import ZenodoService
+from app.modules.fakenodo.factory import get_zenodo_service
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
-zenodo_service = ZenodoService()
+zenodo_service = get_zenodo_service()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 
