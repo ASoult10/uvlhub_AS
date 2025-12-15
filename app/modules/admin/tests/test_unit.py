@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app import db
 from flask import Flask
 from flask_login import LoginManager
 
+from app import db
 from app.modules.admin.services import AdminService
 
 # ==========================================
@@ -21,9 +21,9 @@ class TestAdminService:
         Esto asegura que AdminService use nuestro mock sí o sí.
         """
         mock_session = MagicMock()
-        
+
         # Parcheamos el atributo 'session' del objeto db global
-        with patch.object(db, 'session', mock_session):
+        with patch.object(db, "session", mock_session):
             # Para mantener compatibilidad con tus tests que usan 'mock_db.session.delete',
             # devolvemos un objeto "wrapper" que tiene la propiedad .session
             mock_db_wrapper = MagicMock()
@@ -43,12 +43,12 @@ class TestAdminService:
     @pytest.fixture
     def app(self):
         app = Flask(__name__)
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        
+        app.config["TESTING"] = True
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
         db.init_app(app)
-        
+
         with app.app_context():
             yield app
 
@@ -57,7 +57,6 @@ class TestAdminService:
         mock_user_model.query.order_by.return_value.all.return_value = ["user1", "user2"]
         result = service.list_users()
         assert result == ["user1", "user2"]
-
 
     def test_delete_user_not_found(self, mock_db, mock_user_model):
         service = AdminService()
