@@ -1,7 +1,7 @@
 from app import db
 from app.modules.auth.models import Role, User
-from app.modules.profile.models import UserProfile
 from app.modules.dataset.models import DSDownloadRecord
+from app.modules.profile.models import UserProfile
 
 
 class AdminService:
