@@ -125,6 +125,7 @@ def test_create_api_key_multiple_scopes():
     finally:
         close_driver(driver)
 
+
 def test_api_playground_test_datasets_endpoint():
     """Test probar endpoint /api/datasets desde el playground"""
     driver = initialize_driver()
@@ -368,6 +369,7 @@ def test_api_playground_test_stats_endpoint():
 
     finally:
         close_driver(driver)
+
 
 def test_revoke_api_key():
     """Test revocar una API key existente"""
