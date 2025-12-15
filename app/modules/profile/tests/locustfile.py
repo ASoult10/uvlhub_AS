@@ -133,17 +133,17 @@ class ProfileBehavior(TaskSet):
                 random.randint(
                     1, 1000)}",
             "orcid": f"{
-                        random.randint(
-                            1000, 9999)}-{
-                                random.randint(
-                                    1000, 9999)}-{
-                                        random.randint(
-                                            1000, 9999)}-{
-                                                random.randint(
-                                                    1000, 9999)}",
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}",
             "affiliation": f"University {
-                                                        random.randint(
-                                                            1, 100)}",
+                random.randint(
+                    1, 100)}",
         }
 
         # POST request to edit profile endpoint
