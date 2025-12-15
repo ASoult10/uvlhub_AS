@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 
+from app.modules.dataset.tests.test_selenium_comments import test_dataset_comments_flow
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
@@ -134,3 +135,4 @@ def test_upload_dataset():
 
 # Call the test function
 # test_upload_dataset()
+test_dataset_comments_flow()

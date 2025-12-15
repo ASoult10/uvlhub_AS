@@ -235,6 +235,7 @@ def upload():
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
 @login_required
 def delete():
+    # FIXME: This route should be protected with @login_required
     if current_user.has_role("guest"):
         flash("Guest users cannot delete datasets. Please register for an account.", "error")
         return redirect(url_for("public.index"))
@@ -245,6 +246,7 @@ def delete():
     if not filename:
         return jsonify({"message": "No file specified"}), 400
     filepath = os.path.join(temp_folder, filename)
+
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
