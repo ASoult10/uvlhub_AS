@@ -1,6 +1,7 @@
 from app import db
 from app.modules.auth.models import Role, User
 from app.modules.profile.models import UserProfile
+from app.modules.dataset.models import DSDownloadRecord
 
 
 class AdminService:
@@ -15,6 +16,7 @@ class AdminService:
         if not user:
             return False
         try:
+            DSDownloadRecord.query.filter_by(user_id=user.id).delete()
             db.session.delete(user)
             db.session.commit()
             return True
