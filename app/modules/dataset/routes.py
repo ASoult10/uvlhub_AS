@@ -233,6 +233,7 @@ def upload():
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
+@login_required
 def delete():
     if current_user.has_role("guest"):
         flash("Guest users cannot delete datasets. Please register for an account.", "error")
@@ -241,6 +242,8 @@ def delete():
     data = request.get_json()
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
+    if not filename:
+        return jsonify({"message": "No file specified"}), 400
     filepath = os.path.join(temp_folder, filename)
     try:
         if os.path.exists(filepath):
