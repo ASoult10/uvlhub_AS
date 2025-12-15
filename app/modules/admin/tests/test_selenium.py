@@ -26,55 +26,53 @@ USER_EMAIL_2 = "admin@nuevo.es"
 
 def _run_shell(cmd, env=None):
     """
-    Run shell command, raising a clear exception on failure.
-    Uses shell=True so commands can be passed as a single string (keeps parity with CLI usage).
+    Ejecuta un comando como lista de argumentos (sin shell).
     """
+    if isinstance(cmd, str):
+        # Convierte la cadena a lista de argumentos
+        import shlex
+
+        cmd = shlex.split(cmd)
+
     try:
-        subprocess.run(cmd, shell=True, check=True, env=env)
+        subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(
-            f"Command failed: {cmd}\nExit: {
+            f"Command failed: {
+                ' '.join(cmd)}\nExit: {
                 e.returncode}"
         ) from e
 
 
-@pytest.fixture(scope="function")
-def migrate_and_seed():
+def run_migrate_and_seed():
     """
-    Fixture that performs: flask db downgrade base (or 0), flask db upgrade, rosemary db:seed
-    Runs BEFORE the test that requests this fixture.
-
-    Usage: include `migrate_and_seed` as a parameter in the test function/method signature.
+    Ejecuta migraciones + seed sin depender de pytest.
+    Usable desde Rosemary o cualquier runner manual.
     """
     MIGRATE_ENV = os.environ.copy()
-    # Adapt this FLASK_APP value if necessary for your environment
     MIGRATE_ENV["FLASK_APP"] = "app:create_app('development')"
     MIGRATE_ENV["WORKING_DIR"] = os.getenv("WORKING_DIR", "")
 
-    # Pre-test migration + seed
     try:
-        # Try to downgrade to 'base', fallback to '0'
         try:
             _run_shell("flask db downgrade base", env=MIGRATE_ENV)
         except RuntimeError:
             try:
                 _run_shell("flask db downgrade 0", env=MIGRATE_ENV)
             except RuntimeError:
-                # If downgrade fails, continue to upgrade/seed anyway
                 pass
 
         _run_shell("flask db upgrade", env=MIGRATE_ENV)
         _run_shell("rosemary db:seed", env=MIGRATE_ENV)
+
     except Exception as e:
-        raise RuntimeError(f"Pre-test migration/seed failed: {e}")
+        raise RuntimeError(f"Migration/seed failed: {e}")
 
-    # yield to run the test
+
+@pytest.fixture(scope="function")
+def migrate_and_seed():
+    run_migrate_and_seed()
     yield
-
-    # Note: we DO NOT perform post-test migration/seed here because the next test that
-    # requests the fixture will perform the reset prior to its execution.
-    # If you want a post-test restore as well, we can add it here.
-    return
 
 
 class TestGuestuser:
@@ -484,3 +482,39 @@ class TestCurator:
             raise
         except Exception as exc:
             raise AssertionError(f"test_curator_flow falló inesperadamente: {exc}")
+
+
+if __name__ == "__main__":
+    print("Running Selenium tests via Rosemary (manual runner)")
+
+    # --- Global setup ---
+    run_migrate_and_seed()
+
+    # -------- Guest user --------
+    guest = TestGuestuser()
+    guest.setup_method(None)
+    try:
+        guest.test_guestuser_flow(migrate_and_seed=None)
+        print("✓ TestGuestuser passed")
+    finally:
+        guest.teardown_method(None)
+
+    # -------- Admin --------
+    admin = TestAdmin()
+    admin.setup_method(None)
+    try:
+        admin.test_admin_flow_create_edit_delete_users(migrate_and_seed=None)
+        print("✓ TestAdmin passed")
+    finally:
+        admin.teardown_method(None)
+
+    # -------- Curator --------
+    curator = TestCurator()
+    curator.setup_method(None)
+    try:
+        curator.test_curator_flow(migrate_and_seed=None)
+        print("✓ TestCurator passed")
+    finally:
+        curator.teardown_method(None)
+
+    print("All Selenium tests finished successfully")

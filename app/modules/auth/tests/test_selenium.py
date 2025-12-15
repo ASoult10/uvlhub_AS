@@ -4,7 +4,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from app import create_app
+from app import create_app, db
 from app.modules.auth.services import AuthenticationService
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
@@ -104,6 +104,9 @@ def test_reset_password_valid_token():
     try:
         app = create_app("testing")
         with app.app_context():
+            db.drop_all()
+            db.create_all()
+
             service = AuthenticationService()
 
             user = service.repository.get_by_email("user1@example.com")

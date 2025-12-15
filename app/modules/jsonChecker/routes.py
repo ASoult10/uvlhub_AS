@@ -1,0 +1,1 @@
+# jsonChecker no expone rutas

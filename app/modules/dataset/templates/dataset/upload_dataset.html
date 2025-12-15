@@ -406,8 +406,12 @@
             <label class="form-check">
                 <input id="agreeCheckbox" class="form-check-input" type="checkbox" value="">
                 <span class="form-check-label" style="font-size: 15px">
-                    I agree to have my files automatically uploaded to Zenodo and made available to the public according to the <a
-                        href="https://en.wikipedia.org/wiki/Open_science" target="_blank">Open Science</a> manifesto
+                    {% if USE_FAKENODO %}
+                        I agree to have my files uploaded to the Fakenodo testing server (these files will not be published to Zenodo).
+                    {% else %}
+                        I agree to have my files automatically uploaded to Zenodo and made available to the public according to the <a
+                            href="https://en.wikipedia.org/wiki/Open_science" target="_blank">Open Science</a> manifesto
+                    {% endif %}
                 </span>
             </label>
 

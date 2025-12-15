@@ -16,7 +16,7 @@ admin_service = AdminService()
 @login_required
 @require_permission("manage_users")
 def list_users():
-    users = [u for u in admin_service.list_users() if getattr(u, "email", None) != "locust@local"]
+    users = [u for u in admin_service.list_users() if getattr(u, "email", None) not in ["locust@local", "guest@local"]]
     users_forms = {}
     for user in users:
         users_forms[user.id] = DeleteUserForm()
