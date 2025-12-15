@@ -1,8 +1,10 @@
-import os
-import requests
-import logging
 import itertools
+import logging
+import os
 from typing import Any, Dict, Optional
+
+import requests
+
 from core.configuration.configuration import uploads_folder_name
 
 logger = logging.getLogger(__name__)
@@ -44,7 +46,7 @@ class FakenodoService:
         }
         return {"metadata": metadata}
 
-    # Create 
+    # Create
     def create_new_deposition(self, dataset_or_payload):
         if self._is_remote():
             # remote
@@ -56,7 +58,7 @@ class FakenodoService:
             response.raise_for_status()
             return response.json()
 
-        # Local behaviour 
+        # Local behaviour
         if isinstance(dataset_or_payload, dict):
             payload = dataset_or_payload or {}
             metadata = payload.get("metadata", {})
@@ -84,7 +86,7 @@ class FakenodoService:
             del self._state["records"][deposition_id_int]
             return True
         return False
-    
+
     # List all
     def get_all_depositions(self):
         if self._is_remote():
@@ -92,8 +94,8 @@ class FakenodoService:
             r.raise_for_status()
             return r.json()
         return {"depositions": list(self._state["records"].values())}
-    
-    # Upload file 
+
+    # Upload file
     def upload_file(self, dataset, deposition_id: int, hubfile, user=None):
         """
         Si remote: envía multipart a {base_url}/{deposition_id}/files (campos: file, filename)
@@ -132,8 +134,8 @@ class FakenodoService:
         record["files"].append({"filename": filename})
         return {"filename": filename, "link": f"http://fakenodo.org/files/{deposition_id}/files/{filename}"}
 
-
     # Publish
+
     def publish_deposition(self, deposition_id: int):
         if self._is_remote():
             url = f"{self.base_url}/{deposition_id}/actions/publish"
@@ -148,9 +150,9 @@ class FakenodoService:
         record["doi"] = doi
         record["published"] = True
         return {"id": deposition_id, "doi": doi}
-    
 
     # Get single deposition
+
     def get_deposition(self, deposition_id: int):
         if self._is_remote():
             url = f"{self.base_url}/{deposition_id}"
@@ -158,8 +160,8 @@ class FakenodoService:
             r.raise_for_status()
             return r.json()
         return self._state["records"].get(deposition_id)
-    
-    #Get doi
+
+    # Get doi
     def get_doi(self, deposition_id: int) -> Optional[str]:
         record = self.get_deposition(deposition_id)
         if record and record.get("published"):
