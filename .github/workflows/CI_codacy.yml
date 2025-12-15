@@ -57,4 +57,5 @@ jobs:
           --cov=app/modules \
           --cov-report=xml \
           --ignore-glob='*selenium*'
-        python -m codacy_coverage report -r coverage.xml
+        python-codacy-coverage -r coverage.xml
+
