@@ -15,13 +15,16 @@ AstronomiaHub está construido sobre **UVLHub**, proporcionando una plataforma e
 
 La documentación completa y actualizada del proyecto está disponible en:
 
-*Guía a nuestra wiki:*
+**Guía a nuestra wiki:**
 - https://github.com/ASoult10/astronomiahub/wiki
-*Guía completa de test y de instalación:*
+  
+**Guía completa de test y de instalación:**
 - https://docs.uvlhub.io/
-*Guía directa al manual de instalación:*
+  
+**Guía directa al manual de instalación:**
 - Instalación manual: https://docs.uvlhub.io/installation/manual_installation
-*Guía al tablero de tareas del proyecto:*
+  
+**Guía al tablero de tareas del proyecto:**
 - https://github.com/users/ASoult10/projects/8
 
 ---
