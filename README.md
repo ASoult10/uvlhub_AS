@@ -3,7 +3,7 @@
 </div>
 
 <div style="text-align: center;">
-  <img src="https://www.uvlhub.io/static/img/logos/logo.png" alt="Logo">
+  ![Logo de AstronomiaHub](astronomiahub/app/static/img/logos/logo.png)
 </div>
 
 # Astronomiahub.io
