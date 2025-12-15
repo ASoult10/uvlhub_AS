@@ -31,13 +31,17 @@ def _run_shell(cmd, env=None):
     if isinstance(cmd, str):
         # Convierte la cadena a lista de argumentos
         import shlex
+
         cmd = shlex.split(cmd)
 
     try:
         subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}\nExit: {e.returncode}") from e
-
+        raise RuntimeError(
+            f"Command failed: {
+                ' '.join(cmd)}\nExit: {
+                e.returncode}"
+        ) from e
 
 
 def run_migrate_and_seed():
@@ -69,7 +73,6 @@ def run_migrate_and_seed():
 def migrate_and_seed():
     run_migrate_and_seed()
     yield
-
 
 
 class TestGuestuser:
@@ -480,6 +483,7 @@ class TestCurator:
         except Exception as exc:
             raise AssertionError(f"test_curator_flow falló inesperadamente: {exc}")
 
+
 if __name__ == "__main__":
     print("Running Selenium tests via Rosemary (manual runner)")
 
@@ -514,4 +518,3 @@ if __name__ == "__main__":
         curator.teardown_method(None)
 
     print("All Selenium tests finished successfully")
-
