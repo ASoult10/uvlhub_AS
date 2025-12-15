@@ -377,5 +377,278 @@ class TestRecommendationSystemUnit:
         assert "ai" in tags
         assert len(tags) == 4
 
+    def test_recommendation_no_other_datasets(self, mock_dataset_service):
+        """Test that empty list is returned when no other datasets exist"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python, ml"
+            current.ds_meta_data.authors = [Mock(name="Test Author")]
 
-# Run with: pytest app/modules/dataset/tests/test_unit_recommendations.py -v
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = []  # No other datasets
+
+            result = mock_dataset_service.get_recommendations(1, limit=10)
+            assert result == []
+
+    def test_recommendation_no_matching_candidates(self, mock_dataset_service):
+        """Test when no candidates match tags or authors"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python, ml"
+            current.ds_meta_data.authors = [Mock(name="John Doe")]
+
+            # Create candidates with no matching tags or authors
+            candidate1 = Mock()
+            candidate1.id = 2
+            candidate1.ds_meta_data = Mock()
+            candidate1.ds_meta_data.tags = "rust, blockchain"
+            candidate1.ds_meta_data.authors = [Mock(name="Jane Smith")]
+
+            candidate2 = Mock()
+            candidate2.id = 3
+            candidate2.ds_meta_data = Mock()
+            candidate2.ds_meta_data.tags = "java, spring"
+            candidate2.ds_meta_data.authors = [Mock(name="Bob Johnson")]
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = [candidate1, candidate2]
+
+            result = mock_dataset_service.get_recommendations(1, limit=10)
+            assert result == []
+
+    def test_recommendation_single_download_tier(self, mock_dataset_service):
+        """Test scoring when there's only 1 dataset (n_downloads == 1)"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate = Mock()
+            candidate.id = 2
+            candidate.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            candidate.ds_meta_data = Mock()
+            candidate.ds_meta_data.tags = "python"
+            candidate.ds_meta_data.authors = [Mock(name="Test")]
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = [candidate]
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                mock_downloads.return_value = 5
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 1
+                # With n_downloads == 1, both tier1_max and tier2_max should be downloads_list[0]
+                # Score should be 3.0 (lowest tier)
+
+    def test_recommendation_two_downloads_tiers(self, mock_dataset_service):
+        """Test scoring when there are exactly 2 datasets (n_downloads == 2)"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate1 = Mock()
+            candidate1.id = 2
+            candidate1.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            candidate1.ds_meta_data = Mock()
+            candidate1.ds_meta_data.tags = "python"
+            candidate1.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate2 = Mock()
+            candidate2.id = 3
+            candidate2.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            candidate2.ds_meta_data = Mock()
+            candidate2.ds_meta_data.tags = "python"
+            candidate2.ds_meta_data.authors = [Mock(name="Test")]
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = [candidate1, candidate2]
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                # First candidate has 10 downloads, second has 5
+                mock_downloads.side_effect = [10, 5]
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 2
+                # tier1_max = downloads_list[0] = 10
+                # tier2_max = downloads_list[1] = 5
+
+    def test_recommendation_download_score_tier2(self, mock_dataset_service):
+        """Test that datasets in tier2 downloads get score of 2.0"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            # Create 3 candidates to establish proper tiers
+            candidates = []
+            for i in range(2, 5):
+                candidate = Mock()
+                candidate.id = i
+                candidate.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+                candidate.ds_meta_data = Mock()
+                candidate.ds_meta_data.tags = "python"
+                candidate.ds_meta_data.authors = [Mock(name="Test")]
+                candidates.append(candidate)
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = candidates
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                # Downloads: 100, 50, 20 -> tier1_max=100, tier2_max=66
+                # Dataset with 50 downloads should be in tier2
+                mock_downloads.side_effect = [100, 50, 20]
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 3
+                # Middle dataset should have tier2 score contribution
+
+    def test_recommendation_download_score_tier3(self, mock_dataset_service):
+        """Test that datasets below tier2 get score of 3.0"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            # Create 3 candidates
+            candidates = []
+            for i in range(2, 5):
+                candidate = Mock()
+                candidate.id = i
+                candidate.created_at = datetime(2024, 1, 1, tzinfo=timezone.utc)
+                candidate.ds_meta_data = Mock()
+                candidate.ds_meta_data.tags = "python"
+                candidate.ds_meta_data.authors = [Mock(name="Test")]
+                candidates.append(candidate)
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = candidates
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                # Downloads: 100, 70, 10 -> lowest should be tier3
+                mock_downloads.side_effect = [100, 70, 10]
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 3
+
+    def test_recommendation_recency_score_tier2(self, mock_dataset_service):
+        """Test that datasets in tier2 recency get score of 2.0"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 6, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            # Create 3 candidates with different dates
+            candidate1 = Mock()
+            candidate1.id = 2
+            candidate1.created_at = datetime(2024, 12, 1, tzinfo=timezone.utc)  # Newest
+            candidate1.ds_meta_data = Mock()
+            candidate1.ds_meta_data.tags = "python"
+            candidate1.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate2 = Mock()
+            candidate2.id = 3
+            candidate2.created_at = datetime(2024, 8, 1, tzinfo=timezone.utc)  # Middle
+            candidate2.ds_meta_data = Mock()
+            candidate2.ds_meta_data.tags = "python"
+            candidate2.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate3 = Mock()
+            candidate3.id = 4
+            candidate3.created_at = datetime(2023, 1, 1, tzinfo=timezone.utc)  # Oldest
+            candidate3.ds_meta_data = Mock()
+            candidate3.ds_meta_data.tags = "python"
+            candidate3.ds_meta_data.authors = [Mock(name="Test")]
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = [candidate1, candidate2, candidate3]
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                mock_downloads.return_value = 10
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 3
+                # Middle date should be in tier2
+
+    def test_recommendation_recency_score_tier3(self, mock_dataset_service):
+        """Test that oldest datasets get recency score of 3.0"""
+        with (
+            patch.object(mock_dataset_service.repository, "get_by_id") as mock_get,
+            patch("app.modules.dataset.models.DataSet.query") as mock_query,
+        ):
+            current = Mock()
+            current.id = 1
+            current.created_at = datetime(2024, 6, 1, tzinfo=timezone.utc)
+            current.ds_meta_data = Mock()
+            current.ds_meta_data.tags = "python"
+            current.ds_meta_data.authors = [Mock(name="Test")]
+
+            candidate = Mock()
+            candidate.id = 2
+            candidate.created_at = datetime(2020, 1, 1, tzinfo=timezone.utc)  # Very old
+            candidate.ds_meta_data = Mock()
+            candidate.ds_meta_data.tags = "python"
+            candidate.ds_meta_data.authors = [Mock(name="Test")]
+
+            mock_get.return_value = current
+            mock_query.filter.return_value.all.return_value = [candidate]
+
+            with patch.object(
+                mock_dataset_service.dsdownloadrecord_repository, "count_downloads_for_dataset"
+            ) as mock_downloads:
+                mock_downloads.return_value = 10
+
+                result = mock_dataset_service.get_recommendations(1, limit=10)
+                assert len(result) == 1
+                # Old dataset should have tier3 recency score

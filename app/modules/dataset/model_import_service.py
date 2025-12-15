@@ -5,6 +5,8 @@ import zipfile
 
 import requests
 
+from app.modules.jsonChecker import validate_json_file
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +55,26 @@ class ModelImportService:
         except Exception as e:
             return {"error": f"Error extracting ZIP: {e}"}
 
+        # Validate any JSON files found in the extracted content
+        invalid_files = {}
+        for root, dirs, files in os.walk(extract_path):
+            for fname in files:
+                if fname.lower().endswith(".json"):
+                    fpath = os.path.join(root, fname)
+                    try:
+                        res = validate_json_file(fpath)
+                        if not res.get("is_json") or not res.get("valid"):
+                            invalid_files[fpath] = res.get("errors", [])
+                    except Exception as e:
+                        invalid_files[fpath] = [f"Validation exception: {e}"]
+
+        if invalid_files:
+            # Cleanup extracted files
+            try:
+                shutil.rmtree(extract_path)
+            except Exception:
+                pass
+            return {"error": "Invalid JSON files found in ZIP", "details": invalid_files}
         if not os.listdir(extract_path):
             return {"error": "ZIP extracted but contains no files."}
 
@@ -153,6 +175,25 @@ class ModelImportService:
         except Exception as e:
             return {"error": f"Error extracting GitHub ZIP: {e}"}
 
+        # Validate JSON files in extracted repo
+        invalid_files = {}
+        for root, dirs, files in os.walk(extract_path):
+            for fname in files:
+                if fname.lower().endswith(".json"):
+                    fpath = os.path.join(root, fname)
+                    try:
+                        res = validate_json_file(fpath)
+                        if not res.get("is_json") or not res.get("valid"):
+                            invalid_files[fpath] = res.get("errors", [])
+                    except Exception as e:
+                        invalid_files[fpath] = [f"Validation exception: {e}"]
+
+        if invalid_files:
+            try:
+                shutil.rmtree(extract_path)
+            except Exception:
+                pass
+            return {"error": "Invalid JSON files found in GitHub repo", "details": invalid_files}
         if not os.listdir(extract_path):
             return {"error": "GitHub ZIP extracted but contained no files."}
 

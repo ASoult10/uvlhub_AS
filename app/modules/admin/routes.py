@@ -16,7 +16,7 @@ admin_service = AdminService()
 @login_required
 @require_permission("manage_users")
 def list_users():
-    users = [u for u in admin_service.list_users() if getattr(u, "email", None) != "locust@local"]
+    users = [u for u in admin_service.list_users() if getattr(u, "email", None) not in ["locust@local", "guest@local"]]
     users_forms = {}
     for user in users:
         users_forms[user.id] = DeleteUserForm()
@@ -97,7 +97,7 @@ def edit_user(user_id):
         flash("User not found.", "error")
         return redirect(url_for("admin.list_users"))
 
-    if target_user.has_role("admin") or target_user.id != current_user.id:
+    if target_user.has_role("admin"):
         flash("You cannot edit an admin.", "warning")
         return redirect(url_for("admin.list_users"))
 

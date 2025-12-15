@@ -31,8 +31,9 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.fakenodo.factory import get_zenodo_service
 from app.modules.hubfile.services import HubfileService
-from app.modules.zenodo.services import ZenodoService
+from app.modules.jsonChecker import validate_json_file
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ logger = logging.getLogger(__name__)
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
-zenodo_service = ZenodoService()
+zenodo_service = get_zenodo_service()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 
@@ -193,6 +194,33 @@ def upload():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+    # Validate JSON structure immediately after saving
+    try:
+        res = validate_json_file(file_path)
+        if not res.get("is_json") or not res.get("valid"):
+            # remove invalid file
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+            return (
+                jsonify(
+                    {
+                        "message": "Invalid JSON file",
+                        "errors": res.get("errors", []),
+                    }
+                ),
+                400,
+            )
+    except Exception as e:
+        # In case validation itself fails unexpectedly, remove file and return
+        # error
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+        return jsonify({"message": f"JSON validation error: {e}"}), 500
+
     return (
         jsonify(
             {
@@ -205,6 +233,7 @@ def upload():
 
 
 @dataset_bp.route("/dataset/file/delete", methods=["POST"])
+@login_required
 def delete():
     if current_user.has_role("guest"):
         flash("Guest users cannot delete datasets. Please register for an account.", "error")
@@ -213,6 +242,8 @@ def delete():
     data = request.get_json()
     filename = data.get("file")
     temp_folder = current_user.temp_folder()
+    if not filename:
+        return jsonify({"message": "No file specified"}), 400
     filepath = os.path.join(temp_folder, filename)
     try:
         if os.path.exists(filepath):
@@ -388,7 +419,7 @@ def edit_dataset(dataset_id):
             form.dec.data = obs.dec
             form.magnitude.data = obs.magnitude
             if obs.observation_date:
-                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%dT%H:%M")
+                form.observation_date.data = obs.observation_date.strftime("%Y-%m-%d")
             form.filter_used.data = obs.filter_used
             form.notes.data = obs.notes
 

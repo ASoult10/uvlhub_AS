@@ -26,7 +26,10 @@ def coverage(module_name, html):
     coverage_cmd = [
         "pytest",
         "--ignore-glob=*selenium*",
+        "--ignore-glob=*locustfile*",
+        f"--cov-config={os.path.join(os.getenv('WORKING_DIR', ''), 'app/modules/.coveragerc')}",
         "--cov=" + test_path,
+        "--cov-report=term-missing",
         test_path,
     ]
 

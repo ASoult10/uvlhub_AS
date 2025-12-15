@@ -82,16 +82,17 @@
 
 
                         </div>
+                        {% if dataset.ds_meta_data.tags!=None and dataset.ds_meta_data.tags|length>0 %}
+                            <div class="row mb-2">
 
-                        <div class="row mb-2">
+                                <div class="col-12">
+                                    {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                </div>
 
-                            <div class="col-12">
-                                {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                                {% endfor %}
                             </div>
-
-                        </div>
+                        {% endif %}
 
                         <div class="row  mt-4">
                             <div class="col-12">
@@ -283,8 +284,8 @@
 
                         <div class="card-body card-body-slim">
 
-                            <strong>uvlhub.io</strong> is a repository for UVL files and datasets integrated with
-                                Zenodo and FlamaPy developed by DiversoLab
+                            <strong>uvlhub.io</strong> is a repository for datasets integrated with
+                                Zenodo developed by DiversoLab
 
                         </div>
 
