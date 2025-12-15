@@ -680,3 +680,48 @@ class TestSizeService:
         result = service.get_human_readable_size(1024 * 1024)
 
         assert "MB" in result or "KB" in result, "Should handle 1MB boundary"
+    
+    def test_update_from_form(self, test_client):
+        """
+        Tests specifically that observation details (RA, Dec, etc.) are updated correctly.
+        """
+        with test_client.application.app_context():
+            service = DataSetService()
+            
+            # Datos nuevos para la observación
+            new_date = date(2025, 12, 31)
+            obs_data_update = {
+                "object_name": "Andromeda Updated",
+                "ra": "00:42:44.500",
+                "dec": "+41:16:10.00",
+                "magnitude": 3.50,
+                "observation_date": new_date,
+                "filter_used": "R",
+                "notes": "Updated notes specifically for observation test"
+            }
+
+            # Mock del formulario
+            mock_form = Mock()
+            # Necesitamos datos mínimos de metadatos para que no falle la primera parte
+            mock_form.get_dsmetadata.return_value = {
+                "title": "Title kept same", 
+                "publication_type": PublicationType.DATA_PAPER
+            }
+            # Aquí inyectamos los datos de observación
+            mock_form.get_observation.return_value = obs_data_update
+
+            # Ejecutamos la actualización
+            updated_dataset = service.update_from_form(test_client.test_dataset_id, mock_form)
+
+            # Verificaciones
+            assert updated_dataset is not None
+            observation = updated_dataset.ds_meta_data.observation
+            
+            assert observation is not None, "Observation should exist"
+            assert observation.object_name == "Andromeda Updated"
+            assert observation.ra == "00:42:44.500"
+            assert observation.dec == "+41:16:10.00"
+            assert observation.magnitude == 3.50
+            assert observation.observation_date == new_date
+            assert observation.filter_used == "R"
+            assert observation.notes == "Updated notes specifically for observation test"

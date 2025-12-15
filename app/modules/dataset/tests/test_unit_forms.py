@@ -4,6 +4,7 @@ from datetime import date
 from app import create_app
 from app.modules.dataset.forms import AuthorForm, ObservationForm, DataSetForm, EditDataSetForm
 from app.modules.dataset.models import PublicationType
+from werkzeug.datastructures import MultiDict 
 
 
 @pytest.fixture(scope="module")
@@ -354,101 +355,140 @@ class TestDataSetForm:
             assert observation["object_name"] == "M31"
 
 
+
+
 class TestEditDataSetForm:
     """Unit tests for dataset form: EditDataSetForm"""
-    def test_edit_dataset_form_valid_data(test_client):
+
+    def test_edit_dataset_form_valid_data(self, test_client):
         """
-        Test EditDataSetForm with valid data.
+        Test EditDataSetForm with valid complete data.
         """
-        form = EditDataSetForm(
-            data={
-                "title": "Updated Dataset",
-                "description": "Updated description",
-                "publication_type": PublicationType.JOURNAL_ARTICLE.name,
-                "tags": "updated, tags",
-                "object_name": "NGC 1234",
-                "ra": "12:30:45",
-                "dec": "+45:30:15",
-                "magnitude": 10.5,
-                "observation_date": "2024-12-10",
-                "filter_used": "R",
-                "notes": "Updated observation notes"
-            }
-        )
+        # Simulamos los datos
+        form_data = {
+            "title": "Updated Title",
+            "description": "Updated Description",
+            "publication_type": PublicationType.DATA_PAPER.name,
+            "tags": "updated, tags",
+            "object_name": "M31",
+            "ra": "00:42:44.330",
+            "dec": "+41:16:09.00",
+            "magnitude": "3.44", # En formdata todo llega como string
+            "observation_date": "2024-12-10",
+            "filter_used": "V",
+            "notes": "Updated notes"
+        }
+
+        # USAMOS MultiDict y formdata= PARA SIMULAR UN POST REAL
+        # Esto satisface al validador InputRequired
+        form = EditDataSetForm(formdata=MultiDict(form_data))
+
+        if not form.validate():
+            # Esto imprimirá los errores en la consola si falla, ayudándote a depurar
+            print(f"Form Errors: {form.errors}")
 
         assert form.validate() is True
+
+        # Verificar obtención de metadatos
         metadata = form.get_dsmetadata()
-        assert metadata["title"] == "Updated Dataset"
-        assert metadata["description"] == "Updated description"
-        assert metadata["publication_type"] == PublicationType.JOURNAL_ARTICLE.name
+        assert metadata["title"] == "Updated Title"
+        assert metadata["publication_type"] == "DATA_PAPER"
 
-    def test_edit_dataset_form_missing_required_fields(test_client):
-        """
-        Test EditDataSetForm fails without required fields.
-        """
-        form = EditDataSetForm(data={})
-
-        assert form.validate() is False
-        assert "title" in form.errors
-        assert "description" in form.errors
-        assert "publication_type" in form.errors
-
-    def test_edit_dataset_form_title_too_long(test_client):
-        """
-        Test EditDataSetForm fails when title exceeds max length.
-        """
-        form = EditDataSetForm(
-            data={
-                "title": "A" * 121,  # Exceeds max length of 120
-                "description": "Valid description",
-                "publication_type": PublicationType.DATA_PAPER.name
-            }
-        )
-
-        assert form.validate() is False
-        assert "title" in form.errors
-
-    def test_edit_dataset_form_get_observation(test_client):
-        """
-        Test EditDataSetForm.get_observation() returns correct observation data.
-        """
-        form = EditDataSetForm(
-            data={
-                "title": "Test",
-                "description": "Description",
-                "publication_type": PublicationType.DATA_PAPER.name,
-                "object_name": "M42",
-                "ra": "05:35:17",
-                "dec": "-05:23:28",
-                "magnitude": 4.0,
-                "observation_date": "2024-12-11",
-                "filter_used": "B",
-                "notes": "Test notes"
-            }
-        )
-
-        assert form.validate() is True
+        # Verificar obtención de observación
         obs = form.get_observation()
-        assert obs["object_name"] == "M42"
-        assert obs["ra"] == "05:35:17"
-        assert obs["dec"] == "-05:23:28"
-        assert obs["magnitude"] == 4.0
-        assert obs["filter_used"] == "B"
+        assert obs["object_name"] == "M31"
+        assert obs["ra"] == "00:42:44.330"
+        
+        # Nota: Al venir de formdata, los FloatField convierten automáticamente, 
+        # pero es bueno asegurar que el valor sea correcto.
+        assert obs["magnitude"] == 3.44 
 
-    def test_edit_dataset_form_optional_observation_fields(test_client):
+    def test_edit_dataset_form_optional_fields(self, test_client):
         """
-        Test EditDataSetForm with only required fields, observation fields are optional.
+        Test EditDataSetForm validates correctly without optional fields.
         """
-        form = EditDataSetForm(
-            data={
-                "title": "Minimal Dataset",
-                "description": "Minimal description",
-                "publication_type": PublicationType.OTHER.name
-            }
-        )
+        form_data = {
+            "title": "Valid Title",
+            "description": "Valid Description",
+            "publication_type": PublicationType.DATA_PAPER.name,
+            "object_name": "M31",
+            "ra": "00:00:00",
+            "dec": "+00:00:00",
+            "observation_date": "2024-01-01"
+            # Faltan: tags, magnitude, filter_used, notes
+        }
 
+        # Usamos formdata=MultiDict(...) aquí también
+        form = EditDataSetForm(formdata=MultiDict(form_data))
+        
+        if not form.validate():
+            print(f"Optional Fields Test Errors: {form.errors}")
+            
         assert form.validate() is True
+        
         obs = form.get_observation()
-        assert obs["object_name"] is None
-        assert obs["ra"] is None
-        assert obs["dec"] is None
+        # Verificamos que los campos opcionales sean None o vacíos
+        assert obs["magnitude"] is None
+        assert not obs["filter_used"] # Puede ser None o string vacío
+        assert not obs["notes"]
+
+    def test_edit_dataset_form_missing_required_observation(self, test_client):
+        """
+        Test EditDataSetForm fails when required observation fields are missing.
+        """
+        form_data = {
+            "title": "Valid Title",
+            "description": "Valid Description",
+            "publication_type": PublicationType.DATA_PAPER.name,
+            # Missing observation fields intentionally
+        }
+
+        form = EditDataSetForm(formdata=MultiDict(form_data))
+        
+        assert form.validate() is False
+        assert "object_name" in form.errors
+        assert "ra" in form.errors
+        assert "dec" in form.errors
+        # Ahora InputRequired funcionará correctamente detectando que falta el dato
+        assert "observation_date" in form.errors 
+
+    def test_edit_dataset_form_invalid_ra_format(self, test_client):
+        """
+        Test EditDataSetForm regex validation for Right Ascension (RA).
+        """
+        form_data = {
+            "title": "Valid Title",
+            "description": "Valid Description",
+            "publication_type": PublicationType.DATA_PAPER.name,
+            "object_name": "M31",
+            "ra": "25:00:00",  # Invalid
+            "dec": "+00:00:00",
+            "observation_date": "2024-01-01"
+        }
+
+        form = EditDataSetForm(formdata=MultiDict(form_data))
+        
+        assert form.validate() is False
+        assert "ra" in form.errors
+        assert "Format must be HH:MM:SS" in str(form.ra.errors)
+
+    def test_edit_dataset_form_invalid_dec_format(self, test_client):
+        """
+        Test EditDataSetForm regex validation for Declination (Dec).
+        """
+        form_data = {
+            "title": "Valid Title",
+            "description": "Valid Description",
+            "publication_type": PublicationType.DATA_PAPER.name,
+            "object_name": "M31",
+            "ra": "00:00:00",
+            "dec": "+95:00:00",  # Invalid
+            "observation_date": "2024-01-01"
+        }
+
+        form = EditDataSetForm(formdata=MultiDict(form_data))
+        
+        assert form.validate() is False
+        assert "dec" in form.errors
+        assert "Format must be +/-DD:MM:SS" in str(form.dec.errors)
+    

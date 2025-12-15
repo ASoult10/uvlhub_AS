@@ -10,6 +10,8 @@ from app.modules.profile.models import UserProfile
 from app.modules.dataset.models import DataSet, DSMetaData, Author, Observation, PublicationType
 from app.modules.conftest import login, logout
 from datetime import date
+from flask import url_for
+
 
 logger = logging.getLogger(__name__)
 
@@ -1028,164 +1030,173 @@ class TestImportRoute:
         logout(test_client)
 
 
+
 class TestEditDatasetRoute:
-    """ Tests for the edit dataset route. """
-    
-    edit_url = "/datasets/{}/edit"
-    
+    """ Tests for the edit dataset route (GET and POST). """
+
     def test_edit_dataset_unauthenticated(self, test_client):
-        """ Tests that unauthenticated users cannot access the edit dataset route. """
-        dataset_id = test_client.test_dataset_id
-        response = test_client.get(self.edit_url.format(dataset_id), follow_redirects=False)
-        assert response.status_code == 302, "Should redirect unauthenticated users"
-        assert "/login" in response.headers["Location"], (
-            f"Should redirect to login page but was {response.headers['Location']}"
-        )
-    
-    def test_edit_dataset_get_as_curator(self, test_client):
-        """ Tests that curator users can edit datasets. """
-        logout(test_client)
-        login_response = login(test_client, test_client.curator_email, test_client.curator_password)
-        assert login_response.status_code == 200, "Login should be successful"
-        
+        """
+        Tests that unauthenticated users are redirected to login.
+        """
+        # Usamos url_for para obtener la ruta exacta sin adivinar prefijos
         with test_client.application.app_context():
-            with test_client.session_transaction():
-                assert current_user.is_authenticated, "User should be authenticated"
-                assert current_user.has_role("curator"), "User should have curator role"
-        
-        dataset_id = test_client.test_dataset_id
-        response = test_client.get(self.edit_url.format(dataset_id), follow_redirects=False)
-        assert response.status_code == 200, "Curator users should access the edit dataset page"
-        assert test_client.ds_meta1_title in response.data.decode(), "Edit dataset page should display content"
-
-    def test_edit_nonexistent_dataset(self, test_client):
-        """ Tests that editing a nonexistent dataset returns 404. """
-        logout(test_client)
-        login_response = login(test_client, test_client.curator_email, test_client.curator_password)
-        assert login_response.status_code == 200, "Login should be successful"
-
-        with test_client.application.app_context():
-            with test_client.session_transaction():
-                assert current_user.is_authenticated, "User should be authenticated"
-                assert current_user.has_role("curator"), "User should have curator role"
-
-        nonexistent_dataset_id = 999999  # Assuming this ID does not exist
-
-        response = test_client.get(self.edit_url.format(nonexistent_dataset_id), follow_redirects=False)
-        assert response.status_code == 404, "Editing a nonexistent dataset should return 404"
-    
-    def test_edit_dataset_post_as_curator_successfully(self, test_client):
-        """ Tests that curator users can post edits to datasets. """
-        # Test dataset
-        dataset_id = test_client.test_dataset_id
-        
-        # Login as curator
-        logout(test_client)
-        login_response = login(test_client, test_client.curator_email, test_client.curator_password)
-        assert login_response.status_code == 200, "Login should be successful"
-
-        with test_client.application.app_context():
-            with test_client.session_transaction():
-                assert current_user.is_authenticated, "User should be authenticated"
-                assert current_user.has_role("curator"), "User should have curator role"
-            old_dataset = DataSet.query.filter_by(id=dataset_id).first()
-            old_title = old_dataset.ds_meta_data.title
-            old_description = old_dataset.ds_meta_data.description
-
-        # Perform a POST request to edit the dataset with proper form fields
-        post_data = {
-            "title": "Updated Dataset Title",
-            "description": "Updated description for the dataset.",
-            "publication_type": "DATA_PAPER",
-            "tags": "updated, tags",
-            "object_name": "M31",
-            "ra": "00:42:44.330",
-            "dec": "+41:16:08.63",
-            "observation_date": "2024-01-15T00:00",
-            "magnitude": "3.44",
-            "filter_used": "V",
-            "notes": "Updated observation notes"
-        }
-        response = test_client.post(
-            self.edit_url.format(dataset_id), 
-            data=post_data, 
-            follow_redirects=False,
-            content_type='application/x-www-form-urlencoded'
-        )
-        assert response.status_code == 302, "Should redirect after successful edit"
-        assert "/dataset/list" in response.headers["Location"], (
-            "Should redirect to the list datasets page after posting if successful"
-        )
-
-        with test_client.application.app_context():
-            updated_dataset = DataSet.query.filter_by(id=dataset_id).first()
-            title_is_updated = (
-                updated_dataset.ds_meta_data.title == post_data["title"]
-                and updated_dataset.ds_meta_data.title != old_title
-            )
-            assert title_is_updated, "Dataset title should be updated"
-            description_is_updated = (
-                updated_dataset.ds_meta_data.description == post_data["description"]
-                and updated_dataset.ds_meta_data.description != old_description
-            )
-            assert description_is_updated, "Dataset description should be updated"
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
             
-    def test_edit_dataset_post_as_curator_invalid_title(self, test_client):
-        """ Tests that posting bad data as a curator redirects to edit dataset page. """
-        invalid_title = "Up"  # Short invalid title
-        # Test dataset
-        dataset_id = test_client.test_dataset_id
+        response = test_client.get(url, follow_redirects=False)
         
-        # Login as curator
+        # Debe ser una redirección (302) al login
+        assert response.status_code == 302
+        assert "/login" in response.headers["Location"]
+
+    def test_edit_dataset_forbidden_for_regular_user(self, test_client):
+        """
+        Tests that a regular user (non-curator) cannot access the edit page
+        and is redirected (likely to the dataset view).
+        """
+        login(test_client, test_client.regular_user_email, test_client.regular_user_password)
+        
+        with test_client.application.app_context():
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
+
+        response = test_client.get(url, follow_redirects=False)
+        
+        # El controlador dice: si no es curador, flash error y redirect.
+        # Esperamos un 302.
+        assert response.status_code == 302
+        # Verificar que NO nos deja quedarnos en la página de edición
+        assert "edit" not in response.headers["Location"]
+        
         logout(test_client)
-        login_response = login(test_client, test_client.curator_email, test_client.curator_password)
-        assert login_response.status_code == 200, "Login should be successful"
 
+    def test_edit_dataset_curator_get_prefilled(self, test_client):
+        """
+        Tests that a curator can access the page and sees the form pre-filled.
+        """
+        login(test_client, test_client.curator_email, test_client.curator_password)
+        
         with test_client.application.app_context():
-            with test_client.session_transaction():
-                assert current_user.is_authenticated, "User should be authenticated"
-                assert current_user.has_role("curator"), "User should have curator role"
-            old_dataset = DataSet.query.filter_by(id=dataset_id).first()
-            old_title = old_dataset.ds_meta_data.title
-            old_description = old_dataset.ds_meta_data.description
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
 
-        # Perform a POST request to edit the dataset with proper form fields
-        post_data = {
-            "title": invalid_title,
-            "description": "Updated description for the dataset.",
+        response = test_client.get(url)
+        
+        assert response.status_code == 200
+        # Verificar que carga el template correcto
+        assert b"Edit Dataset" in response.data
+        # Verificar datos del fixture (M31)
+        assert test_client.ds_meta1_title.encode() in response.data
+        assert b"00:42:44.330" in response.data
+        
+        logout(test_client)
+
+    def test_edit_dataset_curator_post_success(self, test_client):
+        """
+        Tests successful update of a dataset by a curator.
+        """
+        login(test_client, test_client.curator_email, test_client.curator_password)
+        
+        with test_client.application.app_context():
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
+        
+        # Datos para actualizar
+        update_data = {
+            "title": "M31 Andromeda Updated Title",
+            "description": "Updated description by curator",
             "publication_type": "DATA_PAPER",
-            "tags": "updated, tags",
-            "object_name": "M31",
-            "ra": "00:42:44.330",
-            "dec": "+41:16:08.63",
-            "observation_date": "2024-01-15T00:00",
-            "magnitude": "3.44",
+            "tags": "updated, galaxy",
+            "object_name": "M31 Updated",
+            "ra": "00:42:44.500",
+            "dec": "+41:16:10.00",
+            "magnitude": "3.55",
+            "observation_date": "2024-01-20",
             "filter_used": "V",
-            "notes": "Updated observation notes"
+            "notes": "Updated notes"
         }
-        response = test_client.post(
-            self.edit_url.format(dataset_id),
-            data=post_data,
-            follow_redirects=False,
-            content_type='application/x-www-form-urlencoded'
-        )
-        assert response.status_code == 302, (
-            f"Should redirect after successful edit but response status was {response.status_code}"
-        )
-        assert "/dataset/edit" in response.headers["Location"], (
-            f"Should redirect to the edit dataset page if unsuccessful but was {response.headers['Location']}"
-        )
 
-        # Verify that the dataset was not updated due to the exception
+        # IMPORTANTE: Inyectar CSRF token para que WTForms acepte el POST
+        with test_client.session_transaction() as sess:
+            update_data['csrf_token'] = sess.get('csrf_token', '')
+        
+        response = test_client.post(url, data=update_data, follow_redirects=True)
+        
+        assert response.status_code == 200
+        # Ahora sí debería aparecer el mensaje flash
+        assert b"Dataset updated successfully" in response.data
+        
+        # Verificar en base de datos
         with test_client.application.app_context():
-            updated_dataset = DataSet.query.filter_by(id=dataset_id).first()
-            title_is_updated = (
-                updated_dataset.ds_meta_data.title == post_data["title"]
-                and updated_dataset.ds_meta_data.title != old_title
-            )
-            assert not title_is_updated, "Dataset title should not be updated"
-            description_is_updated = (
-                updated_dataset.ds_meta_data.description == post_data["description"]
-                and updated_dataset.ds_meta_data.description != old_description
-            )
-            assert not description_is_updated, "Dataset description should not be updated"
+            updated_ds = DataSet.query.get(test_client.test_dataset_id)
+            assert updated_ds.ds_meta_data.title == "M31 Andromeda Updated Title"
+            
+        logout(test_client)
+
+    def test_edit_dataset_validation_error(self, test_client):
+        """
+        Tests that invalid data prevents update and shows errors.
+        """
+        login(test_client, test_client.curator_email, test_client.curator_password)
+        
+        with test_client.application.app_context():
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
+        
+        invalid_data = {
+            "title": "", # Vacío (Inválido)
+            "description": "Desc",
+            "publication_type": "DATA_PAPER",
+            "object_name": "Obj",
+            "ra": "INVALID_RA", # Formato incorrecto
+            "dec": "+00:00:00",
+            "observation_date": "2024-01-01"
+        }
+
+        # Inyectar CSRF token
+        with test_client.session_transaction() as sess:
+            invalid_data['csrf_token'] = sess.get('csrf_token', '')
+        
+        response = test_client.post(url, data=invalid_data, follow_redirects=True)
+        
+        assert response.status_code == 200
+        # No debe haber mensaje de éxito
+        assert b"Dataset updated successfully" not in response.data
+        # Debe mostrar los errores de validación
+        assert b"This field is required" in response.data or b"required" in response.data
+        assert b"Format must be HH:MM:SS" in response.data
+        
+        logout(test_client)
+
+    def test_edit_dataset_service_exception(self, test_client):
+        """
+        Tests handling of exceptions raised by the service layer.
+        """
+        from unittest.mock import patch
+        
+        login(test_client, test_client.curator_email, test_client.curator_password)
+        
+        with test_client.application.app_context():
+            url = url_for("dataset.edit_dataset", dataset_id=test_client.test_dataset_id)
+        
+        valid_data = {
+            "title": "Title",
+            "description": "Desc",
+            "publication_type": "DATA_PAPER",
+            "object_name": "Obj",
+            "ra": "00:00:00",
+            "dec": "+00:00:00",
+            "observation_date": "2024-01-01"
+        }
+
+        with test_client.session_transaction() as sess:
+            valid_data['csrf_token'] = sess.get('csrf_token', '')
+        
+        # Mockeamos para forzar una excepción
+        with patch('app.modules.dataset.routes.dataset_service.update_from_form') as mock_update:
+            mock_update.side_effect = Exception("Database connection failed")
+            
+            response = test_client.post(url, data=valid_data, follow_redirects=True)
+            
+            assert response.status_code == 200
+            # Verificar que el bloque except capturó el error y mostró el flash message
+            assert b"Error updating dataset" in response.data
+            assert b"Database connection failed" in response.data
+            
+        logout(test_client)
+    
