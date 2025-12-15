@@ -97,7 +97,7 @@ def edit_user(user_id):
         flash("User not found.", "error")
         return redirect(url_for("admin.list_users"))
 
-    if target_user.has_role("admin") or target_user.id != current_user.id:
+    if target_user.has_role("admin"):
         flash("You cannot edit an admin.", "warning")
         return redirect(url_for("admin.list_users"))
 

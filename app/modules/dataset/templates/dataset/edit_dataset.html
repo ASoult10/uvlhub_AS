@@ -14,77 +14,89 @@
                 <form method="POST" action="" class="needs-validation" novalidate>
                     {{ form.hidden_tag() }}
 
-                    <!-- Metadata Section -->
                     <div class="mb-4">
                         <h5 class="text-primary fw-bold mb-3">📁 Metadata</h5>
 
                         <div class="mb-3">
                             {{ form.title.label(class="form-label fw-semibold") }}
-                            {{ form.title(class="form-control rounded-3") }}
+                            {{ form.title(class="form-control rounded-3" + (" is-invalid" if form.title.errors else "")) }}
                             {% for error in form.title.errors %}
-                                <div class="text-danger small">{{ error }}</div>
+                                <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.description.label(class="form-label fw-semibold") }}
-                            {{ form.description(class="form-control rounded-3", rows="3") }}
+                            {{ form.description(class="form-control rounded-3" + (" is-invalid" if form.description.errors else ""), rows="3") }}
+                            {% for error in form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 {{ form.publication_type.label(class="form-label fw-semibold") }}
-                                {{ form.publication_type(class="form-select rounded-3") }}
+                                {{ form.publication_type(class="form-select rounded-3" + (" is-invalid" if form.publication_type.errors else "")) }}
+                                {% for error in form.publication_type.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.tags.label(class="form-label fw-semibold") }}
-                                {{ form.tags(class="form-control rounded-3") }}
+                                {{ form.tags(class="form-control rounded-3" + (" is-invalid" if form.tags.errors else "")) }}
+                                {% for error in form.tags.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Observations Section -->
                     <div class="mb-4">
                         <h5 class="text-primary fw-bold mb-3">🔭 Observations</h5>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 {{ form.object_name.label(class="form-label fw-semibold") }}
-                                {{ form.object_name(class="form-control rounded-3") }}
+                                {{ form.object_name(class="form-control rounded-3" + (" is-invalid" if form.object_name.errors else "")) }}
+                                {% for error in form.object_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.observation_date.label(class="form-label fw-semibold") }}
-                                {{ form.observation_date(class="form-control rounded-3", type="datetime-local") }}
+                                {{ form.observation_date(class="form-control rounded-3" + (" is-invalid" if form.observation_date.errors else ""), type="date") }}
+                                {% for error in form.observation_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 {{ form.ra.label(class="form-label fw-semibold") }}
-                                {{ form.ra(class="form-control rounded-3") }}
+                                {{ form.ra(class="form-control rounded-3" + (" is-invalid" if form.ra.errors else "")) }}
+                                {% for error in form.ra.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-4 mb-3">
                                 {{ form.dec.label(class="form-label fw-semibold") }}
-                                {{ form.dec(class="form-control rounded-3") }}
+                                {{ form.dec(class="form-control rounded-3" + (" is-invalid" if form.dec.errors else "")) }}
+                                {% for error in form.dec.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                             <div class="col-md-4 mb-3">
                                 {{ form.magnitude.label(class="form-label fw-semibold") }}
-                                {{ form.magnitude(class="form-control rounded-3") }}
+                                {{ form.magnitude(class="form-control rounded-3" + (" is-invalid" if form.magnitude.errors else "")) }}
+                                {% for error in form.magnitude.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
-
-                        <div class="mb-3">
-                            {{ form.filter_used.label(class="form-label fw-semibold") }}
-                            {{ form.filter_used(class="form-control rounded-3") }}
+                        
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.notes.label(class="form-label fw-semibold") }}
-                            {{ form.notes(class="form-control rounded-3", rows="2") }}
-                        </div>
-                    </div>
-
-                    <!-- Buttons -->
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('dataset.list_dataset') }}" class="btn btn-secondary rounded-3 px-4">Cancel</a>
                         {{ form.submit(class="btn btn-primary rounded-3 px-4") }}

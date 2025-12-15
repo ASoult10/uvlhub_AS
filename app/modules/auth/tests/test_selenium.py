@@ -102,7 +102,7 @@ def test_reset_password_valid_token():
     driver = initialize_driver()
 
     try:
-        app = create_app("development")
+        app = create_app("testing")
         with app.app_context():
             service = AuthenticationService()
 

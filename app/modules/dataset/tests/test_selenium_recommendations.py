@@ -223,6 +223,9 @@ def test_recommendation_link_works():
     try:
         host = get_host_for_selenium_testing()
 
+        # Login first to ensure access
+        login_user(driver, host)
+
         # Go to homepage
         driver.get(f"{host}/")
         wait_for_page_to_load(driver)

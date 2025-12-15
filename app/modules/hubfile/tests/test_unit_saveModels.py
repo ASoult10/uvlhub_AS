@@ -179,13 +179,14 @@ class TestRutaGuardarArchivo:
         from app.modules.hubfile.routes import save_file
 
         mock_user.is_authenticated = False
+        mock_user.has_role = MagicMock(return_value=False)
 
         with patch("app.modules.hubfile.routes.jsonify") as mock_jsonify:
             save_file(1)
             mock_jsonify.assert_called_once()
             call_args = mock_jsonify.call_args[0][0]
             assert call_args["success"] is False
-            assert "logged in" in call_args["error"]
+            assert call_args["error"] == "not_authenticated"
 
 
 class TestRutaEliminarArchivo:

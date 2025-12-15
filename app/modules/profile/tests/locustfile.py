@@ -1,3 +1,6 @@
+import random
+
+from bs4 import BeautifulSoup
 from locust import HttpUser, TaskSet, between, task
 
 from core.environment.host import get_host_for_locust_testing
@@ -16,6 +19,19 @@ class ProfileBehavior(TaskSet):
         self.user_id = self.get_valid_user_id()
         if not self.user_id:
             print("No valid user_id found; some tasks will be skipped.")
+
+        if hasattr(self, "requires_auth") and self.requires_auth:
+            resp = self.client.post("/login", json={"username": "user1@example.com", "password": "1234"})
+            if resp.status_code == 200:
+                self.headers = {
+                    "Authorization": f"Bearer {
+                        resp.json().get('access_token')}"
+                }
+                # fetch CSRF token
+                edit_page = self.client.get("/profile/edit", headers=self.headers)
+                self.csrf_token = extract_token(edit_page.text)
+            else:
+                raise Exception("Login failed for Locust user")
 
     def get_valid_user_id(self):
         """
@@ -80,7 +96,6 @@ class ProfileBehavior(TaskSet):
         Weight: 1 (executed less frequently)
         """
         # Test with random user_ids (1-10)
-        import random
 
         random_user_id = random.randint(1, 10)
 
@@ -97,6 +112,55 @@ class ProfileBehavior(TaskSet):
                     f"Unexpected status code: {
                         response.status_code}"
                 )
+
+    @task(2)
+    def edit_profile(self):
+        """
+        Test editing the currently loaded user's profile.
+        This simulates a user updating their own profile.
+        """
+
+        if not self.user_id:
+            return
+
+        random.randint(1, 10)
+        # Randomized profile data for load testing
+        payload = {
+            "name": f"TestUser{
+                random.randint(
+                    1, 1000)}",
+            "surname": f"Surname{
+                random.randint(
+                    1, 1000)}",
+            "orcid": f"{
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}-{
+                random.randint(
+                    1000, 9999)}",
+            "affiliation": f"University {
+                random.randint(
+                    1, 100)}",
+        }
+
+        # POST request to edit profile endpoint
+        response = self.client.get("/profile/edit")
+
+        csrf_token = extract_token_from_html(response.text)  # simple regex or BeautifulSoup
+
+        self.client.post(
+            "/profile/edit",
+            data={
+                "name": "John",
+                "surname": "Doe",
+                "orcid": "0000-0000-0000-0000",
+                "affiliation": "University X",
+                "csrf_token": csrf_token,
+            },
+        )
 
     @task(1)
     def view_nonexistent_profile(self):
@@ -117,6 +181,18 @@ class ProfileBehavior(TaskSet):
                     f"Expected 404 for nonexistent user, got {
                         response.status_code}"
                 )
+
+
+def extract_token_from_html(html: str) -> str:
+    """
+    Extract CSRF token from a Flask-WTF form in HTML.
+    Returns the token string.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    csrf_input = soup.find("input", {"name": "csrf_token"})
+    if csrf_input and csrf_input.has_attr("value"):
+        return csrf_input["value"]
+    raise ValueError("CSRF token not found in HTML")
 
 
 class ProfileUser(HttpUser):
