@@ -1,23 +1,25 @@
-import pytest
 import os
-import tempfile
 import shutil
+import tempfile
 from datetime import date
 from unittest.mock import Mock, patch
+
+import pytest
+
 from app import db
 from app.modules.auth.models import User
-from app.modules.profile.models import UserProfile
-from app.modules.dataset.models import DataSet, DSMetaData, Author, Observation, PublicationType, DSViewRecord
+from app.modules.dataset.models import Author, DataSet, DSMetaData, DSViewRecord, Observation, PublicationType
 from app.modules.dataset.services import (
-    DataSetService,
     AuthorService,
+    DataSetService,
+    DOIMappingService,
     DSDownloadRecordService,
     DSMetaDataService,
     DSViewRecordService,
-    DOIMappingService,
     SizeService,
-    calculate_checksum_and_size
+    calculate_checksum_and_size,
 )
+from app.modules.profile.models import UserProfile
 
 
 @pytest.fixture(scope="module")
@@ -35,11 +37,7 @@ def test_client(test_client):
 
         if not user.profile:
             profile = UserProfile(
-                user_id=user.id,
-                name="Test",
-                surname="User",
-                affiliation="Test University",
-                orcid="0000-0002-1234-5678"
+                user_id=user.id, name="Test", surname="User", affiliation="Test University", orcid="0000-0002-1234-5678"
             )
             db.session.add(profile)
             db.session.commit()
@@ -49,16 +47,13 @@ def test_client(test_client):
             title="Test Dataset for Services",
             description="Test description",
             publication_type=PublicationType.DATA_PAPER,
-            tags="test, services, unit"
+            tags="test, services, unit",
         )
         db.session.add(ds_meta)
         db.session.commit()
 
         author = Author(
-            name="User, Test",
-            affiliation="Test University",
-            orcid="0000-0002-1234-5678",
-            ds_meta_data_id=ds_meta.id
+            name="User, Test", affiliation="Test University", orcid="0000-0002-1234-5678", ds_meta_data_id=ds_meta.id
         )
         db.session.add(author)
 
@@ -70,15 +65,12 @@ def test_client(test_client):
             observation_date=date(2024, 1, 15),
             filter_used="V",
             notes="Test observation",
-            ds_meta_data_id=ds_meta.id
+            ds_meta_data_id=ds_meta.id,
         )
         db.session.add(obs)
         db.session.commit()
 
-        dataset = DataSet(
-            user_id=user.id,
-            ds_meta_data_id=ds_meta.id
-        )
+        dataset = DataSet(user_id=user.id, ds_meta_data_id=ds_meta.id)
         db.session.add(dataset)
         db.session.commit()
 
@@ -90,14 +82,14 @@ def test_client(test_client):
 
 
 class TestCalculateChecksumAndSize:
-    """ Tests for the calculate_checksum_and_size function. """
+    """Tests for the calculate_checksum_and_size function."""
 
     def test_calculate_checksum_and_size_valid_file(self):
         """
         Tests that checksum and size are calculated correctly for a valid file.
         """
         # Create a temporary file
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
             tmp_file.write("Test content for checksum")
             tmp_file_path = tmp_file.name
 
@@ -116,7 +108,7 @@ class TestCalculateChecksumAndSize:
         """
         Tests that checksum and size are calculated for an empty file.
         """
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
             tmp_file_path = tmp_file.name
 
         try:
@@ -129,7 +121,7 @@ class TestCalculateChecksumAndSize:
 
 
 class TestDataSetService:
-    """ Tests for DataSetService class. """
+    """Tests for DataSetService class."""
 
     def test_get_synchronized(self, test_client):
         """
@@ -151,7 +143,7 @@ class TestDataSetService:
 
             assert result is not None, "Should return a result"
 
-    @patch('app.modules.dataset.repositories.current_user')
+    @patch("app.modules.dataset.repositories.current_user")
     def test_get_unsynchronized_dataset(self, mock_current_user, test_client):
         """
         Tests retrieving a specific unsynchronized dataset.
@@ -163,10 +155,7 @@ class TestDataSetService:
             mock_current_user.has_role.return_value = False
 
             service = DataSetService()
-            result = service.get_unsynchronized_dataset(
-                test_client.test_user_id,
-                test_client.test_dataset_id
-            )
+            result = service.get_unsynchronized_dataset(test_client.test_user_id, test_client.test_dataset_id)
             # Result can be None if dataset is synchronized
             assert result is not None or result is None, "Should return a dataset or None"
 
@@ -273,7 +262,7 @@ class TestDataSetService:
                 title="Similar Dataset",
                 description="Similar test description",
                 publication_type=PublicationType.DATA_PAPER,
-                tags="test, similar"
+                tags="test, similar",
             )
             db.session.add(ds_meta2)
             db.session.commit()
@@ -282,16 +271,13 @@ class TestDataSetService:
                 name="Another, User",
                 affiliation="Test University",
                 orcid="0000-0002-9999-9999",
-                ds_meta_data_id=ds_meta2.id
+                ds_meta_data_id=ds_meta2.id,
             )
             db.session.add(author2)
             db.session.commit()
 
             user = User.query.get(test_client.test_user_id)
-            dataset2 = DataSet(
-                user_id=user.id,
-                ds_meta_data_id=ds_meta2.id
-            )
+            dataset2 = DataSet(user_id=user.id, ds_meta_data_id=ds_meta2.id)
             db.session.add(dataset2)
             db.session.commit()
 
@@ -315,16 +301,13 @@ class TestDataSetService:
                 title="Unique Dataset",
                 description="Unique description",
                 publication_type=PublicationType.DATA_PAPER,
-                tags="unique, different, unmatched"
+                tags="unique, different, unmatched",
             )
             db.session.add(ds_meta_unique)
             db.session.commit()
 
             user = User.query.get(test_client.test_user_id)
-            dataset_unique = DataSet(
-                user_id=user.id,
-                ds_meta_data_id=ds_meta_unique.id
-            )
+            dataset_unique = DataSet(user_id=user.id, ds_meta_data_id=ds_meta_unique.id)
             db.session.add(dataset_unique)
             db.session.commit()
 
@@ -366,7 +349,7 @@ class TestDataSetService:
                 "title": "Updated Title",
                 "description": "Updated description",
                 "publication_type": PublicationType.DATA_PAPER,
-                "tags": "updated, tags"
+                "tags": "updated, tags",
             }
             mock_form.get_observation.return_value = {
                 "object_name": "M42",
@@ -375,7 +358,7 @@ class TestDataSetService:
                 "magnitude": 4.0,
                 "observation_date": date(2024, 2, 20),
                 "filter_used": "H-alpha",
-                "notes": "Updated notes"
+                "notes": "Updated notes",
             }
 
             updated_dataset = service.update_from_form(test_client.test_dataset_id, mock_form)
@@ -417,7 +400,7 @@ class TestDataSetService:
 
             assert result is not None, "Result should not be None"
 
-    @patch('app.modules.dataset.services.AuthenticationService')
+    @patch("app.modules.dataset.services.AuthenticationService")
     def test_move_hubfiles(self, mock_auth_service, test_client):
         """
         Tests moving hubfiles from temp folder to dataset uploads folder.
@@ -433,7 +416,7 @@ class TestDataSetService:
 
             # Create test file in temp folder
             test_file = os.path.join(temp_dir, "test.json")
-            with open(test_file, 'w') as f:
+            with open(test_file, "w") as f:
                 f.write('{"test": "data"}')
 
             service = DataSetService()
@@ -451,7 +434,7 @@ class TestDataSetService:
 
 
 class TestAuthorService:
-    """ Tests for AuthorService class. """
+    """Tests for AuthorService class."""
 
     def test_author_service_initialization(self):
         """
@@ -463,7 +446,7 @@ class TestAuthorService:
 
 
 class TestDSDownloadRecordService:
-    """ Tests for DSDownloadRecordService class. """
+    """Tests for DSDownloadRecordService class."""
 
     def test_ds_download_record_service_initialization(self):
         """
@@ -475,7 +458,7 @@ class TestDSDownloadRecordService:
 
 
 class TestDSMetaDataService:
-    """ Tests for DSMetaDataService class. """
+    """Tests for DSMetaDataService class."""
 
     def test_update_dsmetadata(self, test_client):
         """
@@ -483,10 +466,7 @@ class TestDSMetaDataService:
         """
         with test_client.application.app_context():
             service = DSMetaDataService()
-            updated = service.update(
-                test_client.test_ds_meta_id,
-                title="Updated Metadata Title"
-            )
+            updated = service.update(test_client.test_ds_meta_id, title="Updated Metadata Title")
 
             assert updated is not None, "Update should return a result"
 
@@ -518,9 +498,9 @@ class TestDSMetaDataService:
 
 
 class TestDSViewRecordService:
-    """ Tests for DSViewRecordService class. """
+    """Tests for DSViewRecordService class."""
 
-    @patch('app.modules.dataset.repositories.current_user')
+    @patch("app.modules.dataset.repositories.current_user")
     def test_the_record_exists_false(self, mock_current_user, test_client):
         """
         Tests checking if a view record exists when it doesn't.
@@ -537,7 +517,7 @@ class TestDSViewRecordService:
                 exists = service.the_record_exists(dataset, "new-cookie-12345")
                 assert not exists, "Record should not exist for new cookie"
 
-    @patch('app.modules.dataset.repositories.current_user')
+    @patch("app.modules.dataset.repositories.current_user")
     def test_create_new_record(self, mock_current_user, test_client):
         """
         Tests creating a new view record.
@@ -562,7 +542,7 @@ class TestDSViewRecordService:
         """
         with test_client.application.app_context():
             # Create request context without existing cookies
-            with test_client.application.test_request_context('/'):
+            with test_client.application.test_request_context("/"):
                 service = DSViewRecordService()
                 dataset = DataSet.query.get(test_client.test_dataset_id)
 
@@ -583,8 +563,7 @@ class TestDSViewRecordService:
         with test_client.application.app_context():
             # Create request context with existing cookie
             with test_client.application.test_request_context(
-                '/',
-                environ_base={'HTTP_COOKIE': 'view_cookie=existing-cookie-12345'}
+                "/", environ_base={"HTTP_COOKIE": "view_cookie=existing-cookie-12345"}
             ):
                 service = DSViewRecordService()
                 dataset = DataSet.query.get(test_client.test_dataset_id)
@@ -599,7 +578,7 @@ class TestDSViewRecordService:
 
 
 class TestDOIMappingService:
-    """ Tests for DOIMappingService class. """
+    """Tests for DOIMappingService class."""
 
     def test_get_new_doi_nonexistent(self, test_client):
         """
@@ -613,7 +592,7 @@ class TestDOIMappingService:
 
 
 class TestSizeService:
-    """ Tests for SizeService class. """
+    """Tests for SizeService class."""
 
     def test_get_human_readable_size_bytes(self):
         """
@@ -680,14 +659,14 @@ class TestSizeService:
         result = service.get_human_readable_size(1024 * 1024)
 
         assert "MB" in result or "KB" in result, "Should handle 1MB boundary"
-    
+
     def test_update_from_form(self, test_client):
         """
         Tests specifically that observation details (RA, Dec, etc.) are updated correctly.
         """
         with test_client.application.app_context():
             service = DataSetService()
-            
+
             # Datos nuevos para la observación
             new_date = date(2025, 12, 31)
             obs_data_update = {
@@ -697,15 +676,16 @@ class TestSizeService:
                 "magnitude": 3.50,
                 "observation_date": new_date,
                 "filter_used": "R",
-                "notes": "Updated notes specifically for observation test"
+                "notes": "Updated notes specifically for observation test",
             }
 
             # Mock del formulario
             mock_form = Mock()
-            # Necesitamos datos mínimos de metadatos para que no falle la primera parte
+            # Necesitamos datos mínimos de metadatos para que no falle la
+            # primera parte
             mock_form.get_dsmetadata.return_value = {
-                "title": "Title kept same", 
-                "publication_type": PublicationType.DATA_PAPER
+                "title": "Title kept same",
+                "publication_type": PublicationType.DATA_PAPER,
             }
             # Aquí inyectamos los datos de observación
             mock_form.get_observation.return_value = obs_data_update
@@ -716,7 +696,7 @@ class TestSizeService:
             # Verificaciones
             assert updated_dataset is not None
             observation = updated_dataset.ds_meta_data.observation
-            
+
             assert observation is not None, "Observation should exist"
             assert observation.object_name == "Andromeda Updated"
             assert observation.ra == "00:42:44.500"
