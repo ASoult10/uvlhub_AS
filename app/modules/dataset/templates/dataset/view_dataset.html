@@ -140,6 +140,15 @@
                     <span class="doi_text">{{ dataset.get_uvlhub_doi() }}</span>
                 </button>
             </div>
+            {% else %}
+            <div class="card-body" style="padding-top: 0px">
+                <div class="alert alert-warning d-flex align-items-start" role="alert">
+                    <i data-feather="alert-triangle" class="me-2" style="width: 20px; height: 20px;"></i>
+                    <div>
+                        <strong>Aviso:</strong> Este dataset aún no ha sido publicado y, por tanto, no dispone de DOI. Publícalo para obtener un DOI.
+                    </div>
+                </div>
+            </div>
             {% endif %}
         </div>
 
