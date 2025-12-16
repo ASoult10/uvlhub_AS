@@ -4,6 +4,13 @@
 
 {% block content %}
 
+{% if not current_user.is_anonymous %}
+    <p class="text-secondary">
+		Logged in as <strong>{{ current_user.role_names() | join(', ') if current_user.role_names() else 'none'}}</strong>
+	</p>
+{% endif %}
+
+
     <h1 class="h2 mb-3">
 
         <b>Latest</b> datasets
